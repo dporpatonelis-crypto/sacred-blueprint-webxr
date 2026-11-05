@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "lessons": [
+    {
+      "id": "eikona-talanta-loukas",
+      "directory": "apps/eikona-talanta-loukas",
+      "title": "Από το κατ’ εικόνα στο καθ’ ομοίωση",
+      "description": "Τέσσερις νησίδες, δεκαέξι φωτεινές συνδέσεις. Μια εικονογραφημένη διαδρομή για τον άνθρωπο, τα Τάλαντα και τον Άγιο Λουκά.",
+      "preview": "previews/eikona-talanta-loukas.png",
+      "topics": ["Κατ’ εικόνα", "Τάλαντα", "Άγιος Λουκάς", "Καθ’ ομοίωση"],
+      "connections": 16,
+      "status": "published"
+    }
+  ]
+}

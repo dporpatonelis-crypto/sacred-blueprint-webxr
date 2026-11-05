@@ -1,0 +1,138 @@
+[
+  {
+    "id": "trust",
+    "input": "trust-keyframes.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 240
+  },
+  {
+    "id": "cultivation",
+    "input": "cultivation-keyframes-v2.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "inaction",
+    "input": "inaction-keyframes.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 360
+  },
+  {
+    "id": "hub-eikona",
+    "input": "hub-anchors-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 2,
+      "rows": 2,
+      "index": 0
+    }
+  },
+  {
+    "id": "hub-talanta",
+    "input": "hub-anchors-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 2,
+      "rows": 2,
+      "index": 1
+    }
+  },
+  {
+    "id": "hub-loukas",
+    "input": "hub-anchors-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 2,
+      "rows": 2,
+      "index": 2
+    }
+  },
+  {
+    "id": "hub-omoiosi",
+    "input": "hub-anchors-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 2,
+      "rows": 2,
+      "index": 3
+    }
+  },
+  {
+    "id": "eikona-unity",
+    "input": "eikona-unity-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 240
+  },
+  {
+    "id": "eikona-reason",
+    "input": "eikona-reason-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 240
+  },
+  {
+    "id": "eikona-freedom",
+    "input": "eikona-freedom-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "loukas-knowledge",
+    "input": "loukas-knowledge-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "loukas-faith",
+    "input": "loukas-faith-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "loukas-offering",
+    "input": "loukas-offering-keyframes-v2.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "omoiosi-virtues",
+    "input": "omoiosi-virtues-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "omoiosi-grace",
+    "input": "omoiosi-grace-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  },
+  {
+    "id": "omoiosi-life",
+    "input": "omoiosi-life-keyframes-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 280
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "name": "eikona-talanta-loukas-webxr",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#journey-core": "./src/vendor/journey-core.cjs"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5191 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5191 --strictPort",
+    "test": "node --test qa/*.test.mjs",
+    "prepare:animations": "node scripts/prepare-animations.mjs"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
+  }
+}

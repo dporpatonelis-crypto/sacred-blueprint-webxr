@@ -1,0 +1,913 @@
+{
+  "schemaVersion": "1.0",
+  "contentVersion": 1,
+  "id": "eikona-talanta-loukas",
+  "title": "Η γνωστική μας διαδρομή — Από το κατ’ εικόνα στο καθ’ ομοίωση",
+  "shortTitle": "Η διαδρομή μας",
+  "audience": "Α΄ Γυμνασίου",
+  "coordinateSystem": {
+    "origin": "bottom-left",
+    "range": [
+      0,
+      1
+    ]
+  },
+  "studentTextPolicy": {
+    "maxWords": 3,
+    "extendedTextOnly": "finalQuestion",
+    "sourcesOutsideStudentUI": true
+  },
+  "images": {
+    "panorama": {
+      "src": "assets/01-panorama-v1.png",
+      "width": 1672,
+      "height": 941,
+      "sha256": "42b689fbf1709ec3353405c7a7bcc9fe2d2b4217def92078a1a68e0b6d21cd84"
+    },
+    "eikona": {
+      "src": "assets/02-eikona-focus-v1.png",
+      "width": 1672,
+      "height": 941,
+      "sha256": "2055b8d7e2bb5e9284e26f2f413ec45a65744d63696d7d256e3464b346a6cb6a"
+    },
+    "talanta": {
+      "src": "assets/03-talanta-focus-v1.png",
+      "width": 1672,
+      "height": 941,
+      "sha256": "7d1499ef0ce613922b3fd365d3cd5e9a9f622ac562a344be2845307a39465824"
+    },
+    "loukas": {
+      "src": "assets/04-loukas-focus-v1.png",
+      "width": 1672,
+      "height": 941,
+      "sha256": "651382939a33acdd065d09bb3c4b425fd8c2e0330a88359531b050fa7e504dd8"
+    },
+    "omoiosi": {
+      "src": "assets/05-omoiosi-focus-v1.png",
+      "width": 1672,
+      "height": 941,
+      "sha256": "db0e8ff25ff807c5879a07d22329b046a513aeecd08c02f319b81c4c8bbb3ff2"
+    }
+  },
+  "scenes": [
+    {
+      "id": "main",
+      "title": "Η διαδρομή μας",
+      "imageId": "panorama",
+      "root": [
+        0.5,
+        0.045
+      ],
+      "stations": [
+        {
+          "id": "main-eikona",
+          "word": "Κατ’ εικόνα",
+          "prompt": "Ο άνθρωπος",
+          "hint": "Άνθρωπος, δώρο Θεού",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.12,
+            0.215
+          ],
+          "origin": [
+            0.12,
+            0.57
+          ],
+          "polygon": [
+            [
+              0,
+              1
+            ],
+            [
+              0.24,
+              1
+            ],
+            [
+              0.24,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.115,
+              0.71
+            ],
+            [
+              0.115,
+              0.45
+            ]
+          ]
+        },
+        {
+          "id": "main-talanta",
+          "word": "Παραβολή των Ταλάντων",
+          "prompt": "Το εμπιστευμένο δώρο",
+          "hint": "Ποσό προς αξιοποίηση",
+          "sourceId": "parable-user",
+          "at": [
+            0.37,
+            0.215
+          ],
+          "origin": [
+            0.36,
+            0.5
+          ],
+          "polygon": [
+            [
+              0.24,
+              1
+            ],
+            [
+              0.51,
+              1
+            ],
+            [
+              0.51,
+              0
+            ],
+            [
+              0.24,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.36,
+              0.57
+            ],
+            [
+              0.38,
+              0.41
+            ]
+          ]
+        },
+        {
+          "id": "main-loukas",
+          "word": "Άγιος Λουκάς",
+          "prompt": "Ιατρός και επίσκοπος",
+          "hint": "Ιατρός και επίσκοπος",
+          "sourceId": "saint-luke-biography",
+          "at": [
+            0.63,
+            0.215
+          ],
+          "origin": [
+            0.61,
+            0.55
+          ],
+          "polygon": [
+            [
+              0.51,
+              1
+            ],
+            [
+              0.77,
+              1
+            ],
+            [
+              0.77,
+              0
+            ],
+            [
+              0.51,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.61,
+              0.61
+            ],
+            [
+              0.61,
+              0.44
+            ]
+          ]
+        },
+        {
+          "id": "main-omoiosi",
+          "word": "Καθ’ ομοίωση",
+          "prompt": "Η πορεία μας",
+          "hint": "Πορεία προς Θεό",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.88,
+            0.215
+          ],
+          "origin": [
+            0.89,
+            0.47
+          ],
+          "polygon": [
+            [
+              0.77,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0.77,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.9,
+              0.68
+            ],
+            [
+              0.89,
+              0.43
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eikona",
+      "title": "Κατ’ εικόνα",
+      "imageId": "eikona",
+      "root": [
+        0.5,
+        0.04
+      ],
+      "stations": [
+        {
+          "id": "eikona-unity",
+          "word": "Σώμα και ψυχή",
+          "prompt": "Ενιαίος άνθρωπος",
+          "hint": "Δημιουργία ταυτόχρονα",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.15,
+            0.11
+          ],
+          "origin": [
+            0.14,
+            0.52
+          ],
+          "polygon": [
+            [
+              0,
+              1
+            ],
+            [
+              0.255,
+              1
+            ],
+            [
+              0.255,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.14,
+              0.76
+            ],
+            [
+              0.14,
+              0.32
+            ]
+          ]
+        },
+        {
+          "id": "eikona-reason",
+          "word": "Λογική σκέψη",
+          "prompt": "Σκέφτομαι, κατανοώ",
+          "hint": "Σκέψη και κρίση",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.5,
+            0.11
+          ],
+          "origin": [
+            0.49,
+            0.45
+          ],
+          "polygon": [
+            [
+              0.255,
+              1
+            ],
+            [
+              0.682,
+              1
+            ],
+            [
+              0.682,
+              0
+            ],
+            [
+              0.255,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.47,
+              0.75
+            ],
+            [
+              0.48,
+              0.44
+            ]
+          ]
+        },
+        {
+          "id": "eikona-freedom",
+          "word": "Ελευθερία",
+          "prompt": "Επιλέγω πορεία",
+          "hint": "Επιλέγω υπεύθυνα",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.85,
+            0.11
+          ],
+          "origin": [
+            0.81,
+            0.52
+          ],
+          "polygon": [
+            [
+              0.682,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0.682,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.81,
+              0.64
+            ],
+            [
+              0.84,
+              0.37
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talanta",
+      "title": "Τάλαντα",
+      "imageId": "talanta",
+      "root": [
+        0.5,
+        0.04
+      ],
+      "stations": [
+        {
+          "id": "talanta-trust",
+          "word": "Εμπιστοσύνη",
+          "prompt": "Το δοσμένο ποσό",
+          "hint": "Το παραδομένο ποσό",
+          "sourceId": "parable-user",
+          "at": [
+            0.15,
+            0.11
+          ],
+          "origin": [
+            0.18,
+            0.5
+          ],
+          "polygon": [
+            [
+              0,
+              1
+            ],
+            [
+              0.335,
+              1
+            ],
+            [
+              0.335,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.08,
+              0.71
+            ],
+            [
+              0.25,
+              0.66
+            ],
+            [
+              0.17,
+              0.46
+            ]
+          ]
+        },
+        {
+          "id": "talanta-cultivation",
+          "word": "Καλλιέργεια",
+          "prompt": "Κόπος και καρπός",
+          "hint": "Κόπος και αξιοποίηση",
+          "sourceId": "parable-user",
+          "at": [
+            0.5,
+            0.11
+          ],
+          "origin": [
+            0.51,
+            0.45
+          ],
+          "polygon": [
+            [
+              0.335,
+              1
+            ],
+            [
+              0.68,
+              1
+            ],
+            [
+              0.68,
+              0
+            ],
+            [
+              0.335,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.54,
+              0.65
+            ],
+            [
+              0.55,
+              0.42
+            ]
+          ]
+        },
+        {
+          "id": "talanta-inaction",
+          "word": "Αδράνεια",
+          "prompt": "Το κρυμμένο ποσό",
+          "hint": "Κρυμμένο στη γη",
+          "sourceId": "parable-user",
+          "at": [
+            0.86,
+            0.26
+          ],
+          "origin": [
+            0.85,
+            0.24
+          ],
+          "polygon": [
+            [
+              0.68,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0.68,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.86,
+              0.55
+            ],
+            [
+              0.86,
+              0.17
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "loukas",
+      "title": "Άγιος Λουκάς",
+      "imageId": "loukas",
+      "root": [
+        0.5,
+        0.04
+      ],
+      "stations": [
+        {
+          "id": "loukas-knowledge",
+          "word": "Γνώση",
+          "prompt": "Μελετώ, μαθαίνω",
+          "hint": "Μελέτη, ιατρική",
+          "sourceId": "saint-luke-biography",
+          "at": [
+            0.15,
+            0.11
+          ],
+          "origin": [
+            0.19,
+            0.32
+          ],
+          "polygon": [
+            [
+              0,
+              1
+            ],
+            [
+              0.325,
+              1
+            ],
+            [
+              0.325,
+              0.37
+            ],
+            [
+              0.399,
+              0.2
+            ],
+            [
+              0.425,
+              0.085
+            ],
+            [
+              0.35,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.19,
+              0.6
+            ],
+            [
+              0.2,
+              0.23
+            ]
+          ]
+        },
+        {
+          "id": "loukas-faith",
+          "word": "Πίστη",
+          "prompt": "Πριν την επέμβαση",
+          "hint": "Προσευχή πριν δράσω",
+          "sourceId": "saint-luke-biography",
+          "at": [
+            0.5,
+            0.11
+          ],
+          "origin": [
+            0.49,
+            0.53
+          ],
+          "polygon": [
+            [
+              0.325,
+              1
+            ],
+            [
+              0.66,
+              1
+            ],
+            [
+              0.66,
+              0
+            ],
+            [
+              0.35,
+              0
+            ],
+            [
+              0.425,
+              0.085
+            ],
+            [
+              0.399,
+              0.2
+            ],
+            [
+              0.325,
+              0.37
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.42,
+              0.72
+            ],
+            [
+              0.56,
+              0.75
+            ],
+            [
+              0.43,
+              0.38
+            ]
+          ]
+        },
+        {
+          "id": "loukas-offering",
+          "word": "Προσφορά",
+          "prompt": "Δίπλα στον ασθενή",
+          "hint": "Φροντίδα του άλλου",
+          "sourceId": "saint-luke-biography",
+          "at": [
+            0.85,
+            0.11
+          ],
+          "origin": [
+            0.84,
+            0.47
+          ],
+          "polygon": [
+            [
+              0.66,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0.66,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.8,
+              0.64
+            ],
+            [
+              0.94,
+              0.5
+            ],
+            [
+              0.83,
+              0.35
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "omoiosi",
+      "title": "Καθ’ ομοίωση",
+      "imageId": "omoiosi",
+      "root": [
+        0.5,
+        0.04
+      ],
+      "stations": [
+        {
+          "id": "omoiosi-virtues",
+          "word": "Αρετές",
+          "prompt": "Στηρίζω τον άλλον",
+          "hint": "Αγάπη στην πράξη",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.15,
+            0.11
+          ],
+          "origin": [
+            0.2,
+            0.52
+          ],
+          "polygon": [
+            [
+              0,
+              1
+            ],
+            [
+              0.34,
+              1
+            ],
+            [
+              0.34,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.1,
+              0.52
+            ],
+            [
+              0.22,
+              0.6
+            ],
+            [
+              0.17,
+              0.49
+            ]
+          ]
+        },
+        {
+          "id": "omoiosi-grace",
+          "word": "Χάρη",
+          "prompt": "Το θεϊκό δώρο",
+          "hint": "Δώρο του Θεού",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.5,
+            0.11
+          ],
+          "origin": [
+            0.49,
+            0.58
+          ],
+          "polygon": [
+            [
+              0.34,
+              1
+            ],
+            [
+              0.68,
+              1
+            ],
+            [
+              0.68,
+              0
+            ],
+            [
+              0.34,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.49,
+              0.8
+            ],
+            [
+              0.48,
+              0.5
+            ]
+          ]
+        },
+        {
+          "id": "omoiosi-life",
+          "word": "Θεία ζωή",
+          "prompt": "Μαζί προς Θεό",
+          "hint": "Κοινωνία με Θεό",
+          "sourceId": "creation-worksheet",
+          "at": [
+            0.85,
+            0.11
+          ],
+          "origin": [
+            0.87,
+            0.57
+          ],
+          "polygon": [
+            [
+              0.68,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0.68,
+              0
+            ]
+          ],
+          "semanticPoints": [
+            [
+              0.89,
+              0.62
+            ],
+            [
+              0.81,
+              0.43
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "eikona",
+      "word": "Κατ’ εικόνα",
+      "mainStationId": "main-eikona",
+      "sceneId": "eikona"
+    },
+    {
+      "id": "talanta",
+      "word": "Παραβολή των Ταλάντων",
+      "mainStationId": "main-talanta",
+      "sceneId": "talanta"
+    },
+    {
+      "id": "loukas",
+      "word": "Άγιος Λουκάς",
+      "mainStationId": "main-loukas",
+      "sceneId": "loukas"
+    },
+    {
+      "id": "omoiosi",
+      "word": "Καθ’ ομοίωση",
+      "mainStationId": "main-omoiosi",
+      "sceneId": "omoiosi"
+    }
+  ],
+  "bridges": [
+    {
+      "groupId": "eikona",
+      "word": "Ελευθερία",
+      "at": [
+        0.225,
+        0.44
+      ]
+    },
+    {
+      "groupId": "talanta",
+      "word": "Ευθύνη",
+      "at": [
+        0.485,
+        0.44
+      ]
+    },
+    {
+      "groupId": "loukas",
+      "word": "Προσφορά",
+      "at": [
+        0.748,
+        0.44
+      ]
+    }
+  ],
+  "finalQuestion": "Ποια δυνατότητά σου μπορείς να καλλιεργήσεις και να προσφέρεις στους άλλους; Σύνδεσε το παράδειγμά σου με τα Τάλαντα, τον Άγιο Λουκά και την πορεία προς το καθ’ ομοίωση.",
+  "sources": [
+    {
+      "id": "creation-worksheet",
+      "title": "Δημιουργία του ανθρώπου",
+      "path": "sources/creation-worksheet.txt",
+      "kind": "provided-worksheet-pedagogical-rendering",
+      "note": "Διδακτική απόδοση της διδασκαλίας του Αγίου Ιωάννη του Δαμασκηνού, όχι αυτούσιο πατερικό παράθεμα."
+    },
+    {
+      "id": "parable-user",
+      "title": "Μτ 25, 14–30",
+      "path": "sources/parable-user.txt",
+      "kind": "provided-biblical-excerpt",
+      "note": "Στο αρχικό κείμενο το τάλαντο είναι χρηματικό ποσό. Η σύνδεση με ανθρώπινες δυνατότητες αποτελεί διδακτική γέφυρα."
+    },
+    {
+      "id": "saint-luke-biography",
+      "title": "Άγιος Λουκάς ο Ιατρός",
+      "path": "sources/saint-luke-biography.txt",
+      "kind": "provided-biography",
+      "note": "Οι σκηνές είναι συμβολικές διδακτικές αποδόσεις της δοσμένης βιογραφίας."
+    }
+  ]
+}
