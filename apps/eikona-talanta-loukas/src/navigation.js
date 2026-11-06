@@ -151,13 +151,14 @@ export class Navigation {
     if (this.travel.lengthSq() > 1) this.travel.normalize();
     this.travel.multiplyScalar(3.0 * Math.min(dt, 0.04));
     const p = this.camera.position;
-    if (allowedPosition(p.x + this.travel.x, p.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable)) p.x += this.travel.x;
-    if (allowedPosition(p.x, p.z + this.travel.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable)) p.z += this.travel.z;
+    if (allowedPosition(p.x + this.travel.x, p.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable) && this.hooks.canWalk?.(p.x + this.travel.x,p.z) !== false) p.x += this.travel.x;
+    if (allowedPosition(p.x, p.z + this.travel.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable) && this.hooks.canWalk?.(p.x,p.z + this.travel.z) !== false) p.z += this.travel.z;
   }
   goTo(station) {
     const [x, z] = station.landing;
     this.camera.position.set(x, 1.65, z);
-    this.camera.lookAt(station.position[0], 1.85, station.position[1]);
+    this.camera.lookAt(station.position[0], station.lookHeight ?? 1.0, station.position[1]);
+    this.clearTouchWalk();
     this.keys.clear();
   }
 }

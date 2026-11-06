@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { batchStatic } from './batch-static.js';
+import { courtyardRiver } from './river-bridge.js';
 
 const palette = { stone: 0xe3c38e, pale: 0xf3ddb0, edge: 0xc5a16b, wood: 0x815b37, green: 0x628849, gold: 0xd4a64a };
-export function buildCourtyard(scene, theme = 'talanta') {
+export function buildCourtyard(scene, theme = 'talanta', quiz = null) {
   let seed = 1807;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const materials = new Map();
@@ -28,17 +29,22 @@ export function buildCourtyard(scene, theme = 'talanta') {
   // The walkable courtyard is genuine geometry; the reference illustration is
   // used for art direction, never stretched around the camera as a panorama.
   box(24, 0.7, 22, 0, -0.48, 0, 0xb6a172);
-  box(23, 0.12, 21, 0, -0.06, 0, palette.stone);
+  if (quiz) {
+    box(23,.12,6.5,0,-.06,7.25,palette.stone);
+    for (const [x,width] of [[-7.6,7.8],[0,5.2],[7.6,7.8]]) box(width,.12,12.5,x,-.06,-4.25,palette.stone);
+  } else box(23, 0.12, 21, 0, -0.06, 0, palette.stone);
   const slabGeo = new THREE.BoxGeometry(0.93, 0.045, 0.93);
   const slabs = new THREE.InstancedMesh(slabGeo, mat(0xffffff), 23 * 21);
   const matrix = new THREE.Matrix4(), color = new THREE.Color();
   let index = 0;
   for (let x = -11; x <= 11; x++) for (let z = -10; z <= 10; z++) {
+    if (quiz && ((z > 1.5 && z < 4.5) || (z < 2.5 && Math.abs(Math.abs(x)-3.15)<1))) continue;
     matrix.makeTranslation(x + (z % 2 ? 0.035 : -0.035), 0.001 + random() * 0.008, z);
     slabs.setMatrixAt(index, matrix);
     color.setHSL(0.107 + random() * 0.018, 0.32 + random() * 0.13, 0.67 + random() * 0.08);
     slabs.setColorAt(index++, color);
   }
+  slabs.count = index;
   slabs.receiveShadow = true; scene.add(slabs);
   for (const x of [-11.6, 11.6]) {
     box(0.45, 0.8, 20.8, x, 0.4, 0, palette.edge);
@@ -68,15 +74,19 @@ export function buildCourtyard(scene, theme = 'talanta') {
   }
 
   // Fountain, benches and a lectern-sized table are ordinary 3D props.
-  cylinder(1.15, 1.28, 0.35, 0, 0.175, 2.7, palette.edge, 32);
-  cylinder(1.1, 1.1, 0.12, 0, 0.39, 2.7, palette.pale, 32);
-  const fountainWater = cylinder(0.99, 0.99, 0.018, 0, 0.46, 2.7, 0x4eb7af, 48);
+  const fountainX = quiz ? 8 : 0;
+  const fountainZ = quiz ? .2 : 2.7;
+  const tableX = quiz ? -8 : -3.1;
+  const tableZ = quiz ? .6 : 4.3;
+  cylinder(1.15, 1.28, 0.35, fountainX, 0.175, fountainZ, palette.edge, 32);
+  cylinder(1.1, 1.1, 0.12, fountainX, 0.39, fountainZ, palette.pale, 32);
+  const fountainWater = cylinder(0.99, 0.99, 0.018, fountainX, 0.46, fountainZ, 0x4eb7af, 48);
   fountainWater.material = new THREE.MeshStandardMaterial({ color: 0x43aca7, roughness: 0.23, metalness: 0.24 });
-  cylinder(0.22, 0.35, 0.65, 0, 0.71, 2.7, palette.stone, 12);
-  cylinder(0.55, 0.15, 0.19, 0, 1.12, 2.7, palette.pale, 24);
+  cylinder(0.22, 0.35, 0.65, fountainX, 0.71, fountainZ, palette.stone, 12);
+  cylinder(0.55, 0.15, 0.19, fountainX, 1.12, fountainZ, palette.pale, 24);
   const droplets = [];
   for (let i = 0; i < 12; i++) {
-    const d = mesh(new THREE.SphereGeometry(0.035, 5, 4), mat(0x8be0d5), 0, 1.15, 2.7);
+    const d = mesh(new THREE.SphereGeometry(0.035, 5, 4), mat(0x8be0d5), fountainX, 1.15, fountainZ);
     d.castShadow = false; droplets.push(d);
   }
   for (const x of [-8, 8]) {
@@ -84,9 +94,9 @@ export function buildCourtyard(scene, theme = 'talanta') {
     box(0.37, 0.6, 0.57, x - 0.85, 0.3, 5.5, palette.stone);
     box(0.37, 0.6, 0.57, x + 0.85, 0.3, 5.5, palette.stone);
   }
-  box(1.8, 0.13, 0.85, -3.1, 0.98, 4.3, 0xaa7845);
-  for (const dx of [-0.65, 0.65]) for (const dz of [-0.27, 0.27]) box(0.12, 0.88, 0.12, -3.1 + dx, 0.47, 4.3 + dz, palette.wood);
-  for (let i = 0; i < 5; i++) cylinder(0.11, 0.11, 0.035, -3.5 + (i % 3) * 0.26, 1.08 + Math.floor(i / 3) * 0.04, 4.3, palette.gold, 12);
+  box(1.8, 0.13, 0.85, tableX, 0.98, tableZ, 0xaa7845);
+  for (const dx of [-0.65, 0.65]) for (const dz of [-0.27, 0.27]) box(0.12, 0.88, 0.12, tableX + dx, 0.47, tableZ + dz, palette.wood);
+  for (let i = 0; i < 5; i++) cylinder(0.11, 0.11, 0.035, tableX - .4 + (i % 3) * 0.26, 1.08 + Math.floor(i / 3) * 0.04, tableZ, palette.gold, 12);
 
   const leaves = [];
   const tree = (x, z, scale = 1) => {
@@ -139,25 +149,29 @@ export function buildCourtyard(scene, theme = 'talanta') {
   const roof2 = mesh(new THREE.ConeGeometry(1.15, 0.8, 4), mat(0xb77c51), 0, 7.4, 0, house); roof2.rotation.y = Math.PI / 4;
 
   const obstacles = [
-    { type: 'circle', x: 0, z: 2.7, radius: 1.32 },
+    { type: 'circle', x: fountainX, z: fountainZ, radius: 1.32 },
     { type: 'circle', x: -9.3, z: -0.2, radius: 1.4 },
     { type: 'circle', x: 9.4, z: 3, radius: 1.1 },
-    { type: 'box', minX: -4.1, maxX: -2.1, minZ: 3.8, maxZ: 4.8 },
+    { type: 'box', minX: tableX-1, maxX: tableX+1, minZ: tableZ-.5, maxZ: tableZ+.5 },
     ...[-8, 8].map(x => ({ type: 'box', minX: x - 1.3, maxX: x + 1.3, minZ: 5.0, maxZ: 6.0 })),
     ...[[-6.3, -3.5], [0, -6.3], [6.3, -3.5]].map(([x, z]) => ({ type: 'circle', x, z, radius: 0.9 })),
     ...potLocations.map(([x, z]) => ({ type: 'circle', x, z, radius: 0.51 })),
   ];
-  batchStatic(scene, new Set([...leaves.map(l => l.mesh), ...droplets]));
+  const river = quiz ? courtyardRiver(scene, quiz.progress, quiz.segments) : null;
+  batchStatic(scene, new Set([...leaves.map(l => l.mesh), ...droplets, ...(river?.bridges.flatMap(b=>[...b.exclude]) || [])]));
   return {
-    obstacles,
-    update(time, reduced) {
+    obstacles, river, approaches: river?.approaches,
+    onLand(x,z) { return river?.onLand(x,z) ?? true; },
+    canWalk(x,z) { return river?.canWalk(x,z) ?? true; },
+    update(time, reduced, count = quiz?.progress || 0, dt = 0) {
+      river?.update(time,count,dt,reduced);
       sea.uniforms.uTime.value = reduced ? 0 : time;
       if (!reduced) {
         leaves.forEach(l => { l.mesh.rotation.z = l.base + Math.sin(time * 0.7 + l.phase) * 0.025; });
         droplets.forEach((d, i) => {
           const t = (time * 0.65 + i / droplets.length) % 1;
           const a = i * 2.4;
-          d.position.set(Math.cos(a) * t * 0.5, 1.19 - t * t * 0.67, 2.7 + Math.sin(a) * t * 0.5);
+          d.position.set(fountainX + Math.cos(a) * t * 0.5, 1.19 - t * t * 0.67, fountainZ + Math.sin(a) * t * 0.5);
         });
       }
     },

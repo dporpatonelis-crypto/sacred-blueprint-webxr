@@ -24,10 +24,10 @@ function panelTexture(text, { dark = false, selected = false, solved = false, sm
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4; return texture;
 }
-function setText(mesh, text, options) {
+export function setText(mesh, text, options) {
   mesh.material.map?.dispose(); mesh.material.map = panelTexture(text, { ...options, aspect: mesh.userData.panelAspect }); mesh.material.needsUpdate = true;
 }
-function panel(text, width, height, action, options = {}) {
+export function panel(text, width, height, action, options = {}) {
   const result = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: panelTexture(text, { ...options, aspect: width / height }), transparent: true, side: THREE.DoubleSide, toneMapped: false }));
   result.userData.panelAspect = width / height;
   if (action) result.userData.action = action;

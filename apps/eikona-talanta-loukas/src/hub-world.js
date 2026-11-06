@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { batchStatic } from './batch-static.js';
+import { risingBridge, stationApproach } from './river-bridge.js';
 
-export function buildHub(scene, config) {
+export function buildHub(scene, config, quiz = null) {
   scene.background = new THREE.Color(0xb9e2ec);
   scene.fog = new THREE.Fog(0xc4e4e4, 42, 130);
   scene.add(new THREE.HemisphereLight(0xe5f4ff, 0x8c9b52, 2.4));
@@ -41,25 +42,12 @@ export function buildHub(scene, config) {
       for (let j = 0; j < 3; j++) add(new THREE.SphereGeometry(0.06, 5, 4), [0xf5d96a, 0xf4c99c, 0xe6e7a0][j], bx + (random() - 0.5) * 0.35, 0.68, bz + (random() - 0.5) * 0.35);
     }
   });
-  // The five real bridges follow the same corridors as the collision model.
-  for (const path of config.walkable.paths) {
-    const a = new THREE.Vector3(path.from[0], 0, path.from[1]), b = new THREE.Vector3(path.to[0], 0, path.to[1]);
-    const direction = b.clone().sub(a), fullLength = direction.length(); direction.normalize();
-    const length = Math.max(0.5, fullLength - 5.8);
-    const root = new THREE.Group(); root.position.copy(a.clone().add(b).multiplyScalar(0.5)); root.rotation.y = Math.atan2(direction.x, direction.z); scene.add(root);
-    add(new THREE.BoxGeometry(2.16, 0.16, length), 0xd9c28f, 0, 0.18, 0, root);
-    for (let i = 0; i <= Math.ceil(length / 0.8); i++) {
-      const z = -length / 2 + i * length / Math.ceil(length / 0.8);
-      add(new THREE.BoxGeometry(2.18, 0.025, 0.04), 0xb7a478, 0, 0.271, z, root);
-    }
-    for (const x of [-1.08, 1.08]) {
-      add(new THREE.BoxGeometry(0.18, 0.22, length + 0.1), 0xe8d4a7, x, 0.96, 0, root);
-      const posts = Math.max(2, Math.ceil(length / 1.4));
-      for (let i = 0; i <= posts; i++) add(new THREE.BoxGeometry(0.22, 0.81, 0.22), 0xd4b47a, x, 0.6, -length / 2 + i / posts * length, root);
-      const arch = add(new THREE.TorusGeometry(length / 2, 0.17, 6, 24, Math.PI), 0xbfa16e, x, -0.8, 0, root);
-      arch.rotation.y = Math.PI / 2; arch.scale.y = 0.15;
-    }
-  }
+  const segments = quiz?.segments || 4, progress = quiz?.progress ?? segments;
+  const bridges = config.walkable.paths.map((path,index) => risingBridge(scene, {
+    from: path.from, to: path.to, width: path.width - .04, segments: 1, inset: 2.9, progress: index === 0 || progress >= index ? 1 : 0,
+  }));
+  const approaches = config.stations.map((station,index)=>stationApproach(bridges[index],
+    (x,z)=>Math.hypot(x-station.position[0],z-station.position[1])<=3.8));
   // Olive trees sit away from all landing points and the learning tableaux.
   for (const [x, z] of [[-12.5, -4.4], [-5.7, -13.2], [6.8, -13.3], [13.4, -4.8], [-2.4, 9.0]]) {
     add(new THREE.CylinderGeometry(0.13, 0.3, 2.6, 8), 0x80633e, x, 1.35, z);
@@ -82,6 +70,17 @@ export function buildHub(scene, config) {
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(180, 180), water); sea.rotation.x = -Math.PI / 2; sea.position.y = -0.48; scene.add(sea);
   // The landscape is static: batch by material to keep flowers and bridge
   // detail inexpensive on both a desktop GPU and a headset.
-  batchStatic(scene);
-  return { obstacles, update(time, reduced) { water.uniforms.uTime.value = reduced ? 0 : time; } };
+  batchStatic(scene, new Set(bridges.flatMap(bridge => [...bridge.exclude])));
+  return {
+    obstacles, bridges, approaches,
+    onLand(x,z) { return config.walkable.circles.some(c=>Math.hypot(x-c.x,z-c.z)<=c.radius-.34); },
+    canWalk(x, z) {
+      if (config.walkable.circles.some(c => Math.hypot(x-c.x,z-c.z) <= c.radius-.34)) return true;
+      return bridges.some(bridge => bridge.allows(x,z));
+    },
+    update(time, reduced, count = progress, dt = 0) {
+      water.uniforms.uTime.value = reduced ? 0 : time;
+      bridges.forEach((bridge,index) => bridge.update(index === 0 || count >= index ? 1 : 0,dt,reduced));
+    },
+  };
 }

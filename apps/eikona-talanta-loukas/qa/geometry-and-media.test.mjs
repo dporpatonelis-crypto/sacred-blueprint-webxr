@@ -36,7 +36,8 @@ test('the hub bridges, spawn and landing points stay on navigable land and water
     assert.equal(allowed(x,z), true, `bridge ${x},${z}`);
   }
   assert.equal(allowed(0,0), false); assert.equal(allowed(-15,7), false);
-  let meshes=0;scene.traverse(o=>{if(o.isMesh)meshes++;});
+  const movingBridgeMeshes = new Set(environment.bridges.flatMap(b => [...b.exclude]));
+  let meshes=0;scene.traverse(o=>{if(o.isMesh && !movingBridgeMeshes.has(o))meshes++;});
   assert.ok(meshes < 50, 'static landscape details are batched for rendering');
 });
 
