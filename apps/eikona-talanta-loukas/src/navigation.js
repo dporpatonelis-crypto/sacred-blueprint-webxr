@@ -32,6 +32,11 @@ export class Navigation {
     this.forward = new THREE.Vector3();
     this.right = new THREE.Vector3();
     this.travel = new THREE.Vector3();
+    this.touchAxes = new THREE.Vector2();
+    this.touchPointer = null;
+    this.touchPad = document.getElementById('touch-walk');
+    this.touchBase = this.touchPad?.querySelector('.touch-walk-pad');
+    this.touchStick = document.getElementById('touch-walk-stick');
     this.spawn();
     document.addEventListener('keydown', e => {
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
@@ -41,8 +46,32 @@ export class Navigation {
       if (e.code === 'Escape') { this.keys.clear(); hooks.escape(); }
     });
     document.addEventListener('keyup', e => this.keys.delete(e.code));
-    window.addEventListener('blur', () => { this.keys.clear(); this.drag = null; });
-    document.addEventListener('visibilitychange', () => this.keys.clear());
+    window.addEventListener('blur', () => {
+      this.keys.clear(); this.drag = null; this.clearTouchWalk();
+    });
+    document.addEventListener('visibilitychange', () => {
+      this.keys.clear(); this.clearTouchWalk();
+    });
+    this.touchPad?.addEventListener('pointerdown', e => {
+      if (!this.enabled || renderer.xr.isPresenting || e.button !== 0 || this.touchPointer !== null) return;
+      e.preventDefault(); e.stopPropagation();
+      this.touchPointer = e.pointerId;
+      this.touchPad.setPointerCapture(e.pointerId);
+      this.updateTouchAxes(e);
+    });
+    this.touchPad?.addEventListener('pointermove', e => {
+      if (e.pointerId !== this.touchPointer) return;
+      e.preventDefault(); e.stopPropagation();
+      this.updateTouchAxes(e);
+    });
+    const stopTouchWalk = e => {
+      if (e.pointerId !== this.touchPointer) return;
+      e.preventDefault(); e.stopPropagation();
+      this.clearTouchWalk();
+    };
+    this.touchPad?.addEventListener('pointerup', stopTouchWalk);
+    this.touchPad?.addEventListener('pointercancel', stopTouchWalk);
+    this.touchPad?.addEventListener('lostpointercapture', stopTouchWalk);
     renderer.domElement.addEventListener('pointerdown', e => {
       if (!this.enabled || renderer.xr.isPresenting || e.button !== 0) return;
       if (this.controls.isLocked) { hooks.pick(null); return; }
@@ -74,15 +103,53 @@ export class Navigation {
     this.camera.position.set(this.world.spawn[0], 1.65, this.world.spawn[1]);
     this.camera.lookAt(...(this.world.lookAt || [0, 1.65, -5]));
     this.keys.clear();
+    this.clearTouchWalk();
+  }
+  clearTouchWalk() {
+    const pointerId = this.touchPointer;
+    this.touchPointer = null;
+    this.touchAxes.set(0, 0);
+    if (this.touchStick) this.touchStick.style.transform = '';
+    if (pointerId !== null && this.touchPad?.hasPointerCapture(pointerId)) {
+      this.touchPad.releasePointerCapture(pointerId);
+    }
+  }
+  updateTouchAxes(event) {
+    if (!this.touchBase) return;
+    const rect = this.touchBase.getBoundingClientRect();
+    const handleSize = this.touchStick?.getBoundingClientRect().width || 38;
+    const radius = Math.max(1, (Math.min(rect.width, rect.height) - handleSize) / 2 - 3);
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const length = Math.hypot(dx, dy);
+    const amount = Math.min(length / radius, 1);
+    const deadZone = 0.12;
+    const strength = amount <= deadZone ? 0 : (amount - deadZone) / (1 - deadZone);
+    this.touchAxes.set(
+      length ? dx / length * strength : 0,
+      length ? dy / length * strength : 0,
+    );
+    const offset = Math.min(length, radius);
+    const x = length ? dx / length * offset : 0;
+    const y = length ? dy / length * offset : 0;
+    if (this.touchStick) this.touchStick.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0)`;
   }
   update(dt) {
-    if (!this.enabled || this.renderer.xr.isPresenting) return;
-    const f = Number(this.keys.has('KeyW') || this.keys.has('ArrowUp')) - Number(this.keys.has('KeyS') || this.keys.has('ArrowDown'));
-    const r = Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) - Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft'));
-    if (!f && !r) return;
+    if (!this.enabled || this.renderer.xr.isPresenting) {
+      this.keys.clear();
+      this.clearTouchWalk();
+      return;
+    }
+    const f = Number(this.keys.has('KeyW') || this.keys.has('ArrowUp')) -
+      Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) - this.touchAxes.y;
+    const r = Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) -
+      Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft')) + this.touchAxes.x;
+    if (Math.abs(f) < 0.001 && Math.abs(r) < 0.001) return;
     this.camera.getWorldDirection(this.forward); this.forward.y = 0; this.forward.normalize();
     this.right.crossVectors(this.forward, this.camera.up).normalize();
-    this.travel.copy(this.forward).multiplyScalar(f).addScaledVector(this.right, r).normalize().multiplyScalar(3.0 * Math.min(dt, 0.04));
+    this.travel.copy(this.forward).multiplyScalar(f).addScaledVector(this.right, r);
+    if (this.travel.lengthSq() > 1) this.travel.normalize();
+    this.travel.multiplyScalar(3.0 * Math.min(dt, 0.04));
     const p = this.camera.position;
     if (allowedPosition(p.x + this.travel.x, p.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable)) p.x += this.travel.x;
     if (allowedPosition(p.x, p.z + this.travel.z, this.world.bounds, this.obstacles, 0.34, this.world.walkable)) p.z += this.travel.z;
