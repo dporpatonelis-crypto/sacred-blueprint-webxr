@@ -1,0 +1,410 @@
+{
+  "version": 2,
+  "animations": {
+    "hub-illness": {
+      "atlas": "media/hub-illness.webp",
+      "gif": null,
+      "source": "media/hub-illness.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "hub-old": {
+      "atlas": "media/hub-old.webp",
+      "gif": null,
+      "source": "media/hub-old.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "hub-new": {
+      "atlas": "media/hub-new.webp",
+      "gif": null,
+      "source": "media/hub-new.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "hub-church": {
+      "atlas": "media/hub-church.webp",
+      "gif": null,
+      "source": "media/hub-church.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "compassion": {
+      "atlas": "media/compassion.webp",
+      "gif": null,
+      "source": "media/compassion.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "corruption": {
+      "atlas": "media/corruption.webp",
+      "gif": null,
+      "source": "media/corruption.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "salvation": {
+      "atlas": "media/salvation.webp",
+      "gif": null,
+      "source": "media/salvation.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "healing": {
+      "atlas": "media/healing.webp",
+      "gif": null,
+      "source": "media/healing.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "abraham": {
+      "atlas": "media/abraham.webp",
+      "gif": null,
+      "source": "media/abraham.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "moses": {
+      "atlas": "media/moses.webp",
+      "gif": null,
+      "source": "media/moses.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "prophets": {
+      "atlas": "media/prophets.webp",
+      "gif": null,
+      "source": "media/prophets.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "promised": {
+      "atlas": "media/promised.webp",
+      "gif": null,
+      "source": "media/promised.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "miracles": {
+      "atlas": "media/miracles.webp",
+      "gif": null,
+      "source": "media/miracles.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "teaching": {
+      "atlas": "media/teaching.webp",
+      "gif": null,
+      "source": "media/teaching.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "passion": {
+      "atlas": "media/passion.webp",
+      "gif": null,
+      "source": "media/passion.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "resurrection": {
+      "atlas": "media/resurrection.webp",
+      "gif": null,
+      "source": "media/resurrection.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "eucharist": {
+      "atlas": "media/eucharist.webp",
+      "gif": null,
+      "source": "media/eucharist.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "kingdom": {
+      "atlas": "media/kingdom.webp",
+      "gif": null,
+      "source": "media/kingdom.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "dead": {
+      "atlas": "media/dead.webp",
+      "gif": null,
+      "source": "media/dead.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    },
+    "creation": {
+      "atlas": "media/creation.webp",
+      "gif": null,
+      "source": "media/creation.webp",
+      "frameCount": 1,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "columns": 1,
+      "rows": 1,
+      "margin": 0,
+      "spacing": 0,
+      "width": 512,
+      "height": 512,
+      "durations": [
+        1000
+      ],
+      "durationMs": 1000,
+      "chromaKey": null,
+      "generatedAs": "static-lesson-image"
+    }
+  },
+  "paths": {
+    "atlas": "relative to public/ and the published lesson URL",
+    "source": "relative to the source project root",
+    "gif": "relative to the source project root"
+  }
+}

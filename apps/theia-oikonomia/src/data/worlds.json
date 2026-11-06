@@ -1,0 +1,462 @@
+{
+  "main": {
+    "id": "main",
+    "kind": "hub",
+    "spawn": [
+      0,
+      10
+    ],
+    "lookAt": [
+      0,
+      1.9,
+      -7
+    ],
+    "bounds": {
+      "minX": -16,
+      "maxX": 16,
+      "minZ": -19,
+      "maxZ": 12
+    },
+    "skybox": "media/oikonomia-skybox.webp",
+    "stations": [
+      {
+        "id": "main-illness",
+        "number": 1,
+        "position": [
+          -10,
+          -3
+        ],
+        "landing": [
+          -10,
+          0.4
+        ],
+        "height": 2.8,
+        "asset": "hub-illness"
+      },
+      {
+        "id": "main-old",
+        "number": 2,
+        "position": [
+          -4,
+          -11
+        ],
+        "landing": [
+          -4,
+          -7.6
+        ],
+        "height": 2.2,
+        "asset": "hub-old"
+      },
+      {
+        "id": "main-new",
+        "number": 3,
+        "position": [
+          5,
+          -11
+        ],
+        "landing": [
+          5,
+          -7.6
+        ],
+        "height": 3,
+        "asset": "hub-new"
+      },
+      {
+        "id": "main-church",
+        "number": 4,
+        "position": [
+          11,
+          -3
+        ],
+        "landing": [
+          11,
+          0.4
+        ],
+        "height": 2.8,
+        "asset": "hub-church"
+      }
+    ],
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 7.5,
+          "radius": 4.1
+        },
+        {
+          "x": -10,
+          "z": -3,
+          "radius": 4
+        },
+        {
+          "x": -4,
+          "z": -11,
+          "radius": 4
+        },
+        {
+          "x": 5,
+          "z": -11,
+          "radius": 4
+        },
+        {
+          "x": 11,
+          "z": -3,
+          "radius": 4
+        }
+      ],
+      "paths": [
+        {
+          "from": [
+            0,
+            7.5
+          ],
+          "to": [
+            -10,
+            -3
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            -10,
+            -3
+          ],
+          "to": [
+            -4,
+            -11
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            -4,
+            -11
+          ],
+          "to": [
+            5,
+            -11
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            5,
+            -11
+          ],
+          "to": [
+            11,
+            -3
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            11,
+            -3
+          ],
+          "to": [
+            0,
+            7.5
+          ],
+          "width": 2.2
+        }
+      ]
+    },
+    "hubCenter": [
+      0,
+      7.5
+    ]
+  },
+  "illness": {
+    "id": "illness",
+    "kind": "focus",
+    "theme": "illness",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "bounds": {
+      "minX": -10.5,
+      "maxX": 10.5,
+      "minZ": -8,
+      "maxZ": 9
+    },
+    "stations": [
+      {
+        "id": "compassion",
+        "number": 1,
+        "position": [
+          -7.2,
+          -2.8
+        ],
+        "landing": [
+          -6.5,
+          1.5
+        ],
+        "height": 3.2,
+        "asset": "compassion"
+      },
+      {
+        "id": "corruption",
+        "number": 2,
+        "position": [
+          -2.7,
+          -6.2
+        ],
+        "landing": [
+          -2.2,
+          -1.8
+        ],
+        "height": 3,
+        "asset": "corruption"
+      },
+      {
+        "id": "salvation",
+        "number": 3,
+        "position": [
+          2.7,
+          -6.2
+        ],
+        "landing": [
+          2.2,
+          -1.8
+        ],
+        "height": 3.2,
+        "asset": "salvation"
+      },
+      {
+        "id": "healing",
+        "number": 4,
+        "position": [
+          7.2,
+          -2.8
+        ],
+        "landing": [
+          6.5,
+          1.5
+        ],
+        "height": 3,
+        "asset": "healing"
+      }
+    ]
+  },
+  "old": {
+    "id": "old",
+    "kind": "focus",
+    "theme": "old",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "bounds": {
+      "minX": -10.5,
+      "maxX": 10.5,
+      "minZ": -8,
+      "maxZ": 9
+    },
+    "stations": [
+      {
+        "id": "abraham",
+        "number": 1,
+        "position": [
+          -7.2,
+          -2.8
+        ],
+        "landing": [
+          -6.5,
+          1.5
+        ],
+        "height": 3.2,
+        "asset": "abraham"
+      },
+      {
+        "id": "moses",
+        "number": 2,
+        "position": [
+          -2.7,
+          -6.2
+        ],
+        "landing": [
+          -2.2,
+          -1.8
+        ],
+        "height": 3,
+        "asset": "moses"
+      },
+      {
+        "id": "prophets",
+        "number": 3,
+        "position": [
+          2.7,
+          -6.2
+        ],
+        "landing": [
+          2.2,
+          -1.8
+        ],
+        "height": 3.2,
+        "asset": "prophets"
+      },
+      {
+        "id": "promised",
+        "number": 4,
+        "position": [
+          7.2,
+          -2.8
+        ],
+        "landing": [
+          6.5,
+          1.5
+        ],
+        "height": 3,
+        "asset": "promised"
+      }
+    ]
+  },
+  "new": {
+    "id": "new",
+    "kind": "focus",
+    "theme": "new",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "bounds": {
+      "minX": -10.5,
+      "maxX": 10.5,
+      "minZ": -8,
+      "maxZ": 9
+    },
+    "stations": [
+      {
+        "id": "miracles",
+        "number": 1,
+        "position": [
+          -7.2,
+          -2.8
+        ],
+        "landing": [
+          -6.5,
+          1.5
+        ],
+        "height": 3.2,
+        "asset": "miracles"
+      },
+      {
+        "id": "teaching",
+        "number": 2,
+        "position": [
+          -2.7,
+          -6.2
+        ],
+        "landing": [
+          -2.2,
+          -1.8
+        ],
+        "height": 3,
+        "asset": "teaching"
+      },
+      {
+        "id": "passion",
+        "number": 3,
+        "position": [
+          2.7,
+          -6.2
+        ],
+        "landing": [
+          2.2,
+          -1.8
+        ],
+        "height": 3.2,
+        "asset": "passion"
+      },
+      {
+        "id": "resurrection",
+        "number": 4,
+        "position": [
+          7.2,
+          -2.8
+        ],
+        "landing": [
+          6.5,
+          1.5
+        ],
+        "height": 3,
+        "asset": "resurrection"
+      }
+    ]
+  },
+  "church": {
+    "id": "church",
+    "kind": "focus",
+    "theme": "church",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "bounds": {
+      "minX": -10.5,
+      "maxX": 10.5,
+      "minZ": -8,
+      "maxZ": 9
+    },
+    "stations": [
+      {
+        "id": "eucharist",
+        "number": 1,
+        "position": [
+          -7.2,
+          -2.8
+        ],
+        "landing": [
+          -6.5,
+          1.5
+        ],
+        "height": 3.2,
+        "asset": "eucharist"
+      },
+      {
+        "id": "kingdom",
+        "number": 2,
+        "position": [
+          -2.7,
+          -6.2
+        ],
+        "landing": [
+          -2.2,
+          -1.8
+        ],
+        "height": 3,
+        "asset": "kingdom"
+      },
+      {
+        "id": "dead",
+        "number": 3,
+        "position": [
+          2.7,
+          -6.2
+        ],
+        "landing": [
+          2.2,
+          -1.8
+        ],
+        "height": 3.2,
+        "asset": "dead"
+      },
+      {
+        "id": "creation",
+        "number": 4,
+        "position": [
+          7.2,
+          -2.8
+        ],
+        "landing": [
+          6.5,
+          1.5
+        ],
+        "height": 3,
+        "asset": "creation"
+      }
+    ]
+  }
+}
