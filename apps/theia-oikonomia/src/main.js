@@ -1,1347 +1,536 @@
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
-import lesson from './data/lesson.json';
 import './style.css';
+import worlds from './data/worlds.json' with { type: 'json' };
+import { LessonSession, lesson } from './session.js';
+import { buildCourtyard } from './world.js';
+import { buildHub } from './hub-world.js';
+import { Navigation } from './navigation.js';
+import { SpatialUI } from './spatial-ui.js';
+import { loadActors } from './actors.js';
 
 const $ = id => document.getElementById(id);
-const canvas = $('scene');
-const STORAGE_KEY = 'theia-oikonomia-webxr.v1';
-const MAP_URL = import.meta.env.BASE_URL + 'media/oikonomia-map.webp';
-const GROUPS = lesson.groups;
-const GROUP_BY_ID = new Map(GROUPS.map(group => [group.id, group]));
-const COLORS = { gold: 0xe3c16f, bright: 0xffe09b, green: 0xadc995, analogy: 0xd6a16f, old: 0xe0bf76, new: 0xb5c58b, church: 0x93c1b5 };
+document.getElementById('app').innerHTML = [
+  '<main id="stage" aria-label="Η διαδρομή της Θείας Οικονομίας">',
+  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή της Θείας Οικονομίας. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Οι κάρτες είναι διαθέσιμες και στον πλαϊνό πίνακα."></canvas>',
+  '<div class="vignette"></div>',
+  '<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><div><p class="eyebrow" id="scene-eyebrow">Τέσσερις νησίδες · 20 συνδέσεις</p><h1 id="journey-title">Θεία Οικονομία</h1></div></div>',
+  '<div class="top-actions"><div class="progress-pill" aria-label="Πρόοδος"><div id="global-dots" class="progress-dots" aria-hidden="true"><i></i><i></i><i></i></div><output id="progress">0 / 20</output></div><button class="tool icon" id="help-button" aria-label="Οδηγίες">?</button><button class="tool" id="back-hub" hidden>↩ Χάρτης</button><button class="tool" id="final-button" hidden>Χάρτης εννοιών</button><span id="vr-slot"></span></div></header>',
+  '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από την παρομοίωση στις τρεις φάσεις</p><h2 id="welcome-title">Η Θεία<br>Οικονομία.</h2><p>Ιατρική παρομοίωση · Παλαιά Διαθήκη · Καινή Διαθήκη · Εκκλησία.<br>Τέσσερις νησίδες, είκοσι φωτεινές συνδέσεις.</p><p class="welcome-note"><strong>Να θυμάσαι:</strong> η ασθένεια είναι παρομοίωση· οι φάσεις είναι τρεις.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Ή πήγαινε κατευθείαν σε κάθε σημείο.</p></div><div class="welcome-footer"><span>Φθορά → Σωτηρία</span><span>Τρεις φάσεις</span></div></section>',
+  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 4</span><div><span id="step-number" class="step-number">01</span><button id="hide-panel" class="panel-close" aria-label="Κλείσιμο καρτών">×</button></div></div><h2 id="lesson-prompt">Το δοσμένο ποσό</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
+  '<div id="reticle" aria-hidden="true"></div>',
+  '<div class="keyboard-guide" id="keyboard-guide" hidden><span class="normal-guide"><span class="desktop-controls"><kbd>W A S D</kbd> κίνηση <span class="dot">·</span> σύρε για ματιά <span class="desktop-hint">· <kbd>Tab</kbd> κάρτες</span></span><span class="touch-controls">Κράτησε και σύρε τον μοχλό για κίνηση <span class="dot">·</span> σύρε για ματιά</span></span><span class="locked-guide">Στόχευσε και πάτησε <span class="dot">·</span> <kbd>Esc</kbd> για κάρτες</span></div>',
+  '<div id="touch-walk" class="touch-walk" hidden role="group" aria-label="Χειριστήριο κίνησης αφής"><div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span class="touch-walk-stick" id="touch-walk-stick" aria-hidden="true"></span></div><span class="touch-walk-label">Κίνηση</span></div>',
+  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool paper" id="restore-panel">Κάρτες</button><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
+  '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
+  '</main>',
+  '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
+  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Σύνδεσε</dt><dd>Διάλεξε κάρτα και πάτησε τον φωτεινό στόχο, στον χώρο ή στον πίνακα.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Ακτίνα και trigger για επιλογή ή για τα σημεία στο δάπεδο. Joystick δεξιά/αριστερά για στροφή ανά 45°.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
+  '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 4 / 4</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Η ενότητα φωτίστηκε. Μπορείς να την παρατηρήσεις ξανά ή να επιστρέψεις στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
+  '<dialog id="final-dialog" class="mind-map-dialog" aria-labelledby="final-title"><p class="dialog-kicker" id="final-kicker">Η διαδρομή ολοκληρώθηκε · 20 / 20</p><h2 id="final-title">Ο νοητικός χάρτης της Θείας Οικονομίας</h2><section id="final-mind-map" class="mind-map" aria-label="Νοητικός χάρτης των τεσσάρων ενοτήτων"></section><p id="final-question" class="mind-map-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
+  '<div id="scene-loading" hidden role="status">Μετάβαση…</div>',
+].join('');
 
-const state = {
-  started: false,
-  mode: 'welcome',
-  currentGroupId: null,
-  selectedWord: null,
-  mainSolved: new Set(),
-  childSolved: Object.fromEntries(GROUPS.map(group => [group.id, new Set()])),
-  errors: {},
-  hints: new Set(),
-  sourceOpen: false,
-  feedback: '',
-  feedbackKind: '',
-};
+if (import.meta.env.VITE_COLLECTION_URL) {
+  const collectionLink = document.createElement('a');
+  collectionLink.className = 'dialog-button'; collectionLink.textContent = 'Όλοι οι κόσμοι';
+  collectionLink.href = import.meta.env.VITE_COLLECTION_URL;
+  document.querySelector('#help-dialog .dialog-actions').prepend(collectionLink);
+}
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
-renderer.setSize(window.innerWidth, window.innerHeight, false);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.xr.enabled = true;
-
+let storage = null;
+try { storage = window.localStorage; } catch {}
+const session = new LessonSession(storage);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x102027);
-scene.fog = new THREE.Fog(0x102027, 30, 90);
-const rig = new THREE.Group();
-scene.add(rig);
-const camera = new THREE.PerspectiveCamera(66, window.innerWidth / window.innerHeight, 0.08, 120);
-camera.position.set(0, 1.62, 0);
-camera.rotation.order = 'YXZ';
-rig.add(camera);
-
-const hemisphere = new THREE.HemisphereLight(0xe2eff0, 0x17231e, 2.0);
-scene.add(hemisphere);
-const sunlight = new THREE.DirectionalLight(0xffe2ac, 2.4);
-sunlight.position.set(-7, 12, 6);
-scene.add(sunlight);
-const beaconLight = new THREE.PointLight(0xffd677, 8, 16, 2);
-beaconLight.position.set(0, 2.3, 0.5);
-scene.add(beaconLight);
-
-const materialCache = new Map();
-function material(color, options = {}) {
-  const key = String(color) + JSON.stringify(options);
-  if (!materialCache.has(key)) materialCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.86, flatShading: true, ...options }));
-  return materialCache.get(key);
+const camera = new THREE.PerspectiveCamera(66, 1, 0.08, 180);
+const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas: $('scene'), antialias: true, powerPreference: 'high-performance' }); }
+catch (error) { fail('Ο browser δεν μπόρεσε να ανοίξει τη διαδρομή.'); throw error; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.16;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9);
+let world = worlds[session.sceneId], level = null, courtyard = null, spatial = null, actors = null;
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(), cameraPosition = new THREE.Vector3(), rotationMatrix = new THREE.Matrix4();
+let started = false, ready = false, changingScene = false, vrButton = null, revealTimer = 0, pendingFinal = false;
+let lastTime = performance.now(), lastProximity = null, hovered = null, motionOverride = null;
+let fpsTime = 0, fpsFrames = 0, desktopPose = null, turnLatched = false, teleportFlash = -1000;
+let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
+let worldCards = false;
+const preference = matchMedia('(prefers-reduced-motion: reduce)');
+const reducedMotion = () => motionOverride ?? preference.matches;
+const navigation = new Navigation(camera, renderer, world, [], {
+  pick: point => pickDesktop(point),
+  lock: locked => document.body.classList.toggle('pointer-locked', locked),
+  escape: () => {
+    if (session.selected) { session.selected = null; session.changed(false); }
+    document.body.classList.remove('panel-hidden');
+    setWorldCards(false);
+  },
+});
+const choiceButtons = new Map();
+function fail(message) { $('failure-text').textContent = message; $('failure-banner').hidden = false; }
+function visibleInHierarchy(object) {
+  for (let node = object; node; node = node.parent) if (!node.visible) return false;
+  return !object.userData.disabled;
 }
-function mesh(geometry, mat, x, y, z, parent = scene) {
-  const item = new THREE.Mesh(geometry, mat);
-  item.position.set(x, y, z);
-  item.castShadow = false;
-  item.receiveShadow = false;
-  parent.add(item);
-  return item;
+function hitFromRay(ray, includeTeleport = false) {
+  const objects = [...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
+  return ray.intersectObjects(objects, false).find(hit => hit.distance <= (includeTeleport ? 16 : 10)) || null;
 }
-
-const mapPanels = new Map();
-const mainMarkers = new Map();
-const childMarkers = new Map();
-const panelImageMeshes = [];
-const markerMeshes = [];
-const mapPickables = [];
-const mainLinks = new Map();
-const detailLinks = new Map();
-const mainLinkRoot = new THREE.Group();
-scene.add(mainLinkRoot);
-let mapTexture = null;
-let hudCanvas = null;
-let hudContext = null;
-let hudTexture = null;
-let hudRoot = null;
-let hudHitRoot = null;
-let hudPickables = [];
-let mapGroup = null;
-let activePointer = null;
-let movePointer = null;
-let touchVector = { x: 0, y: 0 };
-let lastFrame = 0;
-let sourceParagraph = 0;
-const keys = new Set();
-
-function roundedRect(ctx, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + width, y, x + width, y + height, r);
-  ctx.arcTo(x + width, y + height, x, y + height, r);
-  ctx.arcTo(x, y + height, x, y, r);
-  ctx.arcTo(x, y, x + width, y, r);
-  ctx.closePath();
-}
-
-function textTexture(text, options = {}) {
-  const width = options.canvasWidth || 768;
-  const height = options.canvasHeight || 160;
-  const canvas2d = document.createElement('canvas');
-  canvas2d.width = width;
-  canvas2d.height = height;
-  const ctx = canvas2d.getContext('2d');
-  ctx.clearRect(0, 0, width, height);
-  if (options.background) {
-    roundedRect(ctx, 4, 4, width - 8, height - 8, options.radius || 22);
-    ctx.fillStyle = options.background;
-    ctx.fill();
-    ctx.strokeStyle = options.border || '#d6bb796c';
-    ctx.lineWidth = options.borderWidth || 3;
-    ctx.stroke();
-  }
-  const lines = String(text).split('\n');
-  const fontSize = options.fontSize || 34;
-  ctx.font = (options.weight || 600) + ' ' + fontSize + 'px system-ui, sans-serif';
-  ctx.fillStyle = options.color || '#f4e8c9';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const lineHeight = options.lineHeight || fontSize * 1.2;
-  const startY = height / 2 - ((lines.length - 1) * lineHeight) / 2;
-  lines.forEach((line, index) => ctx.fillText(line, width / 2, startY + index * lineHeight, width - 42));
-  const texture = new THREE.CanvasTexture(canvas2d);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function textPlane(text, width, height, options = {}) {
-  const texture = textTexture(text, options);
-  const mat = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-    toneMapped: false,
-  });
-  return new THREE.Mesh(new THREE.PlaneGeometry(width, height), mat);
-}
-
-function createEnvironment() {
-  mesh(new THREE.CylinderGeometry(14, 14, 0.55, 64), material(0x1b2e30), 0, -0.31, -1.5);
-  const floorRing = mesh(new THREE.TorusGeometry(11.5, 0.055, 8, 100), material(0xc4a25e), 0, -0.015, -1.5);
-  floorRing.rotation.x = Math.PI / 2;
-  const innerRing = mesh(new THREE.TorusGeometry(5.3, 0.028, 8, 96), material(0x9e8a56), 0, -0.006, -1.5);
-  innerRing.rotation.x = Math.PI / 2;
-  const center = mesh(new THREE.CylinderGeometry(1.55, 1.9, 0.38, 16), material(0x324542), 0, 0.08, 0.4);
-  center.position.y = 0.08;
-  mesh(new THREE.CylinderGeometry(0.78, 1.04, 0.62, 12), material(0x9c8150), 0, 0.55, 0.4);
-  const orb = mesh(new THREE.IcosahedronGeometry(0.42, 1), new THREE.MeshBasicMaterial({ color: 0xffd576, toneMapped: false }), 0, 1.12, 0.4);
-  orb.userData.isBeacon = true;
-  const halo = mesh(new THREE.TorusGeometry(0.84, 0.025, 8, 56), new THREE.MeshBasicMaterial({ color: 0xf1d18d, transparent: true, opacity: 0.78, toneMapped: false }), 0, 1.14, 0.4);
-  halo.rotation.x = Math.PI / 2;
-
-  [-5.25, 5.25].forEach(x => {
-    const column = mesh(new THREE.CylinderGeometry(0.18, 0.26, 5.7, 10), material(0x806b48), x, 2.78, -8.12);
-    column.position.y = 2.78;
-    mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.22, 12), material(0xc0a166), x, 5.65, -8.12);
-    mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.22, 12), material(0xb59b68), x, -0.02, -8.12);
-  });
-  mesh(new THREE.BoxGeometry(10.95, 0.16, 0.25), material(0xb49a67), 0, 6.18, -8.12);
-
-  const dustPositions = [];
-  let seed = 7413;
-  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  for (let i = 0; i < 90; i++) {
-    const angle = random() * Math.PI * 2;
-    const radius = 6 + random() * 28;
-    dustPositions.push(Math.cos(angle) * radius, 0.6 + random() * 13, -6 - random() * 32);
-  }
-  const dustGeometry = new THREE.BufferGeometry();
-  dustGeometry.setAttribute('position', new THREE.Float32BufferAttribute(dustPositions, 3));
-  const dust = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: 0xd6c28e, size: 0.035, transparent: true, opacity: 0.48, sizeAttenuation: true }));
-  scene.add(dust);
-}
-
-function imageBounds(group) {
-  return group.imageBounds;
-}
-
-function pointInPanel(group, sourcePoint) {
-  const bounds = imageBounds(group);
-  const rx = (sourcePoint[0] - bounds[0]) / Math.max(1, bounds[2] - bounds[0]);
-  const ry = (sourcePoint[1] - bounds[1]) / Math.max(1, bounds[3] - bounds[1]);
-  return new THREE.Vector3((rx - 0.5) * PANEL_WIDTH, (0.5 - ry) * PANEL_HEIGHT, 0.16);
-}
-
-const PANEL_WIDTH = 4.24;
-const PANEL_HEIGHT = PANEL_WIDTH * 941 / 1672;
-const MAP_WIDTH = PANEL_WIDTH * 2 + 0.16;
-const MAP_HEIGHT = PANEL_HEIGHT * 2 + 0.16;
-const MAP_CENTER_Y = 3.78;
-const MAP_Z = -8.08;
-
-function createMarker(parent, group, id, index, sourcePoint, kind) {
-  const marker = new THREE.Group();
-  const local = pointInPanel(group, sourcePoint);
-  marker.position.copy(local);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 28), new THREE.MeshBasicMaterial({ color: COLORS.bright, transparent: true, opacity: 0.92, toneMapped: false }));
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), new THREE.MeshBasicMaterial({ color: COLORS.bright, toneMapped: false }));
-  ring.position.z = 0.04;
-  core.position.z = 0.07;
-  marker.add(ring, core);
-  const number = textPlane(String(index + 1).padStart(2, '0'), 0.42, 0.23, {
-    canvasWidth: 512,
-    canvasHeight: 256,
-    fontSize: 74,
-    color: '#fff1c8',
-    background: '#102027dd',
-    border: '#e5c77e',
-    borderWidth: 5,
-    radius: 64,
-  });
-  number.position.set(0, 0.28, 0.09);
-  marker.add(number);
-  marker.userData.action = kind === 'main'
-    ? { type: 'mainTarget', id: id }
-    : { type: 'childTarget', id: id, groupId: group.id };
-  marker.userData.ring = ring;
-  marker.userData.core = core;
-  marker.userData.index = index;
-  parent.add(marker);
-  marker.traverse(object => { if (object.isMesh) markerMeshes.push(object); });
-  return marker;
-}
-
-function createGroupPanels() {
-  const mapBacking = mesh(new THREE.BoxGeometry(MAP_WIDTH + 0.24, MAP_HEIGHT + 0.24, 0.28), material(0x18292a), 0, MAP_CENTER_Y, MAP_Z - 0.18);
-  mapBacking.userData.isMapFrame = true;
-  const border = mesh(new THREE.BoxGeometry(MAP_WIDTH + 0.38, MAP_HEIGHT + 0.38, 0.08), material(0xb69b64), 0, MAP_CENTER_Y, MAP_Z - 0.24);
-  border.userData.isMapFrame = true;
-
-  GROUPS.forEach(group => {
-    const bounds = imageBounds(group);
-    const centerX = (bounds[0] + bounds[2]) / 2;
-    const centerY = (bounds[1] + bounds[3]) / 2;
-    const home = new THREE.Vector3((centerX / 100 - 0.5) * MAP_WIDTH, MAP_CENTER_Y + (0.5 - centerY / 100) * MAP_HEIGHT, MAP_Z);
-    const panel = new THREE.Group();
-    panel.position.copy(home);
-    panel.userData.home = home.clone();
-    panel.userData.groupId = group.id;
-    panel.userData.frameMaterial = material(0x4b4738);
-    const frame = mesh(new THREE.BoxGeometry(PANEL_WIDTH + 0.08, PANEL_HEIGHT + 0.08, 0.12), panel.userData.frameMaterial, 0, 0, -0.025, panel);
-
-    const groupTexture = mapTexture.clone();
-    groupTexture.wrapS = THREE.ClampToEdgeWrapping;
-    groupTexture.wrapT = THREE.ClampToEdgeWrapping;
-    groupTexture.repeat.set((bounds[2] - bounds[0]) / 100, (bounds[3] - bounds[1]) / 100);
-    groupTexture.offset.set(bounds[0] / 100, 1 - bounds[3] / 100);
-    groupTexture.colorSpace = THREE.SRGBColorSpace;
-    groupTexture.needsUpdate = true;
-    const image = mesh(
-      new THREE.PlaneGeometry(PANEL_WIDTH, PANEL_HEIGHT),
-      new THREE.MeshBasicMaterial({ map: groupTexture, side: THREE.DoubleSide, toneMapped: false }),
-      0, 0, 0.055, panel,
-    );
-    image.userData.action = { type: 'panel', groupId: group.id };
-    panelImageMeshes.push(image);
-    mapPickables.push(image);
-
-    const label = textPlane(group.phaseLabel, PANEL_WIDTH, 0.32, {
-      canvasWidth: 1024,
-      canvasHeight: 128,
-      fontSize: 25,
-      color: group.role === 'analogy' ? '#f0c19a' : '#f5e7c4',
-      background: '#112329ef',
-      border: group.role === 'analogy' ? '#d6a16f' : '#d6bb79',
-      borderWidth: 3,
-      radius: 25,
-    });
-    label.position.set(0, PANEL_HEIGHT / 2 + 0.22, 0.055);
-    panel.add(label);
-
-    const mainMarker = createMarker(panel, group, group.id, GROUPS.indexOf(group), group.at, 'main');
-    mainMarkers.set(group.id, mainMarker);
-    mapPickables.push(...markerMeshes.slice(-3));
-
-    const childLineGroup = new THREE.Group();
-    panel.add(childLineGroup);
-    panel.userData.childLineGroup = childLineGroup;
-    group.children.forEach((child, index) => {
-      const marker = createMarker(panel, group, child.id, index, child.at, 'child');
-      childMarkers.set(group.id + ':' + child.id, marker);
-      mapPickables.push(...markerMeshes.slice(-3));
-    });
-    mapPanels.set(group.id, panel);
-    scene.add(panel);
-  });
-}
-
-function lineTube(parent, start, end, color, radius = 0.022, opacity = 0.88) {
-  const a = start.clone();
-  const b = end.clone();
-  const midpoint = a.clone().lerp(b, 0.5);
-  midpoint.z += 0.16;
-  const curve = new THREE.CatmullRomCurve3([a, midpoint, b]);
-  const line = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, 28, radius, 6, false),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, toneMapped: false }),
-  );
-  line.userData.pulseOffset = Math.random() * 3;
-  parent.add(line);
-  return line;
-}
-
-function createMainLink(groupId) {
-  if (mainLinks.has(groupId)) return;
-  const marker = mainMarkers.get(groupId);
-  if (!marker) return;
-  const endpoint = new THREE.Vector3();
-  marker.getWorldPosition(endpoint);
-  const root = new THREE.Vector3(0, MAP_CENTER_Y, MAP_Z + 0.16);
-  const link = lineTube(mainLinkRoot, root, endpoint, COLORS.gold, 0.027, 0.9);
-  mainLinks.set(groupId, link);
-}
-
-function createDetailLink(groupId, childId) {
-  const key = groupId + ':' + childId;
-  if (detailLinks.has(key)) return;
-  const panel = mapPanels.get(groupId);
-  const parentMarker = mainMarkers.get(groupId);
-  const childMarker = childMarkers.get(key);
-  if (!panel || !parentMarker || !childMarker) return;
-  const color = GROUP_BY_ID.get(groupId).role === 'analogy' ? COLORS.analogy : COLORS.gold;
-  const link = lineTube(panel.userData.childLineGroup, parentMarker.position.clone(), childMarker.position.clone(), color, 0.018, 0.86);
-  detailLinks.set(key, link);
-}
-
-function buildMindMap() {
-  mapGroup = new THREE.Group();
-  const board = mesh(new THREE.BoxGeometry(12.25, 5.55, 0.20), material(0x102126), 0, 3.92, -8.18, mapGroup);
-  board.userData.isMapFrame = true;
-  const edge = mesh(new THREE.BoxGeometry(12.45, 5.75, 0.08), material(0xc2a468), 0, 3.92, -8.31, mapGroup);
-  edge.userData.isMapFrame = true;
-  const rootLabel = textPlane('ΘΕΙΑ ΟΙΚΟΝΟΜΙΑ', 4.6, 0.55, {
-    canvasWidth: 1024, canvasHeight: 140, fontSize: 43, color: '#fff0c6',
-    background: '#263932', border: '#e4c67c', borderWidth: 4, radius: 28,
-  });
-  rootLabel.position.set(0, 6.39, -8.02);
-  mapGroup.add(rootLabel);
-  const subtitle = textPlane('Από τη φθορά προς τη σωτηρία · με ελεύθερη συνεργασία', 10.4, 0.34, {
-    canvasWidth: 1200, canvasHeight: 100, fontSize: 28, color: '#d7d3bf',
-    background: '#14282b', border: '#b7a16b', borderWidth: 3, radius: 18,
-  });
-  subtitle.position.set(0, 5.93, -8.02);
-  mapGroup.add(subtitle);
-
-  const columns = [-4.5, -1.5, 1.5, 4.5];
-  const categoryY = 5.16;
-  const childTopY = 4.32;
-  const columnWidth = 2.62;
-  const categoryCards = new Map();
-  const mapColors = { illness: COLORS.analogy, old: COLORS.old, new: COLORS.new, church: COLORS.church };
-  GROUPS.forEach((group, index) => {
-    const x = columns[index];
-    const roleText = group.role === 'analogy' ? 'ΑΣΘΕΝΕΙΑ · ΠΑΡΟΜΟΙΩΣΗ\nΟΧΙ ΦΑΣΗ' : group.phaseLabel;
-    const category = textPlane(roleText, columnWidth, 0.66, {
-      canvasWidth: 800, canvasHeight: 210, fontSize: group.role === 'analogy' ? 24 : 26,
-      color: group.role === 'analogy' ? '#ffe0c1' : '#f8edcf',
-      background: group.role === 'analogy' ? '#403229' : '#263a33',
-      border: '#' + mapColors[group.id].toString(16).padStart(6, '0'), borderWidth: 4, radius: 26,
-    });
-    category.position.set(x, categoryY, -8.02);
-    mapGroup.add(category);
-    categoryCards.set(group.id, category);
-    lineTube(mapGroup, new THREE.Vector3(0, 5.66, -8.04), new THREE.Vector3(x, categoryY + 0.35, -8.04), mapColors[group.id], 0.018, 0.85);
-    group.children.forEach((child, childIndex) => {
-      const y = childTopY - childIndex * 0.65;
-      const card = textPlane(child.word, columnWidth, 0.42, {
-        canvasWidth: 800, canvasHeight: 160, fontSize: 27,
-        color: '#e9e4d3', background: '#14282d', border: '#927f54', borderWidth: 3, radius: 22,
-      });
-      card.position.set(x, y, -8.02);
-      mapGroup.add(card);
-      lineTube(mapGroup, new THREE.Vector3(x, categoryY - 0.33, -8.03), new THREE.Vector3(x, y + 0.22, -8.03), mapColors[group.id], 0.012, 0.62);
-    });
-  });
-  const phasePath = new THREE.Group();
-  mapGroup.add(phasePath);
-  lineTube(phasePath, new THREE.Vector3(-1.5, 4.78, -8.01), new THREE.Vector3(1.5, 4.78, -8.01), COLORS.bright, 0.026, 0.88);
-  lineTube(phasePath, new THREE.Vector3(1.5, 4.78, -8.01), new THREE.Vector3(4.5, 4.78, -8.01), COLORS.bright, 0.026, 0.88);
-  const principle = textPlane('Πρόβλημα: φθορά και θάνατος     ·     Πρωτοβουλία: φιλανθρωπία     ·     Σκοπός: σωτηρία', 11.2, 0.36, {
-    canvasWidth: 1400, canvasHeight: 100, fontSize: 24, color: '#e4d2a8',
-    background: '#111f24', border: '#8d815f', borderWidth: 2, radius: 20,
-  });
-  principle.position.set(0, 1.62, -8.02);
-  mapGroup.add(principle);
-  mapGroup.visible = false;
-  scene.add(mapGroup);
-}
-
-function initHud() {
-  hudCanvas = document.createElement('canvas');
-  hudCanvas.width = 1024;
-  hudCanvas.height = 768;
-  hudContext = hudCanvas.getContext('2d');
-  hudTexture = new THREE.CanvasTexture(hudCanvas);
-  hudTexture.colorSpace = THREE.SRGBColorSpace;
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.92, 2.19),
-    new THREE.MeshBasicMaterial({ map: hudTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }),
-  );
-  hudRoot = new THREE.Group();
-  hudRoot.position.set(0, -0.78, -2.45);
-  hudRoot.add(panel);
-  hudHitRoot = new THREE.Group();
-  hudRoot.add(hudHitRoot);
-  hudRoot.visible = false;
-  camera.add(hudRoot);
-}
-
-function wrapLines(ctx, text, maxWidth, maxLines = 10) {
-  const words = String(text || '').split(/\s+/).filter(Boolean);
-  const lines = [];
-  let line = '';
-  for (const word of words) {
-    const next = line ? line + ' ' + word : word;
-    if (line && ctx.measureText(next).width > maxWidth) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  if (line) lines.push(line);
-  if (lines.length > maxLines) {
-    lines.length = maxLines;
-    lines[maxLines - 1] = lines[maxLines - 1].replace(/[.,;:]?$/, '…');
-  }
-  return lines;
-}
-
-function drawWrapped(ctx, text, x, y, maxWidth, lineHeight, maxLines = 8) {
-  const lines = wrapLines(ctx, text, maxWidth, maxLines);
-  lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
-  return y + lines.length * lineHeight;
-}
-
-function addHudHitbox(x, y, width, height, action) {
-  const planeWidth = 2.92;
-  const planeHeight = 2.19;
-  const hit = new THREE.Mesh(
-    new THREE.PlaneGeometry(width / 1024 * planeWidth, height / 768 * planeHeight),
-    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
-  );
-  hit.position.set(((x + width / 2) / 1024 - 0.5) * planeWidth, (0.5 - (y + height / 2) / 768) * planeHeight, 0.018);
-  hit.userData.action = action;
-  hudHitRoot.add(hit);
-  hudPickables.push(hit);
-}
-
-function clearHudHitboxes() {
-  for (const item of hudPickables) {
-    hudHitRoot.remove(item);
-    item.geometry.dispose();
-    item.material.dispose();
-  }
-  hudPickables = [];
-}
-
-function drawHudButton(ctx, rect, label, selected = false, complete = false) {
-  roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 18);
-  ctx.fillStyle = complete ? '#21372f' : selected ? '#403c30' : '#14282e';
-  ctx.fill();
-  ctx.lineWidth = selected ? 4 : 2;
-  ctx.strokeStyle = complete ? '#a8c995' : selected ? '#f3d48d' : '#a88f5b';
-  ctx.stroke();
-  ctx.font = '600 29px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = complete ? '#cce0b8' : selected ? '#ffe5a9' : '#f1e8d5';
-  const lines = wrapLines(ctx, label, rect.w - 34, 2);
-  const startY = rect.y + rect.h / 2 - ((lines.length - 1) * 34) / 2;
-  lines.forEach((line, index) => ctx.fillText(line, rect.x + rect.w / 2, startY + index * 34));
-}
-
-function activeGroup() {
-  return GROUP_BY_ID.get(state.currentGroupId) || null;
-}
-
-function currentPrompt() {
-  if (state.mode === 'main') {
-    const group = GROUPS.find(item => !state.mainSolved.has(item.id));
-    return group ? { kind: 'main', id: group.id, group, data: group } : null;
-  }
-  if (state.mode === 'detail') {
-    const group = activeGroup();
-    if (!group) return null;
-    const child = group.children.find(item => !state.childSolved[group.id].has(item.id));
-    return child ? { kind: 'detail', id: child.id, group, data: child } : null;
-  }
-  return null;
-}
-
-function currentWordChoices() {
-  if (state.mode === 'main') return GROUPS;
-  if (state.mode === 'detail') {
-    const group = activeGroup();
-    return group ? group.children.filter(child => !state.childSolved[group.id].has(child.id)) : [];
-  }
-  return [];
-}
-
-function hudReadingPages() {
-  const pages = [];
-  const prompt = currentPrompt();
-  if (prompt) {
-    pages.push({
-      title: 'Παραπομπή για την ερώτηση',
-      text: prompt.data.quote || prompt.group.quote,
-      note: prompt.data.source || prompt.group.source || 'Από το δοσμένο κείμενο',
-    });
-  }
-  lesson.sourceText.forEach((text, index) => pages.push({
-    title: 'Κείμενο μαθήματος · παράγραφος ' + (index + 1) + ' / ' + lesson.sourceText.length,
-    text,
-  }));
-  lesson.sourceNotes.forEach((text, index) => pages.push({
-    title: 'Σημείωση · ' + (index + 1) + ' / ' + lesson.sourceNotes.length,
-    text,
-  }));
-  return pages;
-}
-
-function drawHud() {
-  if (!hudContext) return;
-  clearHudHitboxes();
-  const ctx = hudContext;
-  ctx.clearRect(0, 0, 1024, 768);
-  const gradient = ctx.createLinearGradient(0, 0, 1024, 768);
-  gradient.addColorStop(0, 'rgba(12,28,34,0.97)');
-  gradient.addColorStop(1, 'rgba(22,43,43,0.96)');
-  roundedRect(ctx, 5, 5, 1014, 758, 25);
-  ctx.fillStyle = gradient;
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#d8bb765c';
-  ctx.stroke();
-
-  const total = solvedCount();
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = '650 19px system-ui, sans-serif';
-  ctx.fillStyle = '#dfbf7d';
-  ctx.fillText('SACRED BLUEPRINT  ·  ΘΕΙΑ ΟΙΚΟΝΟΜΙΑ', 42, 47);
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#f1dfa9';
-  ctx.fillText(total + ' / ' + lesson.totalConnections, 975, 47);
-  ctx.textAlign = 'left';
-  roundedRect(ctx, 815, 67, 160, 45, 13);
-  ctx.fillStyle = state.sourceOpen ? '#3e392e' : '#14292e';
-  ctx.fill();
-  ctx.strokeStyle = '#b49b63';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.font = '600 20px system-ui, sans-serif';
-  ctx.fillStyle = '#f0dfb8';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(state.sourceOpen ? 'Κλείσιμο κειμένου' : 'Κείμενο', 895, 89);
-  addHudHitbox(815, 67, 160, 45, { type: 'source' });
-
-  if (state.sourceOpen) {
-    const pages = hudReadingPages();
-    sourceParagraph = THREE.MathUtils.clamp(sourceParagraph, 0, pages.length - 1);
-    const page = pages[sourceParagraph];
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = '650 27px system-ui, sans-serif';
-    ctx.fillStyle = '#f4dfad';
-    ctx.fillText(page.title, 46, 162);
-    ctx.font = '24px system-ui, sans-serif';
-    ctx.fillStyle = '#e3e1d5';
-    drawWrapped(ctx, page.text, 48, 210, 925, 32, 13);
-    ctx.font = '18px system-ui, sans-serif';
-    ctx.fillStyle = '#c7b889';
-    if (page.note) drawWrapped(ctx, page.note, 48, 665, 900, 24, 2);
-    roundedRect(ctx, 48, 704, 220, 42, 11);
-    ctx.fillStyle = sourceParagraph > 0 ? '#192d31' : '#101e22';
-    ctx.fill();
-    ctx.strokeStyle = '#b69c61';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.font = '600 18px system-ui, sans-serif';
-    ctx.fillStyle = sourceParagraph > 0 ? '#efdcad' : '#8e9388';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('‹ Προηγούμενο', 158, 725);
-    addHudHitbox(48, 704, 220, 42, { type: 'sourcePrev' });
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#d9c99f';
-    ctx.fillText((sourceParagraph + 1) + ' / ' + pages.length, 512, 725);
-    roundedRect(ctx, 756, 704, 220, 42, 11);
-    ctx.fillStyle = sourceParagraph < pages.length - 1 ? '#192d31' : '#101e22';
-    ctx.fill();
-    ctx.strokeStyle = '#b69c61';
-    ctx.stroke();
-    ctx.font = '600 18px system-ui, sans-serif';
-    ctx.fillStyle = sourceParagraph < pages.length - 1 ? '#efdcad' : '#8e9388';
-    ctx.fillText('Επόμενο ›', 866, 725);
-    addHudHitbox(756, 704, 220, 42, { type: 'sourceNext' });
-    return;
-  }
-
-  if (state.mode === 'welcome') {
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = '36px Georgia, serif';
-    ctx.fillStyle = '#f5e5bf';
-    ctx.fillText('Το σχέδιο της Θείας Οικονομίας', 512, 224);
-    ctx.font = '24px system-ui, sans-serif';
-    ctx.fillStyle = '#c5d0ca';
-    drawWrapped(ctx, 'Τέσσερις κεντρικές συνδέσεις, δεκαέξι επιμέρους έννοιες και ένας τελικός mind map.', 112, 283, 800, 36, 3);
-    roundedRect(ctx, 274, 444, 476, 88, 18);
-    ctx.fillStyle = '#d8bd7c';
-    ctx.fill();
-    ctx.font = '700 29px system-ui, sans-serif';
-    ctx.fillStyle = '#142329';
-    ctx.fillText('Έναρξη διαδρομής', 512, 489);
-    addHudHitbox(274, 444, 476, 88, { type: 'start' });
-    ctx.font = '21px system-ui, sans-serif';
-    ctx.fillStyle = '#e3c79b';
-    ctx.fillText('Η ασθένεια είναι παρομοίωση, όχι τέταρτη φάση.', 512, 607);
-    return;
-  }
-
-  if (state.mode === 'main' || state.mode === 'detail') {
-    const prompt = currentPrompt();
-    if (!prompt) return;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = '650 19px system-ui, sans-serif';
-    ctx.fillStyle = '#d9bd7a';
-    const progress = state.mode === 'main'
-      ? 'ΚΕΝΤΡΙΚΟΣ ΧΑΡΤΗΣ · ' + (state.mainSolved.size + 1) + ' / 4'
-      : prompt.group.phaseLabel + ' · ' + (state.childSolved[prompt.group.id].size + 1) + ' / 4';
-    ctx.fillText(progress.toUpperCase(), 46, 157);
-    ctx.font = '30px Georgia, serif';
-    ctx.fillStyle = '#fff0c9';
-    const nextY = drawWrapped(ctx, prompt.data.question || prompt.group.question, 46, 202, 920, 38, 4);
-    ctx.font = '20px system-ui, sans-serif';
-    ctx.fillStyle = '#b9c8bf';
-    ctx.fillText(state.selectedWord ? 'Τώρα στόχευσε το φωτεινό σημείο στην εικόνα.' : 'Διάλεξε τη λέξη που ταιριάζει και μετά στόχευσε το σημείο.', 46, Math.max(330, nextY + 24));
-    const words = currentWordChoices();
-    const rects = [
-      { x: 46, y: 388, w: 450, h: 100 },
-      { x: 528, y: 388, w: 450, h: 100 },
-      { x: 46, y: 504, w: 450, h: 100 },
-      { x: 528, y: 504, w: 450, h: 100 },
-    ];
-    words.slice(0, 4).forEach((word, index) => {
-      drawHudButton(ctx, rects[index], word.word, state.selectedWord === word.id, false);
-      addHudHitbox(rects[index].x, rects[index].y, rects[index].w, rects[index].h, { type: 'answer', id: word.id });
-    });
-    const itemKey = prompt.kind === 'main' ? prompt.id : prompt.group.id + ':' + prompt.id;
-    if (state.hints.has(itemKey)) {
-      ctx.font = '21px system-ui, sans-serif';
-      ctx.fillStyle = '#f0dcae';
-      drawWrapped(ctx, 'Υπόδειξη: ' + prompt.data.hint, 48, 654, 920, 29, 3);
-    } else {
-      roundedRect(ctx, 48, 647, 244, 51, 12);
-      ctx.fillStyle = '#192d31';
-      ctx.fill();
-      ctx.strokeStyle = '#b69c61';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.font = '600 20px system-ui, sans-serif';
-      ctx.fillStyle = '#efdcad';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Μικρή υπόδειξη', 170, 673);
-      addHudHitbox(48, 647, 244, 51, { type: 'hint' });
-    }
-    return;
-  }
-
-  if (state.mode === 'chapters') {
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = '650 20px system-ui, sans-serif';
-    ctx.fillStyle = '#d9bd7a';
-    ctx.fillText('ΟΙ ΤΕΣΣΕΡΙΣ ΕΝΟΤΗΤΕΣ', 46, 157);
-    ctx.font = '30px Georgia, serif';
-    ctx.fillStyle = '#fff0c9';
-    ctx.fillText('Άνοιξε έναν σταθμό για εμβάθυνση', 46, 207);
-    const rects = [
-      { x: 46, y: 260, w: 450, h: 104 },
-      { x: 528, y: 260, w: 450, h: 104 },
-      { x: 46, y: 382, w: 450, h: 104 },
-      { x: 528, y: 382, w: 450, h: 104 },
-    ];
-    GROUPS.forEach((group, index) => {
-      const count = state.childSolved[group.id].size;
-      drawHudButton(ctx, rects[index], group.word + '\n' + count + ' / ' + group.children.length, false, count === group.children.length);
-      addHudHitbox(rects[index].x, rects[index].y, rects[index].w, rects[index].h, { type: 'openGroup', id: group.id });
-    });
-    if (isComplete()) {
-      roundedRect(ctx, 274, 557, 476, 82, 18);
-      ctx.fillStyle = '#ddc27f';
-      ctx.fill();
-      ctx.font = '700 27px system-ui, sans-serif';
-      ctx.fillStyle = '#15262a';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Άνοιξε τον τελικό mind map', 512, 598);
-      addHudHitbox(274, 557, 476, 82, { type: 'mindmap' });
-    } else {
-      ctx.font = '22px system-ui, sans-serif';
-      ctx.fillStyle = '#c7c6b7';
-      ctx.fillText('Ολοκλήρωσε και τις τέσσερις ενότητες για να ανοίξει ο τελικός χάρτης.', 47, 602, 920);
-    }
-    return;
-  }
-
-  if (state.mode === 'mindmap') {
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = '650 20px system-ui, sans-serif';
-    ctx.fillStyle = '#d9bd7a';
-    ctx.fillText('ΟΛΟΚΛΗΡΩΜΕΝΗ ΔΙΑΔΡΟΜΗ · ' + lesson.totalConnections + ' / ' + lesson.totalConnections, 46, 157);
-    ctx.font = '29px Georgia, serif';
-    ctx.fillStyle = '#fff0c9';
-    ctx.fillText('Ο νους οργανώνει τις συνδέσεις', 46, 207);
-    ctx.font = '23px system-ui, sans-serif';
-    drawWrapped(ctx, lesson.finalMindMap.reflectionPrompt, 47, 258, 930, 36, 6);
-    roundedRect(ctx, 275, 570, 474, 78, 16);
-    ctx.fillStyle = '#d8bd7c';
-    ctx.fill();
-    ctx.font = '700 26px system-ui, sans-serif';
-    ctx.fillStyle = '#142329';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Επιστροφή στις ενότητες', 512, 610);
-    addHudHitbox(275, 570, 474, 78, { type: 'home' });
-  }
-}
-
-function refreshHud() {
-  drawHud();
-  if (hudTexture) hudTexture.needsUpdate = true;
-}
-
-function addCountLinkLines() {
-  for (const group of GROUPS) {
-    if (state.mainSolved.has(group.id)) createMainLink(group.id);
-    for (const child of group.children) {
-      if (state.childSolved[group.id].has(child.id)) createDetailLink(group.id, child.id);
-    }
-  }
-}
-
-function restoreProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (!saved || saved.version !== 1) return;
-    state.mainSolved = new Set((saved.mainSolved || []).filter(id => GROUP_BY_ID.has(id)));
-    for (const group of GROUPS) {
-      state.childSolved[group.id] = new Set((saved.childSolved?.[group.id] || []).filter(id => group.children.some(child => child.id === id)));
-    }
-    state.started = Boolean(saved.started);
-    state.mode = state.started ? (state.mainSolved.size === GROUPS.length ? 'chapters' : 'main') : 'welcome';
-  } catch {
-    // Continue without stored progress when browser storage is unavailable.
-  }
-}
-
-function persistProgress() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: 1,
-      started: state.started,
-      mainSolved: [...state.mainSolved],
-      childSolved: Object.fromEntries(GROUPS.map(group => [group.id, [...state.childSolved[group.id]]])),
-    }));
-  } catch {
-    // The activity remains usable if the browser blocks local storage.
-  }
-}
-
-function solvedCount() {
-  let count = state.mainSolved.size;
-  for (const group of GROUPS) count += state.childSolved[group.id].size;
-  return count;
-}
-
-function isComplete() {
-  return solvedCount() === lesson.totalConnections;
-}
-
-function setFeedback(message, kind = '') {
-  state.feedback = message;
-  state.feedbackKind = kind;
-  const box = $('feedback');
-  box.textContent = message;
-  box.className = 'feedback' + (kind ? ' ' + kind : '');
-  box.hidden = !message;
-}
-
-function makeElement(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-
-function panelHeader(kicker, title) {
-  $('panel-content').append(makeElement('p', 'panel-kicker', kicker));
-  $('panel-content').append(makeElement('h2', '', title));
-}
-
-function renderAnswers(items) {
-  const grid = makeElement('div', 'answer-grid');
-  items.forEach(item => {
-    const button = makeElement('button', 'answer-card', item.word);
-    button.type = 'button';
-    button.setAttribute('aria-pressed', String(state.selectedWord === item.id));
-    if (state.selectedWord === item.id) button.setAttribute('aria-pressed', 'true');
-    button.addEventListener('click', () => selectWord(item.id));
-    grid.append(button);
-  });
-  $('panel-content').append(grid);
-}
-
-function renderPanel() {
-  const panel = $('lesson-panel');
-  const content = $('panel-content');
-  panel.hidden = !state.started || state.mode === 'welcome';
-  content.replaceChildren();
-  const prompt = currentPrompt();
-
-  if (state.mode === 'main' && prompt) {
-    panelHeader('Κεντρικός χάρτης · ' + (state.mainSolved.size + 1) + ' / 4', prompt.group.word);
-    content.append(makeElement('p', '', prompt.group.question));
-    renderAnswers(GROUPS);
-    content.append(makeElement('p', 'panel-instruction', state.selectedWord ? 'Τώρα στόχευσε τον αριθμό που ανήκει στην επιλεγμένη ενότητα.' : 'Διάλεξε λέξη και στόχευσε το αριθμημένο σημείο στην εικόνα.'));
-    renderHintButton(prompt);
-  } else if (state.mode === 'chapters') {
-    panelHeader('Οι τέσσερις ενότητες', 'Άνοιξε έναν σταθμό');
-    content.append(makeElement('p', '', 'Η ασθένεια λειτουργεί ως παρομοίωση. Οι επόμενες τρεις ενότητες είναι οι φάσεις του σχεδίου.'));
-    const list = makeElement('div', 'chapter-list');
-    GROUPS.forEach(group => {
-      const count = state.childSolved[group.id].size;
-      const button = makeElement('button', 'chapter-card');
-      button.type = 'button';
-      button.append(makeElement('span', '', group.phaseLabel));
-      button.append(makeElement('span', '', count + ' / ' + group.children.length));
-      button.addEventListener('click', () => openGroup(group.id));
-      list.append(button);
-    });
-    content.append(list);
-    if (isComplete()) {
-      const map = makeElement('button', 'hint-button', 'Άνοιξε τον τελικό mind map');
-      map.type = 'button';
-      map.addEventListener('click', () => enterMindMap());
-      content.append(map);
-    } else {
-      content.append(makeElement('p', 'panel-instruction', 'Ο τελικός χάρτης ανοίγει μετά την ολοκλήρωση και των 16 επιμέρους συνδέσεων.'));
-    }
-  } else if (state.mode === 'detail' && prompt) {
-    const number = state.childSolved[prompt.group.id].size + 1;
-    panelHeader(prompt.group.phaseLabel + ' · ' + number + ' / 4', prompt.data.title || 'Ποια έννοια ταιριάζει;');
-    content.append(makeElement('p', '', prompt.data.question));
-    content.append(makeElement('p', 'quote-text', '«' + prompt.data.quote + '»'));
-    renderAnswers(currentWordChoices());
-    content.append(makeElement('p', 'panel-instruction', state.selectedWord ? 'Τώρα στόχευσε το φωτεινό σημείο της εικόνας.' : 'Διάλεξε λέξη και σύνδεσέ την με το σημείο της εικόνας.'));
-    renderHintButton(prompt);
-  } else if (state.mode === 'mindmap') {
-    panelHeader('Ολοκληρωμένη διαδρομή · ' + lesson.totalConnections + ' / ' + lesson.totalConnections, 'Ο mind map της Θείας Οικονομίας');
-    content.append(makeElement('p', '', lesson.finalMindMap.reflectionPrompt));
-    content.append(makeElement('p', 'panel-instruction', 'Η αριστερή ενότητα είναι παρομοίωση. Η πορεία των τριών φάσεων κινείται από την Παλαιά Διαθήκη στην Καινή Διαθήκη και στην Εκκλησία.'));
-    const home = makeElement('button', 'hint-button', 'Επιστροφή στις ενότητες');
-    home.type = 'button';
-    home.addEventListener('click', () => goHome());
-    content.append(home);
-  }
-
-  if (state.feedback) content.append(makeElement('p', 'panel-status', state.feedback));
-  $('progress-count').textContent = solvedCount() + ' / ' + lesson.totalConnections;
-  $('home-button').hidden = !state.started || state.mode === 'chapters';
-  $('map-button').disabled = !isComplete();
-  $('map-button').hidden = !state.started || !isComplete() || state.mode === 'mindmap';
-}
-
-function renderHintButton(prompt) {
-  const itemKey = prompt.kind === 'main' ? prompt.id : prompt.group.id + ':' + prompt.id;
-  if (state.hints.has(itemKey)) {
-    $('panel-content').append(makeElement('div', 'hint-box', 'Υπόδειξη: ' + prompt.data.hint));
-    return;
-  }
-  const button = makeElement('button', 'hint-button', 'Μικρή υπόδειξη');
-  button.type = 'button';
-  button.addEventListener('click', () => showHint(prompt));
-  $('panel-content').append(button);
-}
-
-function refresh() {
-  renderPanel();
-  updateWorldVisibility();
-  refreshHud();
-  persistProgress();
-}
-
-function updateMarkerStyle(marker, color, opacity = 1, active = false) {
-  if (!marker) return;
-  marker.userData.ring.material.color.setHex(color);
-  marker.userData.ring.material.opacity = opacity;
-  marker.userData.core.material.color.setHex(color);
-  marker.userData.core.material.opacity = opacity;
-  marker.userData.core.scale.setScalar(active ? 1.25 : 1);
-}
-
-function updateWorldVisibility() {
-  const focus = state.mode === 'detail';
-  for (const group of GROUPS) {
-    const panel = mapPanels.get(group.id);
-    if (!panel) continue;
-    const isFocus = focus && group.id === state.currentGroupId;
-    panel.visible = state.mode !== 'mindmap';
-    panel.position.copy(isFocus ? new THREE.Vector3(0, MAP_CENTER_Y, MAP_Z) : panel.userData.home);
-    panel.scale.setScalar(isFocus ? 1.32 : 1);
-    panel.userData.frameMaterial.color.setHex(isFocus ? 0x89774f : 0x4b4738);
-    const mainMarker = mainMarkers.get(group.id);
-    const mainDone = state.mainSolved.has(group.id);
-    const mainActive = state.mode === 'main' && currentPrompt()?.id === group.id;
-    mainMarker.visible = state.mode === 'main' || state.mode === 'chapters';
-    updateMarkerStyle(mainMarker, mainDone ? COLORS.green : mainActive ? COLORS.bright : COLORS.gold, mainActive || state.mode === 'chapters' ? 1 : 0.56, mainActive);
-    group.children.forEach(child => {
-      const marker = childMarkers.get(group.id + ':' + child.id);
-      const solved = state.childSolved[group.id].has(child.id);
-      const activePrompt = currentPrompt();
-      const active = state.mode === 'detail' && group.id === state.currentGroupId && activePrompt?.id === child.id;
-      marker.visible = isFocus;
-      updateMarkerStyle(marker, solved ? COLORS.green : active ? COLORS.bright : COLORS.gold, active || solved ? 1 : 0.42, active);
-    });
-  }
-  mainLinkRoot.visible = state.mode !== 'detail' && state.mode !== 'mindmap';
-  for (const group of GROUPS) {
-    const panel = mapPanels.get(group.id);
-    if (panel?.userData.childLineGroup) panel.userData.childLineGroup.visible = state.mode === 'detail' && group.id === state.currentGroupId;
-  }
-  if (mapGroup) mapGroup.visible = state.mode === 'mindmap';
-  if (hudRoot) {
-    hudRoot.visible = renderer.xr.isPresenting;
-    hudRoot.position.y = -0.78;
-  }
-  $('welcome').hidden = state.started;
-}
-
-function showHint(prompt = currentPrompt()) {
-  if (!prompt) return;
-  const key = prompt.kind === 'main' ? prompt.id : prompt.group.id + ':' + prompt.id;
-  state.hints.add(key);
-  setFeedback('Υπόδειξη: ' + prompt.data.hint, '');
-  refresh();
-}
-
-function selectWord(id) {
-  if (!currentPrompt()) return;
-  state.selectedWord = id;
-  setFeedback('Επίλεξες λέξη. Τώρα στόχευσε το αντίστοιχο σημείο στην εικόνα.', '');
-  refresh();
-}
-
-function attemptTarget(targetId) {
-  const prompt = currentPrompt();
-  if (!prompt) return;
-  if (!state.selectedWord) {
-    setFeedback('Επίλεξε πρώτα μία λέξη από τις κάρτες.', 'error');
-    refresh();
-    return;
-  }
-  if (state.selectedWord !== prompt.id || targetId !== prompt.id) {
-    const key = prompt.kind === 'main' ? prompt.id : prompt.group.id + ':' + prompt.id;
-    state.errors[key] = (state.errors[key] || 0) + 1;
-    if (state.errors[key] >= 2) state.hints.add(key);
-    state.selectedWord = null;
-    setFeedback(state.errors[key] >= 2 ? 'Δεν ταιριάζει ακόμη. Εμφανίστηκε υπόδειξη.' : 'Η σύνδεση δεν ταιριάζει. Δοκίμασε ξανά.', 'error');
-    refresh();
-    return;
-  }
-
-  state.selectedWord = null;
-  state.errors[prompt.kind === 'main' ? prompt.id : prompt.group.id + ':' + prompt.id] = 0;
-  if (prompt.kind === 'main') {
-    state.mainSolved.add(prompt.id);
-    createMainLink(prompt.id);
-    setFeedback('Σωστά · ' + prompt.group.explanation, 'success');
-    if (state.mainSolved.size === GROUPS.length) {
-      state.mode = 'chapters';
-      state.currentGroupId = null;
-    }
-  } else {
-    state.childSolved[prompt.group.id].add(prompt.id);
-    createDetailLink(prompt.group.id, prompt.id);
-    setFeedback('Σωστά · ' + prompt.data.explanation, 'success');
-    if (state.childSolved[prompt.group.id].size === prompt.group.children.length) {
-      state.currentGroupId = null;
-      state.mode = 'chapters';
-      if (isComplete()) state.mode = 'mindmap';
-    }
-  }
-  refresh();
-}
-
-function openGroup(groupId) {
-  if (!GROUP_BY_ID.has(groupId) || state.mainSolved.size !== GROUPS.length) return;
-  const group = GROUP_BY_ID.get(groupId);
-  if (state.childSolved[groupId].size === group.children.length) {
-    setFeedback('Αυτή η ενότητα έχει ολοκληρωθεί. Μπορείς να την ξαναδείς από τον κεντρικό χάρτη.', 'success');
-    return;
-  }
-  state.currentGroupId = groupId;
-  state.mode = 'detail';
-  state.selectedWord = null;
-  state.sourceOpen = false;
-  rig.position.set(0, 0, 2.35);
-  rig.rotation.y = 0;
-  camera.rotation.x = -0.08;
-  setFeedback('Σταθμός ανοιχτός · σύνδεσε τις τέσσερις έννοιες.', '');
-  refresh();
-}
-
-function goHome() {
-  state.currentGroupId = null;
-  state.selectedWord = null;
-  state.sourceOpen = false;
-  state.mode = state.mainSolved.size === GROUPS.length ? 'chapters' : 'main';
-  rig.position.set(0, 0, 8.5);
-  rig.rotation.y = 0;
-  camera.rotation.x = 0;
-  refresh();
-}
-
-function enterMindMap() {
-  if (!isComplete()) return;
-  state.currentGroupId = null;
-  state.selectedWord = null;
-  state.mode = 'mindmap';
-  state.sourceOpen = false;
-  rig.position.set(0, 0, 8.5);
-  rig.rotation.y = 0;
-  camera.rotation.x = -0.02;
-  setFeedback('Ολοκληρώθηκαν και οι 20 συνδέσεις. Ο τελικός mind map είναι ανοιχτός.', 'success');
-  refresh();
-}
-
-function startJourney() {
-  state.started = true;
-  state.mode = state.mainSolved.size === GROUPS.length ? 'chapters' : 'main';
-  state.currentGroupId = null;
-  rig.position.set(0, 0, 8.5);
-  rig.rotation.y = 0;
-  camera.rotation.x = 0;
-  refresh();
-}
-
-function returnToIntro() {
-  state.started = false;
-  state.mode = 'welcome';
-  state.selectedWord = null;
-  refresh();
-}
-
-function findAction(object) {
-  let current = object;
-  while (current) {
-    if (current.userData?.action) return current.userData.action;
-    current = current.parent;
-  }
-  return null;
-}
-
-function performAction(action) {
-  if (!action) return;
-  if (action.type === 'start') startJourney();
-  else if (action.type === 'answer') selectWord(action.id);
-  else if (action.type === 'hint') showHint();
-  else if (action.type === 'openGroup') openGroup(action.id);
-  else if (action.type === 'mindmap') enterMindMap();
-  else if (action.type === 'home') goHome();
-  else if (action.type === 'source') {
-    state.sourceOpen = !state.sourceOpen;
-    sourceParagraph = 0;
-    refresh();
-  }
-  else if (action.type === 'sourcePrev') {
-    sourceParagraph = Math.max(0, sourceParagraph - 1);
-    refreshHud();
-  }
-  else if (action.type === 'sourceNext') {
-    sourceParagraph = Math.min(hudReadingPages().length - 1, sourceParagraph + 1);
-    refreshHud();
-  }
-  else if (action.type === 'mainTarget') {
-    if (state.mode === 'main') attemptTarget(action.id);
-    else if (state.mode === 'chapters') openGroup(action.id);
-  }
-  else if (action.type === 'childTarget') {
-    if (state.mode === 'detail' && action.groupId === state.currentGroupId) attemptTarget(action.id);
-  }
-  else if (action.type === 'panel' && state.mode === 'chapters') openGroup(action.groupId);
-}
-
-function raycastObjects() {
-  const objects = [...mapPickables];
-  if (renderer.xr.isPresenting) objects.push(...hudPickables);
-  return objects.filter(object => object.visible && object.parent?.visible !== false);
-}
-
-function interactWithRay(ray) {
-  const raycaster = ray;
-  raycaster.far = 24;
-  const hits = raycaster.intersectObjects(raycastObjects(), true);
-  for (const hit of hits) {
-    const action = findAction(hit.object);
-    if (action) {
-      performAction(action);
-      return;
-    }
-  }
-}
-
-function interactAt(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
-  const pointer = new THREE.Vector2(
-    ((clientX - rect.left) / rect.width) * 2 - 1,
-    -((clientY - rect.top) / rect.height) * 2 + 1,
-  );
-  const raycaster = new THREE.Raycaster();
+function pickDesktop(point) {
+  if (!started || changingScene || renderer.xr.isPresenting || document.querySelector('dialog[open]')) return;
+  if (point) {
+    const rect = $('scene').getBoundingClientRect();
+    pointer.set((point.x - rect.left) / rect.width * 2 - 1, -(point.y - rect.top) / rect.height * 2 + 1);
+  } else pointer.set(0, 0);
   raycaster.setFromCamera(pointer, camera);
-  interactWithRay(raycaster);
+  const hit = hitFromRay(raycaster);
+  if (hit) action(hit.object.userData.action);
 }
-
-function renderReadingDialog() {
-  const content = $('reading-content');
-  content.replaceChildren();
-  lesson.sourceText.forEach(text => content.append(makeElement('p', '', text)));
-  lesson.sourceNotes.forEach(text => content.append(makeElement('p', 'source-note', text)));
+function activeConfig() { return world.stations.find(s => s.id === session.visibleStation.id); }
+function goTo(station = activeConfig()) {
+  if (changingScene || !station) return;
+  if (renderer.xr.isPresenting) return teleportTo(station.landing);
+  navigation.goTo(station); renderProximity(true);
 }
-
-function showDialog(id) {
-  const dialog = $(id);
-  if (dialog && !dialog.open) dialog.showModal();
+function action(event) {
+  if (!event || changingScene) return;
+  let result;
+  if (event.type === 'word') result = session.choose(event.id);
+  if (event.type === 'target') result = session.target(event.id);
+  if (result?.type === 'enter') { void changeScene(result.sceneId); return; }
+  if (result?.type === 'matched') {
+    spatial.flash(result.stationId, performance.now());
+    pendingFinal ||= result.scenarioCompleted;
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(() => {
+      if (!session.finishReveal(result.token)) return;
+      if (session.complete) { pendingFinal = false; if (!renderer.xr.isPresenting) showDialog('final-dialog'); }
+      else if (session.sceneComplete && !session.inHub && !renderer.xr.isPresenting) showDialog('completion-dialog');
+    }, reducedMotion() ? 0 : 1150);
+  }
+  if (event.type === 'hint') session.hint();
+  if (event.type === 'resume') session.resume();
+  if (event.type === 'hub') { void changeScene('main'); return; }
+  if (event.type === 'request-reset') {
+    resetScope = session.inHub ? 'all' : 'scene';
+    if (renderer.xr.isPresenting) spatial.setResetConfirm(true); else showReset(resetScope);
+  }
+  if (event.type === 'cancel-reset') spatial.setResetConfirm(false);
+  if (event.type === 'confirm-reset') {
+    clearTimeout(revealTimer); pendingFinal = false; spatial.flashes.clear(); spatial.resetConfirm = false;
+    if (resetScope === 'all' && !session.inHub) { void changeScene('main', true, true); return; }
+    session.reset(resetScope);
+    for (const actor of actors?.actors.values() || []) actor.value = 0.16;
+    if (!renderer.xr.isPresenting) navigation.spawn();
+  }
+  if (event.type === 'teleport') teleportTo(event.point);
 }
-
-function hideDialog(id) {
-  const dialog = $(id);
-  if (dialog?.open) dialog.close();
-}
-
-function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
-  renderer.setSize(window.innerWidth, window.innerHeight, false);
-}
-
-function updateMovement(delta) {
-  if (renderer.xr.isPresenting) return;
-  const forward = Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown')) - touchVector.y;
-  const strafe = Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft')) + touchVector.x;
-  const length = Math.hypot(forward, strafe);
-  if (length < 0.06) return;
-  const f = forward / Math.max(1, length);
-  const r = strafe / Math.max(1, length);
-  const yaw = rig.rotation.y;
-  const speed = 3.0 * delta;
-  rig.position.x += (Math.sin(yaw) * f + Math.cos(yaw) * r) * speed;
-  rig.position.z += (-Math.cos(yaw) * f + Math.sin(yaw) * r) * speed;
-  rig.position.x = THREE.MathUtils.clamp(rig.position.x, -10.8, 10.8);
-  rig.position.z = THREE.MathUtils.clamp(rig.position.z, -12.5, 12.8);
-}
-
-function animate(time) {
-  const delta = Math.min(0.05, Math.max(0, (time - lastFrame) / 1000));
-  lastFrame = time;
-  updateMovement(delta);
-  if (renderer.xr.isPresenting && hudRoot) hudRoot.visible = true;
-  scene.traverse(object => {
-    if (object.userData?.isBeacon) object.rotation.y = time * 0.00035;
+function rebuildChoices() {
+  if (uiScene === session.sceneId) return;
+  uiScene = session.sceneId; choiceButtons.clear(); $('choices').replaceChildren();
+  for (const station of session.choices) {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.dataset.choice = station.id;
+    b.addEventListener('click', () => action({ type: 'word', id: station.id }));
+    choiceButtons.set(station.id, b);
+  }
+  const nav = document.querySelector('.scene-nav'); nav.replaceChildren();
+  const home = document.createElement('button'); home.id = 'overview-button'; home.textContent = '⌂';
+  home.setAttribute('aria-label', 'Συνολική άποψη του χώρου');
+  home.addEventListener('click', () => {
+    if (renderer.xr.isPresenting) teleportTo(world.spawn);
+    else { navigation.spawn(); renderProximity(true); }
   });
-  for (const line of [...mainLinks.values(), ...detailLinks.values()]) {
-    line.material.opacity = 0.68 + Math.sin(time * 0.0013 + (line.userData.pulseOffset || 0)) * 0.14;
+  nav.append(home);
+  for (const item of session.sceneData.stations) {
+    const cfg = world.stations.find(s => s.id === item.id), b = document.createElement('button');
+    b.dataset.station = item.id; b.textContent = String(cfg.number).padStart(2, '0');
+    b.setAttribute('aria-label', 'Σημείο ' + cfg.number + ': ' + item.word);
+    b.addEventListener('click', () => {
+      if (session.solved(item.id)) session.review(item.id); else session.resume();
+      goTo(cfg);
+    });
+    nav.append(b);
+  }
+}
+function renderFinalMindMap() {
+  const host = $('final-mind-map');
+  if (!host) return;
+  host.replaceChildren();
+  const map = lesson.finalMindMap;
+  const intro = document.createElement('div'); intro.className = 'mind-map-intro';
+  const center = document.createElement('div'); center.className = 'mind-map-center';
+  const title = document.createElement('strong'); title.textContent = map.center;
+  const summary = document.createElement('span'); summary.textContent = map.summary;
+  center.append(title, summary); intro.append(center);
+  const roots = document.createElement('div'); roots.className = 'mind-map-roots';
+  for (const [label, value] of [['Αφετηρία', map.premise], ['Κίνητρο', map.initiative], ['Σκοπός', map.goal]]) {
+    const chip = document.createElement('div'); chip.className = 'mind-map-root-chip';
+    const key = document.createElement('small'); key.textContent = label;
+    const text = document.createElement('strong'); text.textContent = value;
+    chip.append(key, text); roots.append(chip);
+  }
+  intro.append(roots); host.append(intro);
+  const branches = document.createElement('div'); branches.className = 'mind-map-branches';
+  for (const group of lesson.groups) {
+    const scene = lesson.scenes.find(item => item.id === group.sceneId);
+    const card = document.createElement('article'); card.className = 'mind-map-branch ' + (group.role === 'analogy' ? 'analogy' : 'phase');
+    const imageDef = lesson.images[group.imageId || group.id];
+    if (imageDef?.src) {
+      const image = document.createElement('img'); image.className = 'mind-map-image';
+      image.src = import.meta.env.BASE_URL + imageDef.src; image.alt = 'Εικονογράφηση: ' + group.word; image.loading = 'lazy'; card.append(image);
+    }
+    const badge = document.createElement('small'); badge.className = 'mind-map-badge';
+    badge.textContent = group.role === 'analogy' ? 'Ιατρική παρομοίωση · όχι φάση' : group.phaseLabel;
+    const heading = document.createElement('h3'); heading.textContent = group.word;
+    const list = document.createElement('ul'); list.className = 'mind-map-terms';
+    for (const station of scene.stations) {
+      const item = document.createElement('li'); item.textContent = station.word; list.append(item);
+    }
+    card.append(badge, heading, list); branches.append(card);
+  }
+  host.append(branches);
+  const ending = document.createElement('p'); ending.className = 'mind-map-ending';
+  ending.textContent = 'Η παρομοίωση φωτίζει τον σκοπό· οι τρεις φάσεις δείχνουν την πορεία της σωτηρίας.';
+  host.append(ending);
+}
+function renderUI() {
+  if (changingScene || !spatial) return;
+  rebuildChoices();
+  const reviewing = Boolean(session.reviewId), completed = session.sceneComplete;
+  const portal = session.inHub && session.unlocked, station = session.visibleStation;
+  const number = session.sceneData.stations.findIndex(s => s.id === station.id) + 1;
+  $('progress').textContent = session.count + ' / ' + session.size;
+  $('global-dots').replaceChildren(...Array.from({ length: session.size }, (_, i) => {
+    const dot = document.createElement('i'); dot.classList.toggle('done', i < session.count); return dot;
+  }));
+  $('journey-title').textContent = session.inHub ? 'Θεία Οικονομία' : session.sceneData.title;
+  $('lesson-panel').classList.toggle('hub-panel', session.inHub);
+  $('scene-eyebrow').textContent = session.inHub ? 'Τέσσερις νησίδες · 20 συνδέσεις' : (lesson.groups.find(g => g.sceneId === session.sceneId)?.phaseLabel || 'Ενότητα ' + (lesson.groups.findIndex(g => g.sceneId === session.sceneId) + 1) + ' / 4');
+  $('back-hub').hidden = session.inHub;
+  $('final-button').hidden = !session.complete;
+  $('panel-kicker').textContent = portal ? 'Ο κεντρικός χάρτης φωτίστηκε' : reviewing ? 'Επανεξέταση' : completed ? 'Η ενότητα ολοκληρώθηκε · ' + session.localCount + ' / ' + session.sceneData.stations.length : 'Σύνδεση ' + number + ' / ' + session.sceneData.stations.length;
+  $('step-number').textContent = String(number).padStart(2, '0');
+  $('lesson-prompt').textContent = portal ? 'Διάλεξε νησίδα' : reviewing || completed ? station.word : station.prompt;
+  $('feedback').textContent = session.message; $('feedback').dataset.kind = session.kind;
+  $('hint-text').hidden = reviewing || completed || !session.hasHint(station.id);
+  $('hint-text').textContent = station.hint;
+  $('hint-button').hidden = reviewing || completed; $('hint-button').disabled = session.busy;
+  $('resume-button').hidden = !reviewing || completed;
+  $('reset-button').textContent = session.inHub ? 'Νέα αρχή' : 'Επαναφορά';
+  $('saving-note').textContent = session.canStore ? 'Η πρόοδός σου αποθηκεύεται εδώ' : 'Μνήμη συνεδρίας';
+  $('target-number').textContent = String(number).padStart(2, '0');
+  $('connect-label').textContent = reviewing || completed ? 'Δες τη σκηνή' : session.selected ? 'Σύνδεσε στον στόχο' : 'Στον φωτεινό στόχο';
+  $('connect-target').classList.toggle('ready', Boolean(session.selected)); $('connect-target').hidden = portal;
+  session.choices.forEach(s => {
+    const b = choiceButtons.get(s.id); $('choices').append(b);
+    b.textContent = s.word; b.classList.toggle('portal-choice', portal);
+    if (portal) {
+      const progress = document.createElement('span'); progress.className = 'choice-progress';
+      progress.textContent = session.groupProgress(s.id) + ' / ' + session.groupSize(s.id) + ' ↗'; b.append(progress);
+    }
+    b.classList.toggle('selected', session.selected === s.id || session.reviewId === s.id);
+    b.classList.toggle('solved', session.solved(s.id) && !portal);
+    b.setAttribute('aria-pressed', String(session.selected === s.id || session.reviewId === s.id));
+    b.disabled = session.busy;
+  });
+  document.querySelectorAll('[data-station]').forEach(b => {
+    const id = b.dataset.station, solved = session.solved(id), active = session.current?.id === id;
+    b.disabled = !solved && !active;
+    b.classList.toggle('done', solved); b.classList.toggle('active', session.visibleStation.id === id);
+    b.setAttribute('aria-current', session.visibleStation.id === id ? 'step' : 'false');
+  });
+  $('skybox-toggle').hidden = !session.inHub;
+  $('skybox-toggle').textContent = skyboxEnabled ? 'Ορίζοντας: εικόνα' : 'Ορίζοντας: απλός';
+  $('skybox-toggle').setAttribute('aria-pressed', String(skyboxEnabled));
+  $('completion-title').textContent = session.sceneData.title;
+  $('completion-words').replaceChildren(...session.sceneData.stations.map(s => {
+    const span = document.createElement('span'); span.textContent = '✓ ' + s.word; return span;
+  }));
+  $('final-question').textContent = lesson.finalQuestion;
+  renderFinalMindMap();
+  spatial.refresh(); renderProximity(true);
+}
+function renderProximity(force = false) {
+  if (changingScene || !spatial) return;
+  const station = activeConfig(), p = renderer.xr.isPresenting ? cameraPosition : camera.position;
+  const near = Math.hypot(p.x - station.position[0], p.z - station.position[1]) < 6;
+  const key = String(near) + String(session.busy);
+  if (key !== lastProximity || force) {
+    $('connect-target').disabled = session.busy || (!near && !session.sceneComplete && !session.reviewId);
+    $('connect-target').title = near ? 'Σύνδεσε την κάρτα με τον στόχο' : 'Πλησίασε τη σκηνή ή πάτησε «Στο σημείο»';
+    lastProximity = key;
+  }
+}
+function syncNavigation() {
+  navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]') && !renderer.xr.isPresenting;
+  if (!navigation.enabled) navigation.keys.clear();
+}
+function showDialog(id) {
+  if (navigation.controls.isLocked) navigation.controls.unlock();
+  $(id).showModal(); syncNavigation();
+}
+function closeDialog(id) { $(id).close(); syncNavigation(); }
+function showReset(scope) {
+  resetScope = scope;
+  $('reset-title').textContent = scope === 'all' ? 'Νέα αρχή;' : 'Επαναφορά ενότητας;';
+  $('reset-description').textContent = scope === 'all' ? 'Θα ξεκινήσουν από την αρχή και οι ' + session.size + ' συνδέσεις.' : 'Θα ξεκινήσουν από την αρχή οι ' + session.sceneData.stations.length + ' συνδέσεις αυτής της ενότητας.';
+  $('reset-all').hidden = scope === 'all';
+  if (!$('reset-dialog').open) showDialog('reset-dialog');
+}
+function start() {
+  if (!ready) return;
+  started = true; $('welcome').hidden = true; $('lesson-panel').hidden = false;
+  $('bottom-bar').hidden = false; $('keyboard-guide').hidden = false; $('touch-walk').hidden = false;
+  syncNavigation(); renderUI();
+}
+$('start-button').addEventListener('click', start);
+$('go-station').addEventListener('click', () => goTo());
+$('connect-target').addEventListener('click', () => action({ type: 'target', id: session.visibleStation.id }));
+$('hint-button').addEventListener('click', () => action({ type: 'hint' }));
+$('resume-button').addEventListener('click', () => action({ type: 'resume' }));
+$('reset-button').addEventListener('click', () => action({ type: 'request-reset' }));
+$('reset-cancel').addEventListener('click', () => closeDialog('reset-dialog'));
+$('reset-confirm').addEventListener('click', () => { closeDialog('reset-dialog'); action({ type: 'confirm-reset' }); });
+$('reset-all').addEventListener('click', () => showReset('all'));
+$('help-button').addEventListener('click', () => showDialog('help-dialog'));
+$('help-close').addEventListener('click', () => closeDialog('help-dialog'));
+$('completion-close').addEventListener('click', () => closeDialog('completion-dialog'));
+$('completion-hub').addEventListener('click', () => { closeDialog('completion-dialog'); void changeScene('main'); });
+$('completion-reset').addEventListener('click', () => { closeDialog('completion-dialog'); action({ type: 'request-reset' }); });
+$('back-hub').addEventListener('click', () => void changeScene('main'));
+$('final-button').addEventListener('click', () => showDialog('final-dialog'));
+$('final-back').addEventListener('click', () => { closeDialog('final-dialog'); void changeScene('main'); });
+document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('close', syncNavigation));
+$('look-button').addEventListener('click', () => {
+  setWorldCards(!worldCards);
+});
+function setWorldCards(value) {
+  worldCards = value;
+  document.body.classList.toggle('spatial-cards', value);
+  document.body.classList.remove('panel-hidden');
+  $('look-button').textContent = value ? 'Πίνακας καρτών' : 'Κάρτες στον χώρο';
+  $('look-button').setAttribute('aria-pressed', String(value));
+}
+$('hide-panel').addEventListener('click', () => { setWorldCards(false); document.body.classList.add('panel-hidden'); });
+$('restore-panel').addEventListener('click', () => setWorldCards(false));
+$('retry-button').addEventListener('click', () => location.reload());
+function renderMotion() {
+  $('motion-toggle').textContent = reducedMotion() ? 'Ενεργοποίηση κίνησης' : 'Παύση κίνησης';
+  $('motion-toggle').setAttribute('aria-pressed', String(reducedMotion()));
+}
+$('motion-toggle').addEventListener('click', () => { motionOverride = !reducedMotion(); renderMotion(); });
+preference.addEventListener('change', renderMotion);
+$('skybox-toggle').addEventListener('click', () => {
+  skyboxEnabled = !skyboxEnabled; applyBackground(); renderUI();
+});
+session.onChange = renderUI; renderMotion(); setWorldCards(false);
+
+// Fixed landing points avoid continuous artificial motion in VR.
+const teleportTargets = [];
+function rebuildTeleportTargets() {
+  for (const marker of teleportTargets) { scene.remove(marker); marker.geometry.dispose(); marker.material.dispose(); }
+  teleportTargets.length = 0;
+for (const point of [world.spawn, ...world.stations.map(s => s.landing)]) {
+  const marker = new THREE.Mesh(new THREE.RingGeometry(0.24, 0.35, 32), new THREE.MeshBasicMaterial({ color: 0xe9ce85, side: THREE.DoubleSide, transparent: true, opacity: 0.82, depthWrite: false, toneMapped: false }));
+  marker.position.set(point[0], 0.07, point[1]); marker.rotation.x = -Math.PI / 2;
+  marker.userData.action = { type: 'teleport', point }; marker.visible = renderer.xr.isPresenting; scene.add(marker); teleportTargets.push(marker);
+}
+}
+const fade = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), new THREE.MeshBasicMaterial({ color: 0x102c25, side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+fade.renderOrder = 1000; fade.visible = false; camera.add(fade);
+function teleportTo(point) {
+  if (!renderer.xr.isPresenting) return;
+  teleportFlash = performance.now();
+  fade.visible = true; fade.material.opacity = 0.95;
+  rig.position.x = point[0]; rig.position.z = point[1]; rig.updateMatrixWorld(true);
+}
+const controllers = [];
+for (let i = 0; i < 2; i++) {
+  const controller = renderer.xr.getController(i); rig.add(controller);
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]), new THREE.LineBasicMaterial({ color: 0xf2d58c, transparent: true, opacity: 0.8 }));
+  line.scale.z = 8; controller.add(line);
+  const cursor = new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe7a7, toneMapped: false }));
+  cursor.visible = false; scene.add(cursor);
+  controller.addEventListener('selectstart', () => {
+    if (!renderer.xr.isPresenting) return;
+    controllerRay(controller);
+    const hit = hitFromRay(raycaster, true);
+    if (hit) action(hit.object.userData.action);
+  });
+  controllers.push({ controller, line, cursor });
+}
+function controllerRay(controller) {
+  rotationMatrix.identity().extractRotation(controller.matrixWorld);
+  raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+  raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix).normalize();
+}
+renderer.xr.addEventListener('sessionstart', () => {
+  desktopPose = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
+  if (navigation.controls.isLocked) navigation.controls.unlock();
+  const yaw = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ').y;
+  rig.position.set(camera.position.x, 0, camera.position.z); rig.rotation.y = yaw;
+  camera.position.set(0, 0, 0); camera.quaternion.identity();
+  document.body.classList.add('xr-active');
+  document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
+  teleportTargets.forEach(m => { m.visible = true; });
+  start(); syncNavigation();
+});
+renderer.xr.addEventListener('sessionend', () => {
+  rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0);
+  if (desktopPose) { camera.position.copy(desktopPose.position); camera.quaternion.copy(desktopPose.quaternion); }
+  document.body.classList.remove('xr-active');
+  teleportTargets.forEach(m => { m.visible = false; }); controllers.forEach(c => { c.cursor.visible = false; });
+  fade.visible = false; spatial.setResetConfirm(false); syncNavigation();
+});
+async function prepareVR() {
+  if (!navigator.xr || !await navigator.xr.isSessionSupported('immersive-vr').catch(() => false)) return;
+  vrButton = VRButton.createButton(renderer, { optionalFeatures: ['local-floor', 'bounded-floor'] });
+  vrButton.id = 'vr-button'; vrButton.className = 'tool'; vrButton.style.cssText = '';
+  $('vr-slot').append(vrButton);
+  const translate = () => {
+    const text = renderer.xr.isPresenting ? 'Έξοδος VR' : 'Είσοδος VR';
+    if (vrButton.textContent !== text) vrButton.textContent = text;
+  };
+  new MutationObserver(translate).observe(vrButton, { childList: true }); translate();
+  renderer.xr.addEventListener('sessionstart', translate); renderer.xr.addEventListener('sessionend', translate);
+}
+
+function resize() {
+  if (renderer.xr.isPresenting) return;
+  const w = $('scene').clientWidth, h = $('scene').clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  const baseFov = world.kind === 'hub' ? 66 : 58;
+  // Preserve the overview's horizontal framing in a narrow preview pane.
+  camera.fov = Math.min(105, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * Math.max(1, 1.6 / camera.aspect))));
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe($('stage')); resize();
+function disposeLevel(root) {
+  if (!root) return;
+  const geometries = new Set(), materials = new Set(), textures = new Set();
+  root.traverse(object => {
+    if (object.geometry) geometries.add(object.geometry);
+    object.shadow?.dispose?.();
+    for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+      if (!material) continue;
+      materials.add(material);
+      for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+      for (const uniform of Object.values(material.uniforms || {})) if (uniform.value?.isTexture) textures.add(uniform.value);
+    }
+  });
+  geometries.forEach(g => g.dispose()); textures.forEach(t => t.dispose()); materials.forEach(m => m.dispose());
+}
+async function getSkybox() {
+  if (!skybox) {
+    skybox = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + worlds.main.skybox);
+    skybox.colorSpace = THREE.SRGBColorSpace; skybox.mapping = THREE.EquirectangularReflectionMapping;
+  }
+  return skybox;
+}
+function applyBackground() {
+  if (!level) return;
+  scene.background = session.inHub && skyboxEnabled && skybox ? skybox : level.background;
+  scene.fog = level.fog; scene.backgroundIntensity = 1;
+  scene.backgroundRotation.set(0, 2.25, 0);
+  $('scene').dataset.skybox = String(session.inHub && skyboxEnabled && Boolean(skybox));
+}
+async function changeScene(id, force = false, resetAll = false) {
+  if (changingScene || (!force && level && id === session.sceneId)) return;
+  if (id !== 'main' && !session.unlocked) return;
+  const previousId = session.sceneId, cfg = worlds[id];
+  changingScene = true; clearTimeout(revealTimer);
+  $('stage').setAttribute('aria-busy', 'true');
+  $('scene-loading').textContent = 'Μετάβαση · ' + CoreTitle(id);
+  $('scene-loading').hidden = !started; syncNavigation();
+  if (resetAll) session.reset('all');
+  session.enter(id);
+  const next = new THREE.Scene();
+  try {
+    const nextEnvironment = cfg.kind === 'hub' ? buildHub(next, cfg) : buildCourtyard(next, cfg);
+    const nextSpatial = new SpatialUI(next, cfg, session, action);
+    const nextActors = await loadActors(next, cfg, import.meta.env.BASE_URL, progress => {
+      if (!started) $('start-label').textContent = 'Ετοιμασία εικόνων · ' + Math.round(progress * 100) + '%';
+    });
+    if (cfg.kind === 'hub') await getSkybox();
+    if (level) { scene.remove(level); disposeLevel(level); }
+    level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; world = cfg;
+    scene.add(level); navigation.world = cfg; navigation.obstacles = courtyard.obstacles;
+    camera.fov = cfg.kind === 'hub' ? 66 : 58; camera.updateProjectionMatrix();
+    if (renderer.xr.isPresenting) {
+      rig.position.set(cfg.spawn[0], 0, cfg.spawn[1]); rig.rotation.set(0, 0, 0);
+      const view = new THREE.PerspectiveCamera(); view.position.set(cfg.spawn[0], 1.65, cfg.spawn[1]); view.lookAt(...(cfg.lookAt || [0, 1.65, -5]));
+      desktopPose = { position: view.position.clone(), quaternion: view.quaternion.clone() };
+    } else navigation.spawn();
+    rebuildTeleportTargets(); applyBackground(); ready = true; uiScene = null; lastProximity = null;
+    $('start-label').textContent = session.count ? 'Συνέχισε τη διαδρομή' : 'Μπες στη διαδρομή';
+    $('start-button').disabled = false;
+    $('stage').dataset.space = id; $('scene').dataset.space = id; $('scene').dataset.animations = String(nextActors.actors.size);
+    $('scene').dataset.animationFrames = JSON.stringify(Object.fromEntries([...nextActors.actors].map(([key, a]) => [key, a.animation.frameCount])));
+    $('failure-banner').hidden = true;
+    changingScene = false; $('scene-loading').hidden = true; $('stage').setAttribute('aria-busy', 'false');
+    renderUI(); syncNavigation(); resize();
+    if (pendingFinal && started && !renderer.xr.isPresenting) { pendingFinal = false; showDialog('final-dialog'); }
+    if (!vrButton) await prepareVR().catch(error => console.warn('WebXR:', error.message));
+  } catch (error) {
+    disposeLevel(next); changingScene = false; session.enter(previousId);
+    $('scene-loading').hidden = true; $('stage').setAttribute('aria-busy', 'false');
+    fail('Δεν φορτώθηκε η ενότητα. ' + error.message); console.error(error); syncNavigation();
+  }
+}
+function CoreTitle(id) { return lesson.scenes.find(s => s.id === id).title; }
+void changeScene(session.sceneId, true);
+
+renderer.setAnimationLoop(time => {
+  const now = typeof time === 'number' ? time : performance.now();
+  const rawDt = Math.max(0, (now - lastTime) / 1000);
+  const dt = Math.min(0.06, rawDt); lastTime = now;
+  navigation.update(dt);
+  const xr = renderer.xr.isPresenting, viewCamera = xr ? renderer.xr.getCamera() : camera;
+  viewCamera.getWorldPosition(cameraPosition);
+  const reduced = reducedMotion();
+  courtyard?.update(now / 1000, reduced);
+  actors?.update(now, cameraPosition, session, reduced, dt);
+  if (!changingScene) spatial?.update(now, cameraPosition, reduced);
+  if (spatial) spatial.rack.visible = xr || worldCards || navigation.controls.isLocked;
+  if (started) renderProximity();
+  if (navigation.controls.isLocked && !xr) {
+    raycaster.setFromCamera(pointer.set(0, 0), camera);
+    hovered = hitFromRay(raycaster);
+    $('reticle').classList.toggle('hot', Boolean(hovered));
+  }
+  if (xr) {
+    for (const item of controllers) {
+      controllerRay(item.controller); const hit = hitFromRay(raycaster, true);
+      item.line.scale.z = hit ? hit.distance : 8;
+      item.cursor.visible = Boolean(hit);
+      if (hit) item.cursor.position.copy(hit.point);
+    }
+    let axis = 0;
+    for (const input of renderer.xr.getSession()?.inputSources || []) {
+      if (input.gamepad && (input.handedness === 'right' || !axis)) {
+        const axes = input.gamepad.axes; axis = axes.length >= 4 ? axes[2] : axes[0] || 0;
+      }
+    }
+    if (Math.abs(axis) > 0.72 && !turnLatched) {
+      const delta = -Math.sign(axis) * Math.PI / 4;
+      rig.position.sub(cameraPosition).applyAxisAngle(THREE.Object3D.DEFAULT_UP, delta).add(cameraPosition);
+      rig.rotation.y += delta; rig.updateMatrixWorld(true); turnLatched = true;
+    } else if (Math.abs(axis) < 0.3) turnLatched = false;
+    if (fade.visible) { fade.material.opacity = Math.max(0, 0.95 * (1 - (now - teleportFlash) / 180)); if (!fade.material.opacity) fade.visible = false; }
   }
   renderer.render(scene, camera);
-}
-
-function setupInputs() {
-  window.addEventListener('keydown', event => {
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
-      event.preventDefault();
-      keys.add(event.code);
-    }
-    if (event.key === 'Escape' && !renderer.xr.isPresenting && state.mode === 'detail') goHome();
-  });
-  window.addEventListener('keyup', event => keys.delete(event.code));
-  window.addEventListener('blur', () => { keys.clear(); touchVector = { x: 0, y: 0 }; });
-
-  canvas.addEventListener('pointerdown', event => {
-    if (event.button !== undefined && event.button !== 0) return;
-    activePointer = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, moved: false };
-    canvas.setPointerCapture(event.pointerId);
-  });
-  canvas.addEventListener('pointermove', event => {
-    if (!activePointer || activePointer.id !== event.pointerId) return;
-    const dx = event.clientX - activePointer.lastX;
-    const dy = event.clientY - activePointer.lastY;
-    activePointer.lastX = event.clientX;
-    activePointer.lastY = event.clientY;
-    if (Math.hypot(event.clientX - activePointer.x, event.clientY - activePointer.y) > 5) activePointer.moved = true;
-    if (activePointer.moved) {
-      rig.rotation.y -= dx * 0.004;
-      camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * 0.003, -1.2, 1.2);
-    }
-  });
-  canvas.addEventListener('pointerup', event => {
-    if (!activePointer || activePointer.id !== event.pointerId) return;
-    const moved = activePointer.moved;
-    activePointer = null;
-    if (!moved) interactAt(event.clientX, event.clientY);
-  });
-  canvas.addEventListener('pointercancel', () => { activePointer = null; });
-
-  const pad = $('touch-base');
-  const stick = $('touch-stick');
-  function setTouch(event) {
-    const rect = pad.getBoundingClientRect();
-    const radius = rect.width * 0.36;
-    const dx = event.clientX - (rect.left + rect.width / 2);
-    const dy = event.clientY - (rect.top + rect.height / 2);
-    const length = Math.hypot(dx, dy);
-    const amount = Math.min(length / radius, 1);
-    const nx = length ? dx / length * amount : 0;
-    const ny = length ? dy / length * amount : 0;
-    touchVector = { x: nx, y: ny };
-    stick.style.left = (50 + nx * 34) + '%';
-    stick.style.top = (50 + ny * 34) + '%';
+  fpsFrames++; fpsTime += rawDt;
+  if (fpsTime >= 1) {
+    $('scene').dataset.fps = String(Math.round(fpsFrames / fpsTime));
+    $('scene').dataset.drawCalls = String(renderer.info.render.calls);
+    $('scene').dataset.position = camera.position.toArray().map(v => v.toFixed(2)).join(',');
+    fpsFrames = 0; fpsTime = 0;
   }
-  function releaseTouch() {
-    movePointer = null;
-    touchVector = { x: 0, y: 0 };
-    stick.style.left = '50%';
-    stick.style.top = '50%';
-  }
-  pad.addEventListener('pointerdown', event => {
-    event.preventDefault();
-    movePointer = event.pointerId;
-    pad.setPointerCapture(event.pointerId);
-    setTouch(event);
-  });
-  pad.addEventListener('pointermove', event => {
-    if (movePointer === event.pointerId) setTouch(event);
-  });
-  pad.addEventListener('pointerup', releaseTouch);
-  pad.addEventListener('pointercancel', releaseTouch);
-}
-
-function setupXR() {
-  try { renderer.xr.setReferenceSpaceType('local-floor'); } catch { /* The browser chooses its supported floor space. */ }
-  const button = VRButton.createButton(renderer, { optionalFeatures: ['local-floor', 'bounded-floor'] });
-  $('vr-slot').append(button);
-  renderer.xr.addEventListener('sessionstart', () => {
-    document.body.classList.add('xr');
-    hudRoot.visible = true;
-    refreshHud();
-  });
-  renderer.xr.addEventListener('sessionend', () => {
-    document.body.classList.remove('xr');
-    hudRoot.visible = false;
-    renderPanel();
-  });
-  for (let index = 0; index < 2; index++) {
-    const controller = renderer.xr.getController(index);
-    const rayLine = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -4)]),
-      new THREE.LineBasicMaterial({ color: 0xf0d28a, transparent: true, opacity: 0.72 }),
-    );
-    controller.add(rayLine);
-    controller.addEventListener('select', () => {
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromXRController(controller);
-      interactWithRay(raycaster);
-    });
-    rig.add(controller);
-  }
-}
-
-function initCollectionLink() {
-  const collectionUrl = import.meta.env.VITE_COLLECTION_URL;
-  if (collectionUrl) $('collection-link').href = collectionUrl;
-}
-
-function restoreAndBuildLinks() {
-  restoreProgress();
-  createEnvironment();
-  initHud();
-  buildMindMap();
-  const loader = new THREE.TextureLoader();
-  loader.load(
-    MAP_URL,
-    texture => {
-      mapTexture = texture;
-      mapTexture.colorSpace = THREE.SRGBColorSpace;
-      mapTexture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-      createGroupPanels();
-      addCountLinkLines();
-      $('start-button').disabled = false;
-      refresh();
-    },
-    undefined,
-    () => {
-      $('start-button').disabled = false;
-      setFeedback('Η εικόνα του χάρτη δεν φορτώθηκε. Δοκίμασε ξανά τη σελίδα.', 'error');
-    },
-  );
-}
-
-function setupButtons() {
-  $('start-button').addEventListener('click', startJourney);
-  $('home-button').addEventListener('click', goHome);
-  $('map-button').addEventListener('click', enterMindMap);
-  $('reading-button').addEventListener('click', () => showDialog('reading-dialog'));
-  $('help-button').addEventListener('click', () => showDialog('help-dialog'));
-  $('reading-close').addEventListener('click', () => hideDialog('reading-dialog'));
-  $('help-close').addEventListener('click', () => hideDialog('help-dialog'));
-  $('reading-dialog').addEventListener('click', event => {
-    if (event.target === $('reading-dialog')) hideDialog('reading-dialog');
-  });
-  $('help-dialog').addEventListener('click', event => {
-    if (event.target === $('help-dialog')) hideDialog('help-dialog');
-  });
-}
-
-renderReadingDialog();
-initCollectionLink();
-setupButtons();
-setupInputs();
-setupXR();
-restoreAndBuildLinks();
-window.addEventListener('resize', onResize);
-renderer.setAnimationLoop(animate);
+});
+window.addEventListener('pagehide', () => { clearTimeout(revealTimer); navigation.keys.clear(); });
