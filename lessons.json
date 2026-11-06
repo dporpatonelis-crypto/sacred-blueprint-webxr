@@ -7,8 +7,29 @@
       "title": "Από το κατ’ εικόνα στο καθ’ ομοίωση",
       "description": "Τέσσερις νησίδες, δεκαέξι φωτεινές συνδέσεις. Μια εικονογραφημένη διαδρομή για τον άνθρωπο, τα Τάλαντα και τον Άγιο Λουκά.",
       "preview": "previews/eikona-talanta-loukas.png",
-      "topics": ["Κατ’ εικόνα", "Τάλαντα", "Άγιος Λουκάς", "Καθ’ ομοίωση"],
+      "topics": [
+        "Κατ’ εικόνα",
+        "Τάλαντα",
+        "Άγιος Λουκάς",
+        "Καθ’ ομοίωση"
+      ],
       "connections": 16,
+      "status": "published"
+    },
+    {
+      "id": "theia-oikonomia",
+      "directory": "apps/theia-oikonomia",
+      "title": "Το Σχέδιο της Θείας Οικονομίας",
+      "description": "Μια ιατρική παρομοίωση και τρεις φάσεις που οδηγούν στον τελικό mind map.",
+      "preview": "previews/theia-oikonomia.webp",
+      "topics": [
+        "Θεία Οικονομία",
+        "Παλαιά Διαθήκη",
+        "Καινή Διαθήκη",
+        "Εκκλησία",
+        "Mind map"
+      ],
+      "connections": 20,
       "status": "published"
     }
   ]
