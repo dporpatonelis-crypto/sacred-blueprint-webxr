@@ -24,3 +24,14 @@ body.spatial-cards #lesson-panel{display:none}#look-button[aria-pressed="true"]{
 @media(max-width:1000px){.top-actions{gap:6px}.top-actions>.tool{font-size:11px;padding:8px}.brand h1{font-size:25px}.explore-controls{flex-wrap:wrap;justify-content:flex-end}.explore-controls .tool{font-size:11px}}
 @media(max-width:700px){.masthead{gap:7px}.brand{max-width:52%}.brand h1{font-size:20px}.top-actions{flex-wrap:wrap;justify-content:flex-end;max-width:49%}.top-actions>.tool{min-height:32px}.progress-dots{display:none}.bottom-bar{align-items:flex-end}.explore-controls{max-width:200px}.explore-controls #look-button{display:none}.keyboard-guide{bottom:99px}#lesson-panel{bottom:115px;transform:none;max-height:calc(100% - 240px)}.portal-choice{font-size:12px}.choice-progress{font-size:10px}}
 @media(max-width:700px){.brand{padding:8px 11px}.brand h1{font-size:22px}}
+
+.touch-walk{display:none;position:absolute;z-index:4;left:20px;bottom:calc(122px + env(safe-area-inset-bottom));align-items:center;flex-direction:column;gap:5px;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+#touch-walk[hidden]{display:none!important}
+.touch-walk-pad{position:relative;width:104px;height:104px;border:1px solid #f2e6c88c;border-radius:50%;background:radial-gradient(circle at 50% 45%,#edf0d820,#163c35a8 72%);box-shadow:0 5px 20px #102e2870,inset 0 0 0 8px #f2e6c812;backdrop-filter:blur(5px);touch-action:none}
+.touch-walk-ring{position:absolute;inset:15px;border:1px solid #efe4c64d;border-radius:50%;pointer-events:none}
+.touch-walk-stick{position:absolute;left:50%;top:50%;width:40px;height:40px;border:1px solid #f7e9c5;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f3dfad,#bd9858);box-shadow:0 3px 12px #0d2d28aa;transform:translate(-50%,-50%);transition:transform .05s linear;pointer-events:none}
+.touch-walk-label{padding:4px 8px;border:1px solid #e7d5ae55;border-radius:12px;background:#1d4439d9;color:#f7edcf;font-size:9px;font-weight:700;letter-spacing:.12em;text-shadow:0 1px 5px #102e28}
+.touch-instruction,.touch-controls{display:none}
+@media(any-pointer:coarse){.touch-walk:not([hidden]){display:flex}.desktop-instruction,.desktop-controls{display:none}.touch-instruction,.touch-controls{display:inline}}
+@media(max-width:700px){.touch-walk{left:15px;bottom:calc(119px + env(safe-area-inset-bottom));}.touch-walk-pad{width:94px;height:94px}.touch-walk-stick{width:38px;height:38px}}
+.xr-active #touch-walk{display:none!important}
