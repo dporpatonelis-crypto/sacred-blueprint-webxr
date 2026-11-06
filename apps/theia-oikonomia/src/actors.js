@@ -33,7 +33,12 @@ export async function loadActors(scene, world, base, onProgress) {
   for (const station of world.stations) {
     const animation = manifest.animations[station.asset];
     if (!animation) throw new Error('Λείπει η εικόνα: ' + station.asset);
-    const texture = await loader.loadAsync(`${base}${animation.atlas}`);
+    let texture;
+    try {
+      texture = await loader.loadAsync(`${base}${animation.atlas}`);
+    } catch {
+      throw new Error(`Δεν φορτώθηκε η εικόνα «${animation.atlas}».`);
+    }
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;

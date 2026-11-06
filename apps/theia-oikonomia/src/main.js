@@ -428,7 +428,11 @@ function disposeLevel(root) {
 }
 async function getSkybox() {
   if (!skybox) {
-    skybox = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + worlds.main.skybox);
+    try {
+      skybox = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + worlds.main.skybox);
+    } catch {
+      throw new Error(`Δεν φορτώθηκε η εικόνα του ορίζοντα «${worlds.main.skybox}».`);
+    }
     skybox.colorSpace = THREE.SRGBColorSpace; skybox.mapping = THREE.EquirectangularReflectionMapping;
   }
   return skybox;
@@ -480,7 +484,9 @@ async function changeScene(id, force = false, resetAll = false) {
   } catch (error) {
     disposeLevel(next); changingScene = false; session.enter(previousId);
     $('scene-loading').hidden = true; $('stage').setAttribute('aria-busy', 'false');
-    fail('Δεν φορτώθηκε η ενότητα. ' + error.message); console.error(error); syncNavigation();
+    const detail = typeof error?.message === 'string' && error.message.trim()
+      ? error.message : 'Παρουσιάστηκε σφάλμα κατά τη φόρτωση της εικόνας ή της σκηνής.';
+    fail('Δεν φορτώθηκε η ενότητα. ' + detail); console.error(error); syncNavigation();
   }
 }
 function CoreTitle(id) { return lesson.scenes.find(s => s.id === id).title; }
