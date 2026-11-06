@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0c1820">
+    <meta name="description" content="Τρισδιάστατη διαδρομή WebXR για το σχέδιο της Θείας Οικονομίας: η ιατρική παρομοίωση, οι τρεις φάσεις και ο τελικός νοητικός χάρτης.">
+    <title>Το Σχέδιο της Θείας Οικονομίας · WebXR</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="scene" aria-label="Τρισδιάστατος χάρτης της Θείας Οικονομίας"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+
+      <header class="masthead">
+        <a class="brand" id="collection-link" href="../../" aria-label="Επιστροφή στη συλλογή">
+          <span class="brand-mark" aria-hidden="true">✧</span>
+          <span><small>SACRED BLUEPRINT · WEBXR</small><strong>Θεία Οικονομία</strong></span>
+        </a>
+        <div class="top-actions">
+          <span class="progress-pill" aria-label="Πρόοδος"><output id="progress-count">0 / 20</output></span>
+          <button class="tool" id="home-button" type="button" hidden>Κεντρικός χάρτης</button>
+          <button class="tool" id="map-button" type="button" disabled>Mind map</button>
+          <button class="tool" id="reading-button" type="button">Κείμενο</button>
+          <button class="tool icon" id="help-button" type="button" aria-label="Οδηγίες">?</button>
+          <span id="vr-slot"></span>
+        </div>
+      </header>
+
+      <section id="welcome" class="welcome" aria-labelledby="welcome-title">
+        <p class="eyebrow">Από την παρομοίωση στις τρεις φάσεις</p>
+        <h1 id="welcome-title">Το σχέδιο της<br><em>Θείας Οικονομίας</em></h1>
+        <p class="welcome-copy">Σύνδεσε τέσσερις ενότητες με τον χάρτη, εξερεύνησε τις 16 επιμέρους έννοιες και ολοκλήρωσε τη διαδρομή με τον mind map.</p>
+        <p class="welcome-note"><strong>Πρόσεξε:</strong> η ασθένεια είναι ιατρική παρομοίωση· οι φάσεις του σχεδίου είναι τρεις.</p>
+        <button id="start-button" class="start-button" type="button">Έναρξη διαδρομής <span aria-hidden="true">↗</span></button>
+        <p class="controls-note"><span class="desktop-note">WASD ή βελάκια για κίνηση · σύρε για να κοιτάξεις</span><span class="touch-note">Κράτησε τον μοχλό για κίνηση · σύρε στην εικόνα για να κοιτάξεις</span><br>Σε συμβατό headset εμφανίζεται το κουμπί VR.</p>
+      </section>
+
+      <aside id="lesson-panel" class="lesson-panel" aria-live="polite" hidden>
+        <div class="panel-rule"></div>
+        <div id="panel-content"></div>
+      </aside>
+
+      <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
+      <div id="touch-base" class="touch-base" aria-label="Μοχλός κίνησης">
+        <span class="touch-label">ΚΙΝΗΣΗ</span>
+        <div id="touch-stick" class="touch-stick"></div>
+      </div>
+      <p class="look-note">Σύρε για να κοιτάξεις <span>·</span> WASD για βήματα</p>
+
+      <dialog id="reading-dialog" class="reading-dialog">
+        <div class="dialog-head">
+          <div><p class="eyebrow">Το κείμενο του μαθήματος</p><h2>Το Σχέδιο της Θείας Οικονομίας</h2></div>
+          <button id="reading-close" class="close-button" type="button" aria-label="Κλείσιμο">×</button>
+        </div>
+        <div id="reading-content" class="reading-content"></div>
+      </dialog>
+
+      <dialog id="help-dialog" class="help-dialog">
+        <div class="dialog-head">
+          <div><p class="eyebrow">Χειρισμός</p><h2>Περιήγηση και σύνδεση</h2></div>
+          <button id="help-close" class="close-button" type="button" aria-label="Κλείσιμο">×</button>
+        </div>
+        <div class="help-content">
+          <p>Επίλεξε μία λέξη και στόχευσε το αντίστοιχο αριθμημένο σημείο στην εικόνα. Μετά τις τέσσερις βασικές συνδέσεις, άνοιξε κάθε ενότητα και ολοκλήρωσε τις επιμέρους αντιστοιχίσεις.</p>
+          <ul>
+            <li><strong>Υπολογιστής:</strong> σύρε για να κοιτάξεις, WASD ή βελάκια για κίνηση, κλικ για επιλογή.</li>
+            <li><strong>Κινητό ή tablet:</strong> ο μοχλός κάτω δεξιά κινεί τον χρήστη· σύρε στον χώρο για να κοιτάξεις.</li>
+            <li><strong>VR:</strong> στόχευσε τις κάρτες ή τους φωτεινούς κόμβους με τον χειριστή και πάτησε τη σκανδάλη.</li>
+            <li>Με δύο λανθασμένες συνδέσεις εμφανίζεται υπόδειξη. Η πρόοδος αποθηκεύεται στη συσκευή.</li>
+          </ul>
+        </div>
+      </dialog>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
