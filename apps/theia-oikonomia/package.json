@@ -7,9 +7,11 @@
     "#journey-core": "./src/vendor/journey-core.cjs"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5192 --strictPort",
+    "dev": "vite --host 127.0.0.1 --port 5194 --strictPort",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 5192 --strictPort"
+    "preview": "vite preview --host 127.0.0.1 --port 5194 --strictPort",
+    "test": "node --test qa/*.test.mjs",
+    "prepare:animations": "node scripts/prepare-animations.mjs"
   },
   "dependencies": {
     "three": "^0.182.0"

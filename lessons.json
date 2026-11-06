@@ -20,8 +20,8 @@
       "id": "theia-oikonomia",
       "directory": "apps/theia-oikonomia",
       "title": "Το Σχέδιο της Θείας Οικονομίας",
-      "description": "Μια ιατρική παρομοίωση και τρεις φάσεις που οδηγούν στον τελικό mind map.",
-      "preview": "previews/theia-oikonomia.webp",
+      "description": "Ιατρική παρομοίωση και τρεις φάσεις, με water blaster, διαδοχικές γέφυρες και τελικό χάρτη εννοιών.",
+      "preview": "previews/theia-oikonomia.png",
       "topics": [
         "Θεία Οικονομία",
         "Παλαιά Διαθήκη",

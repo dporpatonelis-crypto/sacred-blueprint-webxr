@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { runMedia } from '../../../shared/node/media-cli.mjs';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,7 +16,7 @@ manifest.version = 2;
 manifest.paths = { atlas: 'relative to public/ and the published lesson URL', source: 'relative to the source project root', gif: 'relative to the source project root' };
 const onlyArg = process.argv.indexOf('--only');
 const only = onlyArg >= 0 ? new Set(process.argv[onlyArg + 1].split(',')) : null;
-const run = (command, args) => execFileSync(command, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+const run = (command, args) => runMedia(command, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 const ffmpeg = args => run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args]);
 
 for (const source of sources) {

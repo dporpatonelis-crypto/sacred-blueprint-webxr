@@ -1,0 +1,170 @@
+[
+  {
+    "id": "compassion",
+    "input": "compassion-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "corruption",
+    "input": "corruption-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "salvation",
+    "input": "salvation-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "healing",
+    "input": "healing-loop-v2.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "abraham",
+    "input": "abraham-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "moses",
+    "input": "moses-loop-v2.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "prophets",
+    "input": "prophets-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "promised",
+    "input": "promised-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "miracles",
+    "input": "miracles-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "teaching",
+    "input": "teaching-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "passion",
+    "input": "passion-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "resurrection",
+    "input": "resurrection-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "eucharist",
+    "input": "eucharist-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "kingdom",
+    "input": "kingdom-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "dead",
+    "input": "dead-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "creation",
+    "input": "creation-loop-v1.png",
+    "format": "sheet",
+    "columns": 4,
+    "rows": 2,
+    "frameDurationMs": 220
+  },
+  {
+    "id": "hub-illness",
+    "input": "compassion-loop-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 4,
+      "rows": 2,
+      "index": 0
+    }
+  },
+  {
+    "id": "hub-old",
+    "input": "abraham-loop-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 4,
+      "rows": 2,
+      "index": 0
+    }
+  },
+  {
+    "id": "hub-new",
+    "input": "miracles-loop-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 4,
+      "rows": 2,
+      "index": 0
+    }
+  },
+  {
+    "id": "hub-church",
+    "input": "eucharist-loop-v1.png",
+    "format": "static",
+    "crop": {
+      "columns": 4,
+      "rows": 2,
+      "index": 0
+    }
+  }
+]

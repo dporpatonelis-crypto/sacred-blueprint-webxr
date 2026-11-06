@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { runMedia as execFileSync } from '../../../shared/node/media-cli.mjs';
 import { fileURLToPath } from 'node:url';
 import { allowedPosition } from '../src/navigation.js';
 import { frameAt, frameRect, revealProgress } from '../src/animation-timing.js';
@@ -101,10 +101,10 @@ test('every GIF has genuinely different frames, transparency and the atlas timin
     assert.ok(Math.abs(Number(probe.streams[0].duration) * 1000 - animation.durationMs) <= 20);
     const hashes = execFileSync('ffmpeg', ['-v','error','-i',gif,'-f','framemd5','-'], { encoding: 'utf8' }).split('\n').filter(line => line && !line.startsWith('#')).map(line => line.split(',').at(-1).trim());
     assert.ok(new Set(hashes).size >= 2, 'a renamed or repeated still is not an animation');
-    const gifAlpha = execFileSync('ffmpeg', ['-v','error','-i',gif,'-vf','alphaextract','-frames:v','1','-f','rawvideo','-pix_fmt','gray','-']);
+    const gifAlpha = execFileSync('ffmpeg', ['-v','error','-i',gif,'-vf','alphaextract','-frames:v','1','-f','rawvideo','-pix_fmt','gray','-'], { encoding: null });
     assert.ok(gifAlpha.includes(0), 'the encoded GIF retains transparency');
     }
-    const alpha = execFileSync('ffmpeg', ['-v','error','-i',path.join(root, 'public', animation.atlas),'-vf','alphaextract','-frames:v','1','-f','rawvideo','-pix_fmt','gray','-'], { maxBuffer: 32 * 1024 * 1024 });
+    const alpha = execFileSync('ffmpeg', ['-v','error','-i',path.join(root, 'public', animation.atlas),'-vf','alphaextract','-frames:v','1','-f','rawvideo','-pix_fmt','gray','-'], { encoding: null, maxBuffer: 32 * 1024 * 1024 });
     assert.ok(alpha.includes(0), 'cutout needs transparent pixels');
     assert.ok(alpha.includes(254) || alpha.includes(255), 'cutout also needs solid subject pixels');
     for (let i = 0; i < animation.frameCount; i++) {

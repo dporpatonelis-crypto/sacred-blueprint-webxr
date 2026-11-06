@@ -17,7 +17,7 @@
       "minZ": -19,
       "maxZ": 12
     },
-    "skybox": "media/oikonomia-skybox.webp",
+    "skybox": "media/hub-skybox-v2.jpg",
     "stations": [
       {
         "id": "main-illness",
@@ -165,7 +165,8 @@
     "hubCenter": [
       0,
       7.5
-    ]
+    ],
+    "promptHeight": 1.18
   },
   "illness": {
     "id": "illness",
@@ -176,22 +177,22 @@
       7.5
     ],
     "bounds": {
-      "minX": -10.5,
-      "maxX": 10.5,
+      "minX": -15,
+      "maxX": 15,
       "minZ": -8,
-      "maxZ": 9
+      "maxZ": 9.5
     },
     "stations": [
       {
         "id": "compassion",
         "number": 1,
         "position": [
-          -7.2,
-          -2.8
+          -10.5,
+          -3.5
         ],
         "landing": [
-          -6.5,
-          1.5
+          -10.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "compassion"
@@ -200,26 +201,26 @@
         "id": "corruption",
         "number": 2,
         "position": [
-          -2.7,
-          -6.2
+          -3.5,
+          -3.5
         ],
         "landing": [
-          -2.2,
-          -1.8
+          -3.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "corruption"
       },
       {
         "id": "salvation",
         "number": 3,
         "position": [
-          2.7,
-          -6.2
+          3.5,
+          -3.5
         ],
         "landing": [
-          2.2,
-          -1.8
+          3.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "salvation"
@@ -228,17 +229,18 @@
         "id": "healing",
         "number": 4,
         "position": [
-          7.2,
-          -2.8
+          10.5,
+          -3.5
         ],
         "landing": [
-          6.5,
-          1.5
+          10.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "healing"
       }
-    ]
+    ],
+    "promptHeight": 1.18
   },
   "old": {
     "id": "old",
@@ -249,22 +251,22 @@
       7.5
     ],
     "bounds": {
-      "minX": -10.5,
-      "maxX": 10.5,
+      "minX": -15,
+      "maxX": 15,
       "minZ": -8,
-      "maxZ": 9
+      "maxZ": 9.5
     },
     "stations": [
       {
         "id": "abraham",
         "number": 1,
         "position": [
-          -7.2,
-          -2.8
+          -10.5,
+          -3.5
         ],
         "landing": [
-          -6.5,
-          1.5
+          -10.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "abraham"
@@ -273,26 +275,26 @@
         "id": "moses",
         "number": 2,
         "position": [
-          -2.7,
-          -6.2
+          -3.5,
+          -3.5
         ],
         "landing": [
-          -2.2,
-          -1.8
+          -3.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "moses"
       },
       {
         "id": "prophets",
         "number": 3,
         "position": [
-          2.7,
-          -6.2
+          3.5,
+          -3.5
         ],
         "landing": [
-          2.2,
-          -1.8
+          3.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "prophets"
@@ -301,17 +303,18 @@
         "id": "promised",
         "number": 4,
         "position": [
-          7.2,
-          -2.8
+          10.5,
+          -3.5
         ],
         "landing": [
-          6.5,
-          1.5
+          10.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "promised"
       }
-    ]
+    ],
+    "promptHeight": 1.18
   },
   "new": {
     "id": "new",
@@ -322,22 +325,22 @@
       7.5
     ],
     "bounds": {
-      "minX": -10.5,
-      "maxX": 10.5,
+      "minX": -15,
+      "maxX": 15,
       "minZ": -8,
-      "maxZ": 9
+      "maxZ": 9.5
     },
     "stations": [
       {
         "id": "miracles",
         "number": 1,
         "position": [
-          -7.2,
-          -2.8
+          -10.5,
+          -3.5
         ],
         "landing": [
-          -6.5,
-          1.5
+          -10.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "miracles"
@@ -346,26 +349,26 @@
         "id": "teaching",
         "number": 2,
         "position": [
-          -2.7,
-          -6.2
+          -3.5,
+          -3.5
         ],
         "landing": [
-          -2.2,
-          -1.8
+          -3.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "teaching"
       },
       {
         "id": "passion",
         "number": 3,
         "position": [
-          2.7,
-          -6.2
+          3.5,
+          -3.5
         ],
         "landing": [
-          2.2,
-          -1.8
+          3.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "passion"
@@ -374,17 +377,18 @@
         "id": "resurrection",
         "number": 4,
         "position": [
-          7.2,
-          -2.8
+          10.5,
+          -3.5
         ],
         "landing": [
-          6.5,
-          1.5
+          10.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "resurrection"
       }
-    ]
+    ],
+    "promptHeight": 1.18
   },
   "church": {
     "id": "church",
@@ -395,22 +399,22 @@
       7.5
     ],
     "bounds": {
-      "minX": -10.5,
-      "maxX": 10.5,
+      "minX": -15,
+      "maxX": 15,
       "minZ": -8,
-      "maxZ": 9
+      "maxZ": 9.5
     },
     "stations": [
       {
         "id": "eucharist",
         "number": 1,
         "position": [
-          -7.2,
-          -2.8
+          -10.5,
+          -3.5
         ],
         "landing": [
-          -6.5,
-          1.5
+          -10.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "eucharist"
@@ -419,26 +423,26 @@
         "id": "kingdom",
         "number": 2,
         "position": [
-          -2.7,
-          -6.2
+          -3.5,
+          -3.5
         ],
         "landing": [
-          -2.2,
-          -1.8
+          -3.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "kingdom"
       },
       {
         "id": "dead",
         "number": 3,
         "position": [
-          2.7,
-          -6.2
+          3.5,
+          -3.5
         ],
         "landing": [
-          2.2,
-          -1.8
+          3.5,
+          0.5
         ],
         "height": 3.2,
         "asset": "dead"
@@ -447,16 +451,17 @@
         "id": "creation",
         "number": 4,
         "position": [
-          7.2,
-          -2.8
+          10.5,
+          -3.5
         ],
         "landing": [
-          6.5,
-          1.5
+          10.5,
+          0.5
         ],
-        "height": 3,
+        "height": 3.2,
         "asset": "creation"
       }
-    ]
+    ],
+    "promptHeight": 1.18
   }
 }

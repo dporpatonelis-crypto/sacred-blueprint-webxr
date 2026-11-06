@@ -8,26 +8,29 @@ import { buildHub } from './hub-world.js';
 import { Navigation } from './navigation.js';
 import { SpatialUI } from './spatial-ui.js';
 import { loadActors } from './actors.js';
+import { WaterQuiz } from './water-quiz.js';
 
 const $ = id => document.getElementById(id);
 document.getElementById('app').innerHTML = [
-  '<main id="stage" aria-label="Η διαδρομή της Θείας Οικονομίας">',
-  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή της Θείας Οικονομίας. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Οι κάρτες είναι διαθέσιμες και στον πλαϊνό πίνακα."></canvas>',
+  '<main id="stage" aria-label="Η διαδρομή μας">',
+  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Οι κάρτες είναι διαθέσιμες και στον πλαϊνό πίνακα."></canvas>',
   '<div class="vignette"></div>',
-  '<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><div><p class="eyebrow" id="scene-eyebrow">Τέσσερις νησίδες · 20 συνδέσεις</p><h1 id="journey-title">Θεία Οικονομία</h1></div></div>',
+  '<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><div><p class="eyebrow" id="scene-eyebrow">Τέσσερις νησίδες · 20 συνδέσεις</p><h1 id="journey-title">Η διαδρομή μας</h1></div></div>',
   '<div class="top-actions"><div class="progress-pill" aria-label="Πρόοδος"><div id="global-dots" class="progress-dots" aria-hidden="true"><i></i><i></i><i></i></div><output id="progress">0 / 20</output></div><button class="tool icon" id="help-button" aria-label="Οδηγίες">?</button><button class="tool" id="back-hub" hidden>↩ Χάρτης</button><button class="tool" id="final-button" hidden>Χάρτης εννοιών</button><span id="vr-slot"></span></div></header>',
-  '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από την παρομοίωση στις τρεις φάσεις</p><h2 id="welcome-title">Η Θεία<br>Οικονομία.</h2><p>Ιατρική παρομοίωση · Παλαιά Διαθήκη · Καινή Διαθήκη · Εκκλησία.<br>Τέσσερις νησίδες, είκοσι φωτεινές συνδέσεις.</p><p class="welcome-note"><strong>Να θυμάσαι:</strong> η ασθένεια είναι παρομοίωση· οι φάσεις είναι τρεις.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Ή πήγαινε κατευθείαν σε κάθε σημείο.</p></div><div class="welcome-footer"><span>Φθορά → Σωτηρία</span><span>Τρεις φάσεις</span></div></section>',
-  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 4</span><div><span id="step-number" class="step-number">01</span><button id="hide-panel" class="panel-close" aria-label="Κλείσιμο καρτών">×</button></div></div><h2 id="lesson-prompt">Το δοσμένο ποσό</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
+  '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από την παρομοίωση στις τρεις φάσεις</p><h2 id="welcome-title">Η Θεία<br>Οικονομία.</h2><p>Ιατρική παρομοίωση · Παλαιά Διαθήκη · Καινή Διαθήκη · Εκκλησία.<br>Τέσσερις νησίδες, είκοσι φωτεινές συνδέσεις.</p><p class="welcome-note"><strong>Να θυμάσαι:</strong> η ασθένεια είναι παρομοίωση· οι φάσεις είναι τρεις.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Η πρώτη γέφυρα είναι έτοιμη. Γέμισε τη σωστή απάντηση για να ανοίξει η επόμενη.</p></div><div class="welcome-footer"><span>Φθορά → Σωτηρία</span><span>Τρεις φάσεις</span></div></section>',
+  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 4</span><div><span id="step-number" class="step-number">01</span><button id="hide-panel" class="panel-close" aria-label="Κλείσιμο καρτών">×</button></div></div><h2 id="lesson-prompt">Η διαδρομή της σωτηρίας</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="station-explanation" class="station-explanation" hidden></p><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
   '<div id="reticle" aria-hidden="true"></div>',
+  '<section id="bridge-hud" hidden aria-label="Πρόοδος γέφυρας"><span class="water-kicker">Χτίσε το πέρασμα</span><div class="bridge-headline"><strong>Περάσματα</strong><output id="bridge-count">0 / 4</output></div><div id="bridge-parts"></div><p id="water-guide">Γέμισε το δοχείο της σωστής απάντησης.</p></section>',
+  '<button id="fire-button" hidden aria-label="Κράτησε για βολή νερού προς το κέντρο"><span aria-hidden="true">◉</span><span>Νερό</span></button>',
   '<div class="keyboard-guide" id="keyboard-guide" hidden><span class="normal-guide"><span class="desktop-controls"><kbd>W A S D</kbd> κίνηση <span class="dot">·</span> σύρε για ματιά <span class="desktop-hint">· <kbd>Tab</kbd> κάρτες</span></span><span class="touch-controls">Κράτησε και σύρε τον μοχλό για κίνηση <span class="dot">·</span> σύρε για ματιά</span></span><span class="locked-guide">Στόχευσε και πάτησε <span class="dot">·</span> <kbd>Esc</kbd> για κάρτες</span></div>',
   '<div id="touch-walk" class="touch-walk" hidden role="group" aria-label="Χειριστήριο κίνησης αφής"><div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span class="touch-walk-stick" id="touch-walk-stick" aria-hidden="true"></span></div><span class="touch-walk-label">Κίνηση</span></div>',
-  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool paper" id="restore-panel">Κάρτες</button><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
+  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool paper" id="restore-panel">Κάρτες</button><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
   '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
   '</main>',
   '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
-  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Σύνδεσε</dt><dd>Διάλεξε κάρτα και πάτησε τον φωτεινό στόχο, στον χώρο ή στον πίνακα.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Ακτίνα και trigger για επιλογή ή για τα σημεία στο δάπεδο. Joystick δεξιά/αριστερά για στροφή ανά 45°.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
-  '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 4 / 4</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Η ενότητα φωτίστηκε. Μπορείς να την παρατηρήσεις ξανά ή να επιστρέψεις στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
-  '<dialog id="final-dialog" class="mind-map-dialog" aria-labelledby="final-title"><p class="dialog-kicker" id="final-kicker">Η διαδρομή ολοκληρώθηκε · 20 / 20</p><h2 id="final-title">Ο νοητικός χάρτης της Θείας Οικονομίας</h2><section id="final-mind-map" class="mind-map" aria-label="Νοητικός χάρτης των τεσσάρων ενοτήτων"></section><p id="final-question" class="mind-map-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
+  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 4.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Joystick δεξιά/αριστερά για στροφή ανά 45°.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
+  '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 4 / 4</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Άνοιξε και η γέφυρα επιστροφής. Διάσχισε το ποτάμι για να παρατηρήσεις τις σκηνές ή επέστρεψε στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
+  '<dialog id="final-dialog" class="mind-map-dialog" aria-labelledby="final-title"><p class="dialog-kicker" id="final-kicker">Η διαδρομή ολοκληρώθηκε · 20 / 20</p><h2 id="final-title" tabindex="-1" autofocus>Ο νοητικός χάρτης της Θείας Οικονομίας</h2><section id="final-mind-map" class="mind-map" aria-label="Νοητικός χάρτης των τεσσάρων ενοτήτων"></section><p id="final-question" class="mind-map-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
   '<div id="scene-loading" hidden role="status">Μετάβαση…</div>',
 ].join('');
 
@@ -40,7 +43,9 @@ if (import.meta.env.VITE_COLLECTION_URL) {
 
 let storage = null;
 try { storage = window.localStorage; } catch {}
-const session = new LessonSession(storage);
+// Experimental gameplay has its own save slot, including on the same origin.
+const waterStorage = storage && { getItem: key => storage.getItem(key + '.water-v1'), setItem: (key, value) => storage.setItem(key + '.water-v1', value) };
+const session = new LessonSession(waterStorage);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(66, 1, 0.08, 180);
 const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
@@ -52,18 +57,21 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.16;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9);
-let world = worlds[session.sceneId], level = null, courtyard = null, spatial = null, actors = null;
+let world = worlds[session.sceneId], level = null, courtyard = null, spatial = null, actors = null, waterQuiz = null;
+let waterMode = true;
+let firing = { active: false };
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(), cameraPosition = new THREE.Vector3(), rotationMatrix = new THREE.Matrix4();
 let started = false, ready = false, changingScene = false, vrButton = null, revealTimer = 0, pendingFinal = false;
 let lastTime = performance.now(), lastProximity = null, hovered = null, motionOverride = null;
 let fpsTime = 0, fpsFrames = 0, desktopPose = null, turnLatched = false, teleportFlash = -1000;
 let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
-let worldCards = false;
+let worldCards = false, lastStationNear = null;
 const preference = matchMedia('(prefers-reduced-motion: reduce)');
 const reducedMotion = () => motionOverride ?? preference.matches;
 const navigation = new Navigation(camera, renderer, world, [], {
   pick: point => pickDesktop(point),
+  canWalk: (x,z) => courtyard?.canWalk?.(x,z) ?? true,
   lock: locked => document.body.classList.toggle('pointer-locked', locked),
   escape: () => {
     if (session.selected) { session.selected = null; session.changed(false); }
@@ -78,7 +86,7 @@ function visibleInHierarchy(object) {
   return !object.userData.disabled;
 }
 function hitFromRay(ray, includeTeleport = false) {
-  const objects = [...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
+  const objects = [...(waterQuiz?.pickables || []), ...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
   return ray.intersectObjects(objects, false).find(hit => hit.distance <= (includeTeleport ? 16 : 10)) || null;
 }
 function pickDesktop(point) {
@@ -92,14 +100,137 @@ function pickDesktop(point) {
   if (hit) action(hit.object.userData.action);
 }
 function activeConfig() { return world.stations.find(s => s.id === session.visibleStation.id); }
+function stationPose(station) {
+  const index = world.stations.indexOf(station), approach = courtyard?.approaches?.[index];
+  if (!approach) return station;
+  return { ...station, landing: approach.viewpoint, lookHeight: 1.35,
+    position: waterMode && session.current?.id === station.id ? approach.quizPosition : station.position };
+}
+function availableLandings() {
+  return [world.spawn,...world.stations.slice(0,session.localCount+1).map(station=>stationPose(station).landing)];
+}
+function atActiveStation() {
+  if (session.sceneComplete) return true;
+  const station = world.stations.find(s=>s.id===session.current?.id);
+  const p = renderer.xr.isPresenting ? cameraPosition : camera.position;
+  const approach = courtyard?.approaches?.[world.stations.indexOf(station)];
+  if (approach) return approach.contains(p.x,p.z);
+  return Boolean(station && courtyard?.onLand(p.x,p.z) && Math.hypot(p.x-station.landing[0],p.z-station.landing[1]) < 2.5);
+}
+function canFire() {
+  return atActiveStation() && started && ready && waterMode && !changingScene && !session.busy && !session.sceneComplete && !session.reviewId && !document.querySelector('dialog[open]');
+}
+function beginFire(input) {
+  if (!canFire() || firing.active) return;
+  firing = { active: true, ...input };
+  $('fire-button').classList.add('firing');
+}
+function stopFire() {
+  firing = { active: false };
+  waterQuiz?.fill.release();
+  $('fire-button').classList.remove('firing');
+}
+function bindPourButton(button, id) {
+  button.addEventListener('pointerdown', event => {
+    if (!canFire() || session.solved(id)) return;
+    event.preventDefault();
+    beginFire({ mode: 'guided', id, pointerId: event.pointerId });
+    button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener('keydown', event => {
+    if ((event.code === 'Space' || event.code === 'Enter') && !event.repeat && canFire()) {
+      event.preventDefault(); event.stopPropagation(); beginFire({ mode: 'guided', id, keyboard: true });
+    }
+  });
+  button.addEventListener('keyup', event => { if (event.code === 'Space' || event.code === 'Enter') stopFire(); });
+}
+function updateFire() {
+  const shot = { ...firing, xr: renderer.xr.isPresenting, worldPrompt: renderer.xr.isPresenting || document.body.classList.contains('panel-hidden'), direction: new THREE.Vector3() };
+  camera.getWorldDirection(shot.direction);
+  if (!shot.active || changingScene || !waterQuiz) return shot;
+  if (shot.mode === 'guided') return shot;
+  if (shot.mode === 'xr') {
+    controllerRay(shot.controller);
+    shot.origin = raycaster.ray.origin.clone(); shot.direction.copy(raycaster.ray.direction);
+  } else {
+    if (shot.mode === 'canvas') {
+      const rect = $('scene').getBoundingClientRect();
+      pointer.set((shot.point.x - rect.left) / rect.width * 2 - 1, -(shot.point.y - rect.top) / rect.height * 2 + 1);
+    } else pointer.set(0,0);
+    raycaster.setFromCamera(pointer,camera); shot.direction.copy(raycaster.ray.direction);
+  }
+  const hit = raycaster.intersectObjects(waterQuiz.pickables.filter(visibleInHierarchy),false).find(h => h.distance <= 10);
+  shot.id = waterQuiz.root.visible ? hit?.object.userData.action.id : null;
+  return shot;
+}
+function updateFillHUD() {
+  for (const [id, button] of choiceButtons) {
+    if (!button.classList.contains('pour-choice')) { button.style.removeProperty('--fill'); continue; }
+    const level = session.solved(id) ? 100 : Math.floor((waterQuiz?.fill.levels.get(id) || 0) * 100);
+    button.style.setProperty('--fill', level + '%');
+    button.classList.toggle('pouring',firing.active && (firing.id === id));
+    let value = button.querySelector('.pour-value');
+    if (!value) { value = document.createElement('span'); value.className = 'pour-value'; button.append(value); }
+    const text = level ? level + '%' : 'Κράτησε'; if (value.textContent !== text) value.textContent = text;
+  }
+  $('scene').dataset.bridgeParts = session.localCount + '/' + session.sceneData.stations.length;
+}
+function submitWater(id) {
+  const current = session.current;
+  if (!current || session.busy || session.solved(id)) return;
+  session.choose(id);
+  const result = action({ type: 'target', id: current.id, water: true });
+  if (result?.type === 'wrong') waterQuiz.reject(id,performance.now());
+  if (result?.type === 'matched') {
+    session.message = 'Σωστά! Άνοιξε η επόμενη γέφυρα.'; session.changed(false);
+  }
+}
+// Capture a hold on a vessel before the canvas navigation interprets it as drag.
+$('scene').addEventListener('pointerdown', event => {
+  if (!canFire() || event.button !== 0) return;
+  const rect = $('scene').getBoundingClientRect();
+  pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
+  raycaster.setFromCamera(pointer,camera);
+  const hit = raycaster.intersectObjects(waterQuiz.pickables.filter(visibleInHierarchy),false).find(h=>h.distance<=10);
+  if (!hit || !waterQuiz.root.visible) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  beginFire({ mode:'canvas', point:{x:event.clientX,y:event.clientY}, pointerId:event.pointerId });
+  $('scene').setPointerCapture(event.pointerId);
+},true);
+$('scene').addEventListener('pointermove', event => {
+  if (firing.mode==='canvas' && firing.pointerId===event.pointerId) firing.point={x:event.clientX,y:event.clientY};
+});
+for (const name of ['pointerup','pointercancel','lostpointercapture']) window.addEventListener(name,event=> {
+  if (firing.pointerId===event.pointerId) stopFire();
+});
+$('fire-button').addEventListener('pointerdown',event=> {
+  event.preventDefault(); beginFire({ mode:'center', pointerId:event.pointerId }); $('fire-button').setPointerCapture(event.pointerId);
+});
+document.addEventListener('keydown',event=> {
+  if (event.code!=='Space' || event.repeat || /^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(event.target.tagName)) return;
+  if (canFire()) { event.preventDefault(); beginFire({mode:'center',keyboard:true}); }
+});
+document.addEventListener('keyup',event=> { if (event.code==='Space' && firing.keyboard) stopFire(); });
+window.addEventListener('blur',stopFire);
+document.addEventListener('visibilitychange',stopFire);
 function goTo(station = activeConfig()) {
   if (changingScene || !station) return;
-  if (renderer.xr.isPresenting) return teleportTo(station.landing);
-  navigation.goTo(station); renderProximity(true);
+  stopFire();
+  const index = world.stations.findIndex(s=>s.id===station.id);
+  if (index > session.localCount) return;
+  const pose = stationPose(station);
+  if (renderer.xr.isPresenting) return teleportTo(pose.landing);
+  navigation.goTo(pose); renderProximity(true);
 }
 function action(event) {
   if (!event || changingScene) return;
   let result;
+  if (event.type === 'target' && !atActiveStation() && !session.solved(event.id)) {
+    session.message = 'Ανέβα στη γέφυρα προς τον ενεργό σταθμό'; session.changed(false); return;
+  }
+  if (event.type === 'target' && waterMode && !event.water && !session.solved(event.id) && !session.sceneComplete) {
+    session.message = 'Γέμισε το δοχείο της απάντησης'; session.changed(false); return;
+  }
   if (event.type === 'word') result = session.choose(event.id);
   if (event.type === 'target') result = session.target(event.id);
   if (result?.type === 'enter') { void changeScene(result.sceneId); return; }
@@ -109,6 +240,7 @@ function action(event) {
     clearTimeout(revealTimer);
     revealTimer = setTimeout(() => {
       if (!session.finishReveal(result.token)) return;
+      rebuildTeleportTargets();
       if (session.complete) { pendingFinal = false; if (!renderer.xr.isPresenting) showDialog('final-dialog'); }
       else if (session.sceneComplete && !session.inHub && !renderer.xr.isPresenting) showDialog('completion-dialog');
     }, reducedMotion() ? 0 : 1150);
@@ -124,11 +256,12 @@ function action(event) {
   if (event.type === 'confirm-reset') {
     clearTimeout(revealTimer); pendingFinal = false; spatial.flashes.clear(); spatial.resetConfirm = false;
     if (resetScope === 'all' && !session.inHub) { void changeScene('main', true, true); return; }
-    session.reset(resetScope);
+    stopFire(); waterQuiz?.fill.reset(); session.reset(resetScope);
     for (const actor of actors?.actors.values() || []) actor.value = 0.16;
-    if (!renderer.xr.isPresenting) navigation.spawn();
+    if (!renderer.xr.isPresenting) navigation.spawn(); else teleportTo(world.spawn);
   }
   if (event.type === 'teleport') teleportTo(event.point);
+  return result;
 }
 function rebuildChoices() {
   if (uiScene === session.sceneId) return;
@@ -136,7 +269,8 @@ function rebuildChoices() {
   for (const station of session.choices) {
     const b = document.createElement('button');
     b.className = 'choice'; b.dataset.choice = station.id;
-    b.addEventListener('click', () => action({ type: 'word', id: station.id }));
+    b.addEventListener('click', () => { if (!waterMode || session.sceneComplete || session.reviewId) action({ type: 'word', id: station.id }); });
+    bindPourButton(b, station.id);
     choiceButtons.set(station.id, b);
   }
   const nav = document.querySelector('.scene-nav'); nav.replaceChildren();
@@ -199,10 +333,12 @@ function renderFinalMindMap() {
   ending.textContent = 'Η παρομοίωση φωτίζει τον σκοπό· οι τρεις φάσεις δείχνουν την πορεία της σωτηρίας.';
   host.append(ending);
 }
+
 function renderUI() {
   if (changingScene || !spatial) return;
   rebuildChoices();
   const reviewing = Boolean(session.reviewId), completed = session.sceneComplete;
+  const traveling = !completed && !reviewing && !session.busy && !atActiveStation();
   const portal = session.inHub && session.unlocked, station = session.visibleStation;
   const number = session.sceneData.stations.findIndex(s => s.id === station.id) + 1;
   $('progress').textContent = session.count + ' / ' + session.size;
@@ -211,22 +347,27 @@ function renderUI() {
   }));
   $('journey-title').textContent = session.inHub ? 'Θεία Οικονομία' : session.sceneData.title;
   $('lesson-panel').classList.toggle('hub-panel', session.inHub);
-  $('scene-eyebrow').textContent = session.inHub ? 'Τέσσερις νησίδες · 20 συνδέσεις' : (lesson.groups.find(g => g.sceneId === session.sceneId)?.phaseLabel || 'Ενότητα ' + (lesson.groups.findIndex(g => g.sceneId === session.sceneId) + 1) + ' / 4');
+  $('scene-eyebrow').textContent = session.inHub ? 'Τέσσερις νησίδες · 20 συνδέσεις' : (lesson.groups.find(g=>g.sceneId===session.sceneId)?.phaseLabel || session.sceneData.title);
   $('back-hub').hidden = session.inHub;
   $('final-button').hidden = !session.complete;
-  $('panel-kicker').textContent = portal ? 'Ο κεντρικός χάρτης φωτίστηκε' : reviewing ? 'Επανεξέταση' : completed ? 'Η ενότητα ολοκληρώθηκε · ' + session.localCount + ' / ' + session.sceneData.stations.length : 'Σύνδεση ' + number + ' / ' + session.sceneData.stations.length;
+  $('panel-kicker').textContent = portal ? 'Ο κεντρικός χάρτης φωτίστηκε' : reviewing ? 'Επανεξέταση' : completed ? 'Η ενότητα ολοκληρώθηκε · 4 / 4' : 'Σύνδεση ' + number + ' / ' + session.sceneData.stations.length;
   $('step-number').textContent = String(number).padStart(2, '0');
-  $('lesson-prompt').textContent = portal ? 'Διάλεξε νησίδα' : reviewing || completed ? station.word : station.prompt;
-  $('feedback').textContent = session.message; $('feedback').dataset.kind = session.kind;
+  $('lesson-prompt').textContent = traveling ? 'Προχώρησε στον σταθμό ' + number : portal ? 'Διάλεξε νησίδα' : reviewing || completed ? station.word : station.prompt;
+  $('lesson-panel').classList.toggle('route-panel', traveling);
+  $('choices').hidden = traveling;
+  const explained = reviewing ? station : session.busy ? session.sceneData.stations[session.localCount-1] : completed ? station : null;
+  $('station-explanation').hidden = !explained;
+  $('station-explanation').textContent = explained?.explanation || '';
+  $('feedback').textContent = traveling ? 'Ανέβα στην ανοιχτή γέφυρα για να εμφανιστούν τα δοχεία.' : session.message; $('feedback').dataset.kind = session.kind;
   $('hint-text').hidden = reviewing || completed || !session.hasHint(station.id);
   $('hint-text').textContent = station.hint;
-  $('hint-button').hidden = reviewing || completed; $('hint-button').disabled = session.busy;
+  $('hint-button').hidden = reviewing || completed || traveling; $('hint-button').disabled = session.busy;
   $('resume-button').hidden = !reviewing || completed;
   $('reset-button').textContent = session.inHub ? 'Νέα αρχή' : 'Επαναφορά';
   $('saving-note').textContent = session.canStore ? 'Η πρόοδός σου αποθηκεύεται εδώ' : 'Μνήμη συνεδρίας';
   $('target-number').textContent = String(number).padStart(2, '0');
   $('connect-label').textContent = reviewing || completed ? 'Δες τη σκηνή' : session.selected ? 'Σύνδεσε στον στόχο' : 'Στον φωτεινό στόχο';
-  $('connect-target').classList.toggle('ready', Boolean(session.selected)); $('connect-target').hidden = portal;
+  $('connect-target').classList.toggle('ready', Boolean(session.selected)); $('connect-target').hidden = traveling || portal || (waterMode && !reviewing && !completed);
   session.choices.forEach(s => {
     const b = choiceButtons.get(s.id); $('choices').append(b);
     b.textContent = s.word; b.classList.toggle('portal-choice', portal);
@@ -237,7 +378,8 @@ function renderUI() {
     b.classList.toggle('selected', session.selected === s.id || session.reviewId === s.id);
     b.classList.toggle('solved', session.solved(s.id) && !portal);
     b.setAttribute('aria-pressed', String(session.selected === s.id || session.reviewId === s.id));
-    b.disabled = session.busy;
+    b.disabled = session.busy || (waterMode && !portal && !reviewing && !completed && session.solved(s.id));
+    b.classList.toggle('pour-choice', waterMode && !portal && !reviewing && !completed);
   });
   document.querySelectorAll('[data-station]').forEach(b => {
     const id = b.dataset.station, solved = session.solved(id), active = session.current?.id === id;
@@ -254,6 +396,19 @@ function renderUI() {
   }));
   $('final-question').textContent = lesson.finalQuestion;
   renderFinalMindMap();
+  waterQuiz?.sync(session);
+  $('bridge-hud').hidden = !started;
+  $('bridge-count').textContent = session.localCount + ' / ' + session.sceneData.stations.length;
+  $('bridge-parts').replaceChildren(...session.sceneData.stations.map((_,i) => {
+    const piece = document.createElement('i'); piece.className = i < session.localCount ? 'raised' : ''; return piece;
+  }));
+  $('water-guide').textContent = completed ? 'Όλες οι γέφυρες άνοιξαν · εξερεύνησε ελεύθερα' : traveling ? 'Ανέβα στη γέφυρα · σταθμός ' + number : waterMode ? 'Απάντησε εδώ · γέμισε το σωστό δοχείο' : 'Απάντησε εδώ · σύνδεσε τη σωστή κάρτα';
+  $('gameplay-toggle').textContent = waterMode ? 'Παιχνίδι νερού' : 'Κλασικές κάρτες';
+  $('gameplay-toggle').setAttribute('aria-pressed', String(waterMode));
+  $('fire-button').hidden = !started || !waterMode || completed || reviewing || traveling;
+  $('look-button').hidden = waterMode && !completed;
+  $('go-station').textContent = traveling ? '↗ Στον σταθμό ' + number : '↗ Μπροστά στον σταθμό';
+  document.body.classList.toggle('water-mode',waterMode && !completed && !reviewing && started);
   spatial.refresh(); renderProximity(true);
 }
 function renderProximity(force = false) {
@@ -262,12 +417,13 @@ function renderProximity(force = false) {
   const near = Math.hypot(p.x - station.position[0], p.z - station.position[1]) < 6;
   const key = String(near) + String(session.busy);
   if (key !== lastProximity || force) {
-    $('connect-target').disabled = session.busy || (!near && !session.sceneComplete && !session.reviewId);
+    $('connect-target').disabled = session.busy;
     $('connect-target').title = near ? 'Σύνδεσε την κάρτα με τον στόχο' : 'Πλησίασε τη σκηνή ή πάτησε «Στο σημείο»';
     lastProximity = key;
   }
 }
 function syncNavigation() {
+  if (document.querySelector('dialog[open]') || changingScene) stopFire();
   navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]') && !renderer.xr.isPresenting;
   if (!navigation.enabled) navigation.keys.clear();
 }
@@ -279,7 +435,7 @@ function closeDialog(id) { $(id).close(); syncNavigation(); }
 function showReset(scope) {
   resetScope = scope;
   $('reset-title').textContent = scope === 'all' ? 'Νέα αρχή;' : 'Επαναφορά ενότητας;';
-  $('reset-description').textContent = scope === 'all' ? 'Θα ξεκινήσουν από την αρχή και οι ' + session.size + ' συνδέσεις.' : 'Θα ξεκινήσουν από την αρχή οι ' + session.sceneData.stations.length + ' συνδέσεις αυτής της ενότητας.';
+  $('reset-description').textContent = scope === 'all' ? 'Θα ξεκινήσουν από την αρχή και οι 20 συνδέσεις.' : 'Θα ξεκινήσουν από την αρχή οι τέσσερις συνδέσεις αυτής της ενότητας.';
   $('reset-all').hidden = scope === 'all';
   if (!$('reset-dialog').open) showDialog('reset-dialog');
 }
@@ -326,6 +482,7 @@ function renderMotion() {
 }
 $('motion-toggle').addEventListener('click', () => { motionOverride = !reducedMotion(); renderMotion(); });
 preference.addEventListener('change', renderMotion);
+$('gameplay-toggle').addEventListener('click', () => { stopFire(); waterMode = !waterMode; setWorldCards(false); renderUI(); });
 $('skybox-toggle').addEventListener('click', () => {
   skyboxEnabled = !skyboxEnabled; applyBackground(); renderUI();
 });
@@ -336,9 +493,9 @@ const teleportTargets = [];
 function rebuildTeleportTargets() {
   for (const marker of teleportTargets) { scene.remove(marker); marker.geometry.dispose(); marker.material.dispose(); }
   teleportTargets.length = 0;
-for (const point of [world.spawn, ...world.stations.map(s => s.landing)]) {
+for (const point of availableLandings()) {
   const marker = new THREE.Mesh(new THREE.RingGeometry(0.24, 0.35, 32), new THREE.MeshBasicMaterial({ color: 0xe9ce85, side: THREE.DoubleSide, transparent: true, opacity: 0.82, depthWrite: false, toneMapped: false }));
-  marker.position.set(point[0], 0.07, point[1]); marker.rotation.x = -Math.PI / 2;
+  marker.position.set(point[0], point === world.spawn ? (session.inHub ? .19 : .07) : .29, point[1]); marker.rotation.x = -Math.PI / 2;
   marker.userData.action = { type: 'teleport', point }; marker.visible = renderer.xr.isPresenting; scene.add(marker); teleportTargets.push(marker);
 }
 }
@@ -346,6 +503,9 @@ const fade = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), new THREE.Mes
 fade.renderOrder = 1000; fade.visible = false; camera.add(fade);
 function teleportTo(point) {
   if (!renderer.xr.isPresenting) return;
+  stopFire();
+  const permitted = availableLandings();
+  if (!permitted.some(p=>p[0]===point[0] && p[1]===point[1])) return;
   teleportFlash = performance.now();
   fade.visible = true; fade.material.opacity = 0.95;
   rig.position.x = point[0]; rig.position.z = point[1]; rig.updateMatrixWorld(true);
@@ -361,8 +521,10 @@ for (let i = 0; i < 2; i++) {
     if (!renderer.xr.isPresenting) return;
     controllerRay(controller);
     const hit = hitFromRay(raycaster, true);
+    if (waterMode && !session.sceneComplete && !session.reviewId && (!hit || hit.object.userData.action?.type === 'vessel')) { beginFire({ mode: 'xr', controller, id: hit?.object.userData.action?.id }); return; }
     if (hit) action(hit.object.userData.action);
   });
+  controller.addEventListener('selectend', () => { if (firing.controller === controller) stopFire(); });
   controllers.push({ controller, line, cursor });
 }
 function controllerRay(controller) {
@@ -371,6 +533,7 @@ function controllerRay(controller) {
   raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix).normalize();
 }
 renderer.xr.addEventListener('sessionstart', () => {
+  stopFire();
   desktopPose = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
   if (navigation.controls.isLocked) navigation.controls.unlock();
   const yaw = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ').y;
@@ -382,6 +545,7 @@ renderer.xr.addEventListener('sessionstart', () => {
   start(); syncNavigation();
 });
 renderer.xr.addEventListener('sessionend', () => {
+  stopFire();
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0);
   if (desktopPose) { camera.position.copy(desktopPose.position); camera.quaternion.copy(desktopPose.quaternion); }
   document.body.classList.remove('xr-active');
@@ -405,12 +569,16 @@ function resize() {
   if (renderer.xr.isPresenting) return;
   const w = $('scene').clientWidth, h = $('scene').clientHeight;
   renderer.setSize(w, h, false); camera.aspect = w / h;
-  const baseFov = world.kind === 'hub' ? 66 : 58;
+  const baseFov = world.kind === 'hub' ? 66 : 68;
   // Preserve the overview's horizontal framing in a narrow preview pane.
   camera.fov = Math.min(105, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * Math.max(1, 1.6 / camera.aspect))));
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe($('stage')); resize();
+// Long questions change the mobile panel height; keep movement/fire above it.
+new ResizeObserver(() => {
+  $('stage').style.setProperty('--lesson-panel-height', $('lesson-panel').getBoundingClientRect().height + 'px');
+}).observe($('lesson-panel'));
 function disposeLevel(root) {
   if (!root) return;
   const geometries = new Set(), materials = new Set(), textures = new Set();
@@ -428,11 +596,7 @@ function disposeLevel(root) {
 }
 async function getSkybox() {
   if (!skybox) {
-    try {
-      skybox = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + worlds.main.skybox);
-    } catch {
-      throw new Error(`Δεν φορτώθηκε η εικόνα του ορίζοντα «${worlds.main.skybox}».`);
-    }
+    skybox = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + worlds.main.skybox);
     skybox.colorSpace = THREE.SRGBColorSpace; skybox.mapping = THREE.EquirectangularReflectionMapping;
   }
   return skybox;
@@ -448,7 +612,7 @@ async function changeScene(id, force = false, resetAll = false) {
   if (changingScene || (!force && level && id === session.sceneId)) return;
   if (id !== 'main' && !session.unlocked) return;
   const previousId = session.sceneId, cfg = worlds[id];
-  changingScene = true; clearTimeout(revealTimer);
+  changingScene = true; stopFire(); clearTimeout(revealTimer);
   $('stage').setAttribute('aria-busy', 'true');
   $('scene-loading').textContent = 'Μετάβαση · ' + CoreTitle(id);
   $('scene-loading').hidden = !started; syncNavigation();
@@ -456,21 +620,28 @@ async function changeScene(id, force = false, resetAll = false) {
   session.enter(id);
   const next = new THREE.Scene();
   try {
-    const nextEnvironment = cfg.kind === 'hub' ? buildHub(next, cfg) : buildCourtyard(next, cfg);
+    const quiz = { segments: session.sceneData.stations.length, progress: session.localCount };
+    const nextEnvironment = cfg.kind === 'hub' ? buildHub(next, cfg, quiz) : buildCourtyard(next, cfg, quiz);
     const nextSpatial = new SpatialUI(next, cfg, session, action);
     const nextActors = await loadActors(next, cfg, import.meta.env.BASE_URL, progress => {
       if (!started) $('start-label').textContent = 'Ετοιμασία εικόνων · ' + Math.round(progress * 100) + '%';
     });
     if (cfg.kind === 'hub') await getSkybox();
+    waterQuiz?.dispose();
+    const nextWaterQuiz = new WaterQuiz(next, cfg, session, camera, submitWater, nextEnvironment.approaches);
     if (level) { scene.remove(level); disposeLevel(level); }
-    level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; world = cfg;
+    level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; waterQuiz = nextWaterQuiz; world = cfg;
     scene.add(level); navigation.world = cfg; navigation.obstacles = courtyard.obstacles;
     camera.fov = cfg.kind === 'hub' ? 66 : 58; camera.updateProjectionMatrix();
     if (renderer.xr.isPresenting) {
       rig.position.set(cfg.spawn[0], 0, cfg.spawn[1]); rig.rotation.set(0, 0, 0);
       const view = new THREE.PerspectiveCamera(); view.position.set(cfg.spawn[0], 1.65, cfg.spawn[1]); view.lookAt(...(cfg.lookAt || [0, 1.65, -5]));
       desktopPose = { position: view.position.clone(), quaternion: view.quaternion.clone() };
-    } else navigation.spawn();
+    } else if (session.localCount > 0 && !session.sceneComplete) navigation.goTo(stationPose(cfg.stations[session.localCount-1]));
+    else { navigation.spawn(); if (!session.sceneComplete) {
+      const first = nextEnvironment.approaches[0].quizPosition; camera.lookAt(first[0],1.2,first[1]);
+    } }
+    lastStationNear = null;
     rebuildTeleportTargets(); applyBackground(); ready = true; uiScene = null; lastProximity = null;
     $('start-label').textContent = session.count ? 'Συνέχισε τη διαδρομή' : 'Μπες στη διαδρομή';
     $('start-button').disabled = false;
@@ -484,9 +655,7 @@ async function changeScene(id, force = false, resetAll = false) {
   } catch (error) {
     disposeLevel(next); changingScene = false; session.enter(previousId);
     $('scene-loading').hidden = true; $('stage').setAttribute('aria-busy', 'false');
-    const detail = typeof error?.message === 'string' && error.message.trim()
-      ? error.message : 'Παρουσιάστηκε σφάλμα κατά τη φόρτωση της εικόνας ή της σκηνής.';
-    fail('Δεν φορτώθηκε η ενότητα. ' + detail); console.error(error); syncNavigation();
+    fail('Δεν φορτώθηκε η ενότητα. ' + (error?.message || 'Παρουσιάστηκε σφάλμα φόρτωσης.')); console.error(error); syncNavigation();
   }
 }
 function CoreTitle(id) { return lesson.scenes.find(s => s.id === id).title; }
@@ -500,11 +669,18 @@ renderer.setAnimationLoop(time => {
   const xr = renderer.xr.isPresenting, viewCamera = xr ? renderer.xr.getCamera() : camera;
   viewCamera.getWorldPosition(cameraPosition);
   const reduced = reducedMotion();
-  courtyard?.update(now / 1000, reduced);
+  courtyard?.update(now / 1000, reduced, session.localCount, dt);
+  const waterShot = updateFire();
+  waterQuiz?.update(now,dt,session,cameraPosition,reduced,waterMode && started && !changingScene && (atActiveStation() || session.busy),waterShot);
+  updateFillHUD();
   actors?.update(now, cameraPosition, session, reduced, dt);
   if (!changingScene) spatial?.update(now, cameraPosition, reduced);
-  if (spatial) spatial.rack.visible = xr || worldCards || navigation.controls.isLocked;
-  if (started) renderProximity();
+  if (spatial) spatial.rack.visible = (xr || worldCards || navigation.controls.isLocked) && (!waterMode || session.sceneComplete || Boolean(session.reviewId));
+  if (started && !changingScene) {
+    const near = atActiveStation();
+    if (near !== lastStationNear) { lastStationNear = near; renderUI(); }
+    renderProximity();
+  }
   if (navigation.controls.isLocked && !xr) {
     raycaster.setFromCamera(pointer.set(0, 0), camera);
     hovered = hitFromRay(raycaster);
@@ -539,4 +715,4 @@ renderer.setAnimationLoop(time => {
     fpsFrames = 0; fpsTime = 0;
   }
 });
-window.addEventListener('pagehide', () => { clearTimeout(revealTimer); navigation.keys.clear(); });
+window.addEventListener('pagehide', () => { stopFire(); clearTimeout(revealTimer); navigation.keys.clear(); });
