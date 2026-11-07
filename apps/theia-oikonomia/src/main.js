@@ -13,18 +13,19 @@ import { WaterQuiz } from './water-quiz.js';
 const $ = id => document.getElementById(id);
 document.getElementById('app').innerHTML = [
   '<main id="stage" aria-label="Η διαδρομή μας">',
-  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Οι κάρτες είναι διαθέσιμες και στον πλαϊνό πίνακα."></canvas>',
+  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή. Σύρε για να κοιτάξεις και χρησιμοποίησε WASD ή βελάκια για κίνηση. Οι ερωτήσεις και οι επιλογές βρίσκονται στο μενού."></canvas>',
   '<div class="vignette"></div>',
+  '<button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-label="Άνοιγμα μενού" title="Ερωτήσεις, πληροφορίες και επιλογές" hidden><span aria-hidden="true">☰</span><span>Μενού</span></button>',
   '<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><div><p class="eyebrow" id="scene-eyebrow">Τέσσερις νησίδες · 20 συνδέσεις</p><h1 id="journey-title">Η διαδρομή μας</h1></div></div>',
   '<div class="top-actions"><div class="progress-pill" aria-label="Πρόοδος"><div id="global-dots" class="progress-dots" aria-hidden="true"><i></i><i></i><i></i></div><output id="progress">0 / 20</output></div><button class="tool icon" id="help-button" aria-label="Οδηγίες">?</button><button class="tool" id="back-hub" hidden>↩ Χάρτης</button><button class="tool" id="final-button" hidden>Χάρτης εννοιών</button><span id="vr-slot"></span></div></header>',
   '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από την παρομοίωση στις τρεις φάσεις</p><h2 id="welcome-title">Η Θεία<br>Οικονομία.</h2><p>Ιατρική παρομοίωση · Παλαιά Διαθήκη · Καινή Διαθήκη · Εκκλησία.<br>Τέσσερις νησίδες, είκοσι φωτεινές συνδέσεις.</p><p class="welcome-note"><strong>Να θυμάσαι:</strong> η ασθένεια είναι παρομοίωση· οι φάσεις είναι τρεις.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Η πρώτη γέφυρα είναι έτοιμη. Γέμισε τη σωστή απάντηση για να ανοίξει η επόμενη.</p></div><div class="welcome-footer"><span>Φθορά → Σωτηρία</span><span>Τρεις φάσεις</span></div></section>',
-  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 4</span><div><span id="step-number" class="step-number">01</span><button id="hide-panel" class="panel-close" aria-label="Κλείσιμο καρτών">×</button></div></div><h2 id="lesson-prompt">Η διαδρομή της σωτηρίας</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="station-explanation" class="station-explanation" hidden></p><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
+  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 4</span><div><span id="step-number" class="step-number">01</span></div></div><h2 id="lesson-prompt">Η διαδρομή της σωτηρίας</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="station-explanation" class="station-explanation" hidden></p><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
   '<div id="reticle" aria-hidden="true"></div>',
   '<section id="bridge-hud" hidden aria-label="Πρόοδος γέφυρας"><span class="water-kicker">Χτίσε το πέρασμα</span><div class="bridge-headline"><strong>Περάσματα</strong><output id="bridge-count">0 / 4</output></div><div id="bridge-parts"></div><p id="water-guide">Γέμισε το δοχείο της σωστής απάντησης.</p></section>',
   '<button id="fire-button" hidden aria-label="Κράτησε για βολή νερού προς το κέντρο"><span aria-hidden="true">◉</span><span>Νερό</span></button>',
   '<div class="keyboard-guide" id="keyboard-guide" hidden><span class="normal-guide"><span class="desktop-controls"><kbd>W A S D</kbd> κίνηση <span class="dot">·</span> σύρε για ματιά <span class="desktop-hint">· <kbd>Tab</kbd> κάρτες</span></span><span class="touch-controls">Κράτησε και σύρε τον μοχλό για κίνηση <span class="dot">·</span> σύρε για ματιά</span></span><span class="locked-guide">Στόχευσε και πάτησε <span class="dot">·</span> <kbd>Esc</kbd> για κάρτες</span></div>',
   '<div id="touch-walk" class="touch-walk" hidden role="group" aria-label="Χειριστήριο κίνησης αφής"><div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span class="touch-walk-stick" id="touch-walk-stick" aria-hidden="true"></span></div><span class="touch-walk-label">Κίνηση</span></div>',
-  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool paper" id="restore-panel">Κάρτες</button><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
+  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
   '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
   '</main>',
   '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
@@ -66,7 +67,7 @@ let started = false, ready = false, changingScene = false, vrButton = null, reve
 let lastTime = performance.now(), lastProximity = null, hovered = null, motionOverride = null;
 let fpsTime = 0, fpsFrames = 0, desktopPose = null, turnLatched = false, teleportFlash = -1000;
 let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
-let worldCards = false, lastStationNear = null;
+let worldCards = false, lastStationNear = null, interfaceOpen = false;
 const preference = matchMedia('(prefers-reduced-motion: reduce)');
 const reducedMotion = () => motionOverride ?? preference.matches;
 const navigation = new Navigation(camera, renderer, world, [], {
@@ -75,8 +76,8 @@ const navigation = new Navigation(camera, renderer, world, [], {
   lock: locked => document.body.classList.toggle('pointer-locked', locked),
   escape: () => {
     if (session.selected) { session.selected = null; session.changed(false); }
-    document.body.classList.remove('panel-hidden');
     setWorldCards(false);
+    setInterfaceMenu(true);
   },
 });
 const choiceButtons = new Map();
@@ -145,7 +146,7 @@ function bindPourButton(button, id) {
   button.addEventListener('keyup', event => { if (event.code === 'Space' || event.code === 'Enter') stopFire(); });
 }
 function updateFire() {
-  const shot = { ...firing, xr: renderer.xr.isPresenting, worldPrompt: renderer.xr.isPresenting || document.body.classList.contains('panel-hidden'), direction: new THREE.Vector3() };
+  const shot = { ...firing, xr: renderer.xr.isPresenting, worldPrompt: renderer.xr.isPresenting || !interfaceOpen, direction: new THREE.Vector3() };
   camera.getWorldDirection(shot.direction);
   if (!shot.active || changingScene || !waterQuiz) return shot;
   if (shot.mode === 'guided') return shot;
@@ -439,13 +440,33 @@ function showReset(scope) {
   $('reset-all').hidden = scope === 'all';
   if (!$('reset-dialog').open) showDialog('reset-dialog');
 }
+function setInterfaceMenu(open) {
+  interfaceOpen = Boolean(open);
+  if (interfaceOpen && worldCards) {
+    worldCards = false;
+    document.body.classList.remove('spatial-cards');
+    $('look-button').textContent = 'Κάρτες στον χώρο';
+    $('look-button').setAttribute('aria-pressed', 'false');
+  }
+  document.body.classList.toggle('interface-collapsed', started && !interfaceOpen && !renderer.xr.isPresenting);
+  const button = $('menu-toggle');
+  button.hidden = !started || renderer.xr.isPresenting;
+  button.setAttribute('aria-expanded', String(interfaceOpen));
+  button.setAttribute('aria-label', interfaceOpen ? 'Κλείσιμο μενού' : 'Άνοιγμα μενού');
+  button.title = interfaceOpen ? 'Κλείσιμο μενού' : 'Άνοιγμα ερωτήσεων, πληροφοριών και επιλογών';
+  button.innerHTML = interfaceOpen
+    ? '<span aria-hidden="true">×</span><span>Κλείσιμο</span>'
+    : '<span aria-hidden="true">☰</span><span>Μενού</span>';
+}
 function start() {
   if (!ready) return;
   started = true; $('welcome').hidden = true; $('lesson-panel').hidden = false;
   $('bottom-bar').hidden = false; $('keyboard-guide').hidden = false; $('touch-walk').hidden = false;
+  setInterfaceMenu(false);
   syncNavigation(); renderUI();
 }
 $('start-button').addEventListener('click', start);
+$('menu-toggle').addEventListener('click', () => setInterfaceMenu(!interfaceOpen));
 $('go-station').addEventListener('click', () => goTo());
 $('connect-target').addEventListener('click', () => action({ type: 'target', id: session.visibleStation.id }));
 $('hint-button').addEventListener('click', () => action({ type: 'hint' }));
@@ -467,14 +488,13 @@ $('look-button').addEventListener('click', () => {
   setWorldCards(!worldCards);
 });
 function setWorldCards(value) {
-  worldCards = value;
-  document.body.classList.toggle('spatial-cards', value);
-  document.body.classList.remove('panel-hidden');
-  $('look-button').textContent = value ? 'Πίνακας καρτών' : 'Κάρτες στον χώρο';
+  worldCards = Boolean(value);
+  document.body.classList.toggle('spatial-cards', worldCards);
+  if (worldCards) setInterfaceMenu(false);
+  $('look-button').textContent = worldCards ? 'Πίνακας καρτών' : 'Κάρτες στον χώρο';
   $('look-button').setAttribute('aria-pressed', String(value));
 }
-$('hide-panel').addEventListener('click', () => { setWorldCards(false); document.body.classList.add('panel-hidden'); });
-$('restore-panel').addEventListener('click', () => setWorldCards(false));
+
 $('retry-button').addEventListener('click', () => location.reload());
 function renderMotion() {
   $('motion-toggle').textContent = reducedMotion() ? 'Ενεργοποίηση κίνησης' : 'Παύση κίνησης';
@@ -549,6 +569,7 @@ renderer.xr.addEventListener('sessionend', () => {
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0);
   if (desktopPose) { camera.position.copy(desktopPose.position); camera.quaternion.copy(desktopPose.quaternion); }
   document.body.classList.remove('xr-active');
+  setInterfaceMenu(false);
   teleportTargets.forEach(m => { m.visible = false; }); controllers.forEach(c => { c.cursor.visible = false; });
   fade.visible = false; spatial.setResetConfirm(false); syncNavigation();
 });

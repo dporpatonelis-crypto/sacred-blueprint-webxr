@@ -57,3 +57,11 @@ body.water-mode .panel-top{margin-bottom:12px;padding-bottom:10px}body.water-mod
 @media(max-width:700px){body.water-mode #lesson-panel{width:auto;padding:12px 14px;max-height:48vh}body.water-mode #lesson-panel #lesson-prompt{font-size:15px;line-height:1.35;max-height:9.45em}body.water-mode .choice.pour-choice{min-height:36px;padding:8px 9px}body.water-mode #lesson-panel.route-panel{max-height:160px}.welcome-inner h2{font-size:48px}.welcome-inner .welcome-note{font-size:11px!important}.station-explanation{font-size:11px}}
 @media(max-width:700px){body.water-mode #fire-button,body.water-mode #touch-walk{bottom:calc(116px + var(--lesson-panel-height,183px) + env(safe-area-inset-bottom))}}
 #final-dialog.mind-map-dialog{width:min(1120px,calc(100vw - 28px))}#final-title:focus{outline:none}
+
+/* The full lesson interface opens on demand; gameplay remains on the scene. */
+.menu-toggle{position:absolute;z-index:12;top:20px;right:20px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border:1px solid #f0d59d;border-radius:12px;background:#1e493fe8;color:#fff0cd;box-shadow:0 8px 25px #0b2e2a44;backdrop-filter:blur(12px);font-size:13px;font-weight:650;letter-spacing:.02em;transition:background .16s,transform .16s}.menu-toggle:hover{background:#35604d;transform:translateY(-1px)}.menu-toggle>span:first-child{font-size:20px;line-height:1}.menu-toggle[hidden]{display:none!important}
+body.interface-collapsed .masthead,body.interface-collapsed #lesson-panel,body.interface-collapsed #bridge-hud,body.interface-collapsed .keyboard-guide,body.interface-collapsed .bottom-bar,body.interface-collapsed #fire-button{display:none!important}
+body.interface-collapsed #menu-toggle{display:inline-flex}body.interface-collapsed #menu-toggle[hidden],body.xr-active #menu-toggle{display:none!important}
+body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:84px}
+@media(max-width:1000px){.menu-toggle{right:21px}body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:75px}}
+@media(max-width:700px){.menu-toggle{top:15px;right:15px;min-height:38px;padding:8px 11px;font-size:12px}body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:66px}}
