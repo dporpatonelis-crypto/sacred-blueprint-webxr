@@ -32,8 +32,6 @@ jobs:
           sudo apt-get install -y ffmpeg
       - name: Install locked dependencies
         run: npm ci
-      - name: Regenerate updated Divine Economy sprite atlases
-        run: npm run prepare:animations --workspace=apps/theia-oikonomia -- --only compassion,hub-illness,abraham,hub-old,prophets
       - name: Validate collection and lessons
         run: npm test
       - name: Build published worlds
