@@ -18,10 +18,9 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     if (!gesture || event.pointerId !== gesture.pointerId) return;
     event.preventDefault();
     const dx = event.clientX - gesture.startX, dy = event.clientY - gesture.startY;
-    gesture.moved ||= Math.hypot(dx, dy) >= gesture.slop;
-    gesture.along = dx * gesture.axisX + dy * gesture.axisY;
-    gesture.across = gesture.axisX ? dy : dx;
-    gesture.offset = Math.max(0, Math.min(gesture.distance, gesture.along));
+    const along = dx * gesture.axisX + dy * gesture.axisY;
+    // Keep forward progress even if the finger slips backwards before release.
+    gesture.offset = Math.max(gesture.offset, Math.min(gesture.distance, along));
     gesture.button.style.transform = `translate3d(${gesture.axisX * gesture.offset}px, ${gesture.axisY * gesture.offset}px, 0)`;
   };
   const finishGesture = (event = null, cancelled = false) => {
@@ -35,10 +34,9 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     suppressClick = true;
     if (current.button.hasPointerCapture(current.pointerId)) current.button.releasePointerCapture(current.pointerId);
     if (cancelled) return;
-    const farEnough = current.offset >= Math.max(12, current.distance * .30);
-    const towardBlank = current.along >= Math.abs(current.across) * .65;
-    // A tap uses the same path as a drag. Its compatibility click is consumed below.
-    if (!current.moved || farEnough && towardBlank) activity.move(current.tile);
+    // There is only one legal destination. Every normal release completes it,
+    // regardless of drag distance, direction or the timing of the final event.
+    activity.move(current.tile);
   };
   const cancelGesture = () => finishGesture(null, true);
   const beginGesture = (event, tile, button) => {
@@ -52,8 +50,7 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     const axisY = Math.floor(blank / columns) - Math.floor(index / columns);
     const rect = button.getBoundingClientRect();
     gesture = { tile, button, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
-      axisX, axisY, distance: axisX ? rect.width : rect.height, slop: event.pointerType === 'touch' ? 8 : 6,
-      moved: false, along: 0, across: 0, offset: 0 };
+      axisX, axisY, distance: axisX ? rect.width : rect.height, offset: 0 };
     button.classList.add('is-dragging'); grid.classList.add('is-dragging');
     button.setPointerCapture(event.pointerId);
   };
@@ -89,7 +86,7 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     const blank = root.querySelector('.puzzle-blank'); place(blank, puzzle.blank); blank.hidden = puzzle.solved;
     reference.hidden = !preview; previewButton.setAttribute('aria-pressed', String(preview)); previewButton.textContent = preview ? 'Επιστροφή στο puzzle' : 'Δες την εικόνα';
     explanationsNode.hidden = !puzzle.solved;
-    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.' : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Σύρε προς το κενό ή πάτησε ένα φωτισμένο πλακίδιο.';
+    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.' : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Άφησε το πλακίδιο και η κίνηση ολοκληρώνεται προς το κενό.';
     if (!activity.canStore) status.textContent += ' Η πρόοδος διατηρείται όσο μένει ανοιχτή η σελίδα.';
     if (puzzle.solved && !wasSolved) onSolved(); wasSolved = puzzle.solved;
   };
