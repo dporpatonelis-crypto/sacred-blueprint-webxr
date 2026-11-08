@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-import content from './data/talanta-hymn.json' with { type: 'json' };
+import { manuscriptForWorld } from './manuscript-content.js';
 import { panel, setText } from '../../../shared/journey/text-panels.js';
 
-export const hymnContent = content;
-export const hymnEntry = id => content.entries.find(entry => entry.stationId === id);
 const CW = 1024, CH = 924, BW = 2.05, BH = BW * CH / CW, FONT = 'Georgia, "Times New Roman", serif';
 const clamp = value => Math.max(0, Math.min(1, value));
 const ease = value => { const t = clamp(value); return t * t * (3 - 2 * t); };
@@ -32,13 +30,14 @@ function invisibleHit(rect, action) {
 }
 
 /** World-space manuscript, exact glyph origins, one beam and two words per station. */
-export class TalantaHymn {
+export class ManuscriptConnections {
   constructor(scene, world, session, actors, approaches, onFinished) {
+    this.content = manuscriptForWorld(world.id);
     this.world = world; this.session = session; this.actors = actors; this.onFinished = onFinished;
-    this.root = new THREE.Group(); scene.add(this.root); this.root.name = 'talanta-hymn';
+    this.root = new THREE.Group(); scene.add(this.root); this.root.name = world.id + '-manuscript';
     this.pickables = []; this.books = []; this.words = new Map(); this.beams = new Map(); this.glyphs = new Map(); this.pages = new Map();
     this.page = -1; this.active = null; this.signature = ''; this.lastInterpretation = ''; this.resetConfirm = false;
-    for (const entry of content.entries) for (const word of entry.keywords) this.glyphs.set(word, glyph(word));
+    for (const entry of this.content.entries) for (const word of entry.keywords) this.glyphs.set(word, glyph(word));
     this.layout = this.makePage(-1).layout;
     this.makeBook('entry', [0, 1.55, 5.75]);
     world.stations.forEach((station, index) => {
@@ -52,8 +51,11 @@ export class TalantaHymn {
   }
   get reading() { return this.page >= 0; }
   get revealing() { return Boolean(this.active); }
-  get interpretationText() { return !this.reading && this.active && this.active.elapsed >= (this.active.reduced ? 0 : 800) ? hymnEntry(this.active.id).interpretation : ''; }
+  get finalPage() { return this.content.readingPages.length; }
+  entry(id) { return this.content.entries.find(entry => entry.stationId === id); }
+  get interpretationText() { return !this.reading && this.active && this.active.elapsed >= (this.active.reduced ? 0 : 800) ? this.entry(this.active.id).interpretation : ''; }
   makePage(page) {
+    const content = this.content;
     const solved = content.entries.map(e => Number(this.session.solved(e.stationId))).join('');
     const key = `${page}:${this.session.selected || this.session.reviewId || ''}:${solved}:${this.session.complete}`;
     if (this.pages.has(key)) return this.pages.get(key);
@@ -62,7 +64,7 @@ export class TalantaHymn {
     const wash = ctx.createLinearGradient(0, 0, CW, CH); wash.addColorStop(0, '#f9edcb'); wash.addColorStop(.5, '#edce94'); wash.addColorStop(1, '#f5e2b9');
     ctx.fillStyle = wash; ctx.fillRect(0, 0, CW, CH); ctx.strokeStyle = '#9a6c2e'; ctx.lineWidth = 3; ctx.strokeRect(22, 22, CW - 44, CH - 44);
     ctx.strokeStyle = '#b9904c'; ctx.lineWidth = 1; ctx.strokeRect(32, 32, CW - 64, CH - 64);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#846232'; ctx.font = '17px system-ui'; ctx.fillText('ΥΜΝΟΣ ΤΗΣ ΜΕΓΑΛΗΣ ΤΡΙΤΗΣ', CW / 2, 66);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#846232'; ctx.font = '17px system-ui'; ctx.fillText(content.heading, CW / 2, 66);
     ctx.fillStyle = '#51391f'; ctx.font = `38px ${FONT}`; ctx.fillText(content.title, CW / 2, 113);
     const layout = new Map(), hits = [];
     const button = (text, rect, action) => {
@@ -71,12 +73,12 @@ export class TalantaHymn {
       ctx.fillStyle = '#533a20'; ctx.textAlign = 'center'; ctx.font = '23px system-ui'; ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h / 2 + 8); hits.push({ rect, action });
     };
     if (page < 0) {
-      ctx.font = '19px system-ui'; ctx.fillStyle = '#7d5d31'; ctx.fillText('Επίλεξε στίχους · σύνδεσε με τον σταθμό', CW / 2, 149);
+      ctx.font = '19px system-ui'; ctx.fillStyle = '#7d5d31'; ctx.fillText(content.instruction, CW / 2, 149);
       content.entries.forEach((entry, index) => {
         const rect = { x: 54, y: 180 + index * 197, w: 916, h: 175 }, selected = this.session.selected === entry.stationId || this.session.reviewId === entry.stationId, done = this.session.solved(entry.stationId);
         ctx.fillStyle = selected ? '#f1cf83' : done ? '#d9dfb8' : '#f9edce'; ctx.strokeStyle = selected ? '#9a641d' : '#b18c4f'; ctx.lineWidth = selected ? 4 : 1.5;
         ctx.beginPath(); ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 12); ctx.fill(); ctx.stroke();
-        ctx.textAlign = 'left'; ctx.font = '16px system-ui'; ctx.fillStyle = '#806331'; ctx.fillText((done ? '✓ ' : '') + 'ΧΩΡΙΟ ' + (index + 1) + (entry.note ? ' · ΠΡΟΣΩΠΙΚΗ ΕΦΑΡΜΟΓΗ' : ''), rect.x + 23, rect.y + 29);
+        ctx.textAlign = 'left'; ctx.font = '16px system-ui'; ctx.fillStyle = '#806331'; ctx.fillText((done ? '✓ ' : '') + 'ΧΩΡΙΟ ' + (index + 1) + (entry.sourceLabel ? ' · ' + entry.sourceLabel.toLocaleUpperCase('el') : entry.note ? ' · ΠΡΟΣΩΠΙΚΗ ΕΦΑΡΜΟΓΗ' : ''), rect.x + 23, rect.y + 29);
         ctx.font = `28px ${FONT}`; ctx.fillStyle = done ? '#3c4c2b' : '#50381f';
         const anchors = []; const lines = wrapped(ctx, entry.text, rect.w - 48);
         for (const [lineIndex, line] of lines.entries()) {
@@ -98,17 +100,20 @@ export class TalantaHymn {
         }
         layout.set(entry.stationId, anchors); hits.push({ rect, action: { type: 'word', id: entry.stationId } });
       });
-      button('Πλήρης ύμνος', { x: 84, y: 801, w: this.session.complete ? 405 : 856, h: 65 }, { type: 'hymn-page', page: 0 });
-      if (this.session.complete) button('Τελικό ερώτημα', { x: 533, y: 801, w: 405, h: 65 }, { type: 'hymn-page', page: 3 });
+      button(content.readLabel, { x: 84, y: 801, w: this.session.complete ? 405 : 856, h: 65 }, { type: 'hymn-page', page: 0 });
+      if (this.session.complete) button('Τελικό ερώτημα', { x: 533, y: 801, w: 405, h: 65 }, { type: 'hymn-page', page: this.finalPage });
     } else {
-      const text = page === 3 ? this.session.sceneData && this.finalQuestion : content.readingPages[page];
+      const reading = content.readingPages[page], final = page === this.finalPage;
+      const text = final ? this.finalQuestion : reading.text;
+      ctx.textAlign = 'center'; ctx.font = '19px system-ui'; ctx.fillStyle = '#7d5d31'; ctx.fillText(final ? 'Σκέψου και σύνδεσε' : reading.title, CW / 2, 153);
       ctx.textAlign = 'left'; ctx.fillStyle = '#50381f'; ctx.font = `34px ${FONT}`;
       let y = 205;
       for (const paragraph of String(text || '').split('\n')) { for (const line of wrapped(ctx, paragraph, 840)) { ctx.fillText(line, 92, y); y += 48; } y += 18; }
-      ctx.textAlign = 'center'; ctx.font = '18px system-ui'; ctx.fillStyle = '#7c6039'; ctx.fillText(page === 3 ? 'Σκέψου και σύνδεσε' : `${page + 1} / ${content.readingPages.length}`, CW / 2, 761);
-      if (page < 3) {
+      ctx.textAlign = 'center'; ctx.font = '18px system-ui'; ctx.fillStyle = '#7c6039'; ctx.fillText(final ? 'Σκέψου και σύνδεσε' : `${page + 1} / ${this.finalPage}`, CW / 2, 761);
+      if (!final && reading.attribution) { ctx.font = '14px system-ui'; ctx.fillText(reading.attribution, CW / 2, 718, 850); }
+      if (!final) {
         if (page > 0) button('←', { x: 70, y: 801, w: 135, h: 65 }, { type: 'hymn-page', page: page - 1 });
-        if (page < 2) button('→', { x: 819, y: 801, w: 135, h: 65 }, { type: 'hymn-page', page: page + 1 });
+        if (page < this.finalPage - 1) button('→', { x: 819, y: 801, w: 135, h: 65 }, { type: 'hymn-page', page: page + 1 });
       }
       button('Στις συνδέσεις', { x: 267, y: 801, w: 490, h: 65 }, { type: 'hymn-page', page: -1 });
     }
@@ -121,7 +126,7 @@ export class TalantaHymn {
     for (const y of [-BH / 2 - .025, BH / 2 + .025]) { const roll = new THREE.Mesh(new THREE.CylinderGeometry(.055, .055, BW + .13, 16), wood); roll.rotation.z = Math.PI / 2; roll.position.y = y; root.add(roll); }
     const post = new THREE.Mesh(new THREE.CylinderGeometry(.045, .07, position[1] - BH / 2, 10), wood); post.position.y = -BH / 2 - (position[1] - BH / 2) / 2; root.add(post);
     const book = { id, root, surface, hitMeshes: [], sources: new Map() }; this.books.push(book);
-    for (const entry of content.entries) {
+    for (const entry of this.content.entries) {
       const words = [];
       for (const item of this.layout.get(entry.stationId)) {
         const g = this.glyphs.get(item.text), material = new THREE.MeshBasicMaterial({ map: g.texture, color: ink, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
@@ -134,7 +139,7 @@ export class TalantaHymn {
     return book;
   }
   makeWords(station) {
-    const words = hymnEntry(station.id).keywords.map(text => {
+    const words = this.entry(station.id).keywords.map(text => {
       const g = this.glyphs.get(text), material = new THREE.MeshBasicMaterial({ map: g.texture, color: gold, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
       const mesh = new THREE.Mesh(g.geometry, material); mesh.scale.setScalar(.24); mesh.visible = false; this.root.add(mesh);
       const backdrop = panel('', g.width / g.height + .4, 1.5, null, { dark: true }); backdrop.position.z = -.01; backdrop.material.depthWrite = false; backdrop.renderOrder = 9; mesh.renderOrder = 10; mesh.add(backdrop);
@@ -157,7 +162,7 @@ export class TalantaHymn {
     const bead = new THREE.Mesh(new THREE.SphereGeometry(.085, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffefbb, toneMapped: false }));
     this.root.add(beam, halo, bead); this.beams.set(station.id, { beam, halo, bead, curve });
   }
-  setPage(page) { this.page = Math.max(-1, Math.min(3, page)); this.signature = ''; this.sync(); }
+  setPage(page) { this.page = Math.max(-1, Math.min(this.finalPage, page)); this.signature = ''; this.sync(); }
   sync() {
     const key = `${this.page}:${this.session.selected}:${this.session.reviewId}:${this.session.localCount}:${this.session.busy}:${this.session.complete}:${this.resetConfirm}`;
     if (key === this.signature) return; this.signature = key;
@@ -181,12 +186,12 @@ export class TalantaHymn {
     if (cameraPosition) book.root.lookAt(cameraPosition.x, book.root.position.y, cameraPosition.z);
     book.root.updateWorldMatrix(true, true);
     const words = this.words.get(id);
-    for (const [index, word] of words.entries()) { const source = book.sources.get(id).find(mesh => mesh.userData.keyword === hymnEntry(id).keywords[index]);
+    for (const [index, word] of words.entries()) { const source = book.sources.get(id).find(mesh => mesh.userData.keyword === this.entry(id).keywords[index]);
       source.getWorldPosition(word.start); const scale = source.getWorldScale(new THREE.Vector3()); word.startScale = scale.y; word.mesh.position.copy(word.start); word.mesh.visible = true;
     }
     this.active = { id, station, book, elapsed: 0, reduced };
-    setText(this.interpretation, hymnEntry(id).interpretation, { dark: true, paragraph: true });
-    this.interpretation.position.set(station.position[0], station.height + 1, station.position[1] + .15);
+    setText(this.interpretation, this.entry(id).interpretation, { dark: true, paragraph: true });
+    this.interpretation.position.set(station.position[0], station.height + (this.content.interpretationOffset || 1), station.position[1] + .15);
   }
   cancel(finish = true) {
     const active = this.active; this.active = null; this.interpretation.visible = false;
@@ -209,7 +214,7 @@ export class TalantaHymn {
     this.interpretation.visible = Boolean(this.interpretationText);
     if (this.interpretation.visible) this.interpretation.lookAt(cameraPosition.x, this.interpretation.position.y, cameraPosition.z);
     for (const station of this.world.stations) {
-      const active = this.active?.id === station.id ? this.active : null, solved = this.session.solved(station.id), entry = hymnEntry(station.id), time = active?.elapsed ?? 0, instant = active?.reduced;
+      const active = this.active?.id === station.id ? this.active : null, solved = this.session.solved(station.id), entry = this.entry(station.id), time = active?.elapsed ?? 0, instant = active?.reduced;
       const arrival = instant ? 0 : 800;
       this.actors.present(station.id, { elapsedMs: active && time >= arrival && !instant ? time - arrival : -1, reveal: active ? instant ? 1 : time < arrival ? .42 : .42 + .58 * ease((time - arrival) / 600) : solved ? 1 : this.session.current?.id === station.id ? .42 : .16 });
       const beam = this.beams.get(station.id); beam.beam.visible = beam.halo.visible = solved;
