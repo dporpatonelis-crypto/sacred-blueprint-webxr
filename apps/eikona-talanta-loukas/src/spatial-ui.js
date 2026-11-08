@@ -61,8 +61,8 @@ export class SpatialUI {
     else card.position.set((index - 1) * 1.19, 0, 0);
   }
   refresh() {
-    const session = this.session;
-    this.finalPanel.visible = session.complete && !this.resetConfirm && !session.reviewId;
+    const session = this.session, hymn = this.world.id === 'talanta';
+    this.finalPanel.visible = !hymn && session.complete && !this.resetConfirm && !session.reviewId;
     const station = this.world.stations.find(s => s.id === session.visibleStation.id);
     this.rack.position.set(station.position[0], this.world.kind === 'hub' ? 1.1 : 0.95, station.position[1] + (this.world.kind === 'hub' ? 1.4 : 2.0));
     for (const [id, target] of this.targets) {
@@ -74,12 +74,12 @@ export class SpatialUI {
       const caption = session.inHub && session.unlocked ? data.word + ' · ' + session.groupProgress(id) + '/3' : solved ? data.word : data.prompt;
       setText(this.labels.get(id).mesh, caption, { dark: true, selected: session.reviewId === id });
       this.labels.get(id).mesh.material.opacity = active || solved ? 0.98 : 0.62;
-      const b = this.beams.get(id); b.beam.visible = b.halo.visible = solved; b.bead.visible = false;
+      const b = this.beams.get(id); b.beam.visible = b.halo.visible = solved && !hymn; b.bead.visible = false;
     }
     session.choices.forEach((data, index) => {
       const card = this.cards.get(data.id);
       this.positionCard(card, index);
-      card.visible = !this.resetConfirm;
+      card.visible = !hymn && !this.resetConfirm;
       const caption = session.inHub && session.unlocked ? data.word + ' · ' + session.groupProgress(data.id) + '/3' : (session.solved(data.id) ? '✓ ' : '') + data.word;
       setText(card, caption, { selected: session.selected === data.id || session.reviewId === data.id, solved: session.solved(data.id) });
       card.userData.disabled = session.busy;

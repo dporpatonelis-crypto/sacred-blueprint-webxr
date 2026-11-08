@@ -9,26 +9,29 @@ import { Navigation } from './navigation.js';
 import { SpatialUI } from './spatial-ui.js';
 import { loadActors } from './actors.js';
 import { WaterQuiz } from './water-quiz.js';
+import { TalantaHymn, hymnContent, hymnEntry } from './hymn-manuscript.js';
 
 const $ = id => document.getElementById(id);
 document.getElementById('app').innerHTML = [
   '<main id="stage" aria-label="Η διαδρομή μας">',
-  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Οι κάρτες είναι διαθέσιμες και στον πλαϊνό πίνακα."></canvas>',
+  '<canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη αυλή. Σύρε για να κοιτάξεις, WASD ή βελάκια για να κινηθείς. Το μενού ανοίγει τις ερωτήσεις, τα κείμενα και τις επιλογές."></canvas>',
   '<div class="vignette"></div>',
+  '<p id="hymn-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>',
+  '<button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="lesson-panel bottom-bar" aria-label="Άνοιγμα μενού" title="Ερωτήσεις, πληροφορίες και επιλογές" hidden><span aria-hidden="true">☰</span><span>Μενού</span></button>',
   '<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><div><p class="eyebrow" id="scene-eyebrow">Τέσσερις νησίδες · 16 συνδέσεις</p><h1 id="journey-title">Η διαδρομή μας</h1></div></div>',
   '<div class="top-actions"><div class="progress-pill" aria-label="Πρόοδος"><div id="global-dots" class="progress-dots" aria-hidden="true"><i></i><i></i><i></i></div><output id="progress">0 / 16</output></div><button class="tool icon" id="help-button" aria-label="Οδηγίες">?</button><button class="tool" id="back-hub" hidden>↩ Χάρτης</button><button class="tool" id="final-button" hidden>Τελικό ερώτημα</button><span id="vr-slot"></span></div></header>',
-  '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από το κατ’ εικόνα στο καθ’ ομοίωση</p><h2 id="welcome-title">Η διαδρομή<br>μας.</h2><p>Κατ’ εικόνα · Τάλαντα · Άγιος Λουκάς · Καθ’ ομοίωση.<br>Γέμισε τη σωστή απάντηση με νερό.<br>Πέρασε τη γέφυρα · απάντησε στον σταθμό.<br>Κάθε επιτυχία ανοίγει το επόμενο πέρασμα.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Κράτησε ένα δοχείο ή την κάρτα του για να γεμίσει.</p></div><div class="welcome-footer"><span>Κατ’ εικόνα → Καθ’ ομοίωση</span><span>Ενιαία διαδρομή</span></div></section>',
-  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 3</span><div><span id="step-number" class="step-number">01</span><button id="hide-panel" class="panel-close" aria-label="Κλείσιμο καρτών">×</button></div></div><h2 id="lesson-prompt">Το δοσμένο ποσό</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
+  '<section id="welcome" aria-labelledby="welcome-title"><div class="welcome-inner"><div class="welcome-line"></div><p class="welcome-kicker">Από το κατ’ εικόνα στο καθ’ ομοίωση</p><h2 id="welcome-title">Η διαδρομή<br>μας.</h2><p>Κατ’ εικόνα · Τάλαντα · Άγιος Λουκάς · Καθ’ ομοίωση.<br>Στα Τάλαντα σύνδεσε τους στίχους του ύμνου.<br>Στις άλλες αυλές γέμισε τη σωστή απάντηση με νερό.<br>Πέρασε τη γέφυρα · απάντησε στον σταθμό.<br>Κάθε επιτυχία ανοίγει το επόμενο πέρασμα.</p><button id="start-button" class="start-button" disabled><span id="start-label">Ετοιμασία αυλής</span><span aria-hidden="true">↗</span></button><p class="subtle"><span class="desktop-instruction">Ποντίκι για το βλέμμα · WASD για τα βήματα.</span><span class="touch-instruction">Σύρε για να κοιτάξεις · κράτησε τον μοχλό για να περπατήσεις.</span><br>Επίλεξε στίχους στο χειρόγραφο· στις άλλες αυλές κράτησε ένα δοχείο για νερό.</p></div><div class="welcome-footer"><span>Κατ’ εικόνα → Καθ’ ομοίωση</span><span>Ενιαία διαδρομή</span></div></section>',
+  '<aside id="lesson-panel" aria-labelledby="lesson-prompt" hidden><div class="panel-top"><span id="panel-kicker" class="panel-kicker">Σύνδεση 1 / 3</span><div><span id="step-number" class="step-number">01</span></div></div><h2 id="lesson-prompt">Το δοσμένο ποσό</h2><button id="go-station" class="go-button"><span aria-hidden="true">↗</span> Στο σημείο</button><div id="choices" class="choices" role="group" aria-label="Κάρτες εννοιών"></div><button id="hymn-read" class="go-button" hidden>Πλήρης ύμνος</button><section id="hymn-reading" hidden aria-label="Πλήρης ανάγνωση ύμνου"><p id="hymn-reading-text"></p><div class="hymn-reading-actions"><button id="hymn-prev" class="text-button" aria-label="Προηγούμενη σελίδα">←</button><output id="hymn-reading-page"></output><button id="hymn-next" class="text-button" aria-label="Επόμενη σελίδα">→</button><button id="hymn-reading-back" class="text-button">Στις συνδέσεις</button></div></section><p id="hymn-interpretation" hidden role="status" aria-live="polite" aria-atomic="true"></p><button id="connect-target" class="connect-target"><span class="target-icon" id="target-number">01</span><span id="connect-label">Στον φωτεινό στόχο</span></button><p id="hint-text" hidden></p><div class="panel-foot"><button id="hint-button" class="text-button">Υπόδειξη</button><button id="resume-button" class="text-button" hidden>Συνέχεια</button><button id="reset-button" class="text-button">Νέα αρχή</button></div><p id="feedback" role="status" aria-live="polite">Επίλεξε · Σύνδεσε</p></aside>',
   '<div id="reticle" aria-hidden="true"></div>',
   '<section id="bridge-hud" hidden aria-label="Πρόοδος γέφυρας"><span class="water-kicker">Χτίσε το πέρασμα</span><div class="bridge-headline"><strong>Περάσματα</strong><output id="bridge-count">0 / 4</output></div><div id="bridge-parts"></div><p id="water-guide">Γέμισε το δοχείο της σωστής απάντησης.</p></section>',
   '<button id="fire-button" hidden aria-label="Κράτησε για βολή νερού προς το κέντρο"><span aria-hidden="true">◉</span><span>Νερό</span></button>',
   '<div class="keyboard-guide" id="keyboard-guide" hidden><span class="normal-guide"><span class="desktop-controls"><kbd>W A S D</kbd> κίνηση <span class="dot">·</span> σύρε για ματιά <span class="desktop-hint">· <kbd>Tab</kbd> κάρτες</span></span><span class="touch-controls">Κράτησε και σύρε τον μοχλό για κίνηση <span class="dot">·</span> σύρε για ματιά</span></span><span class="locked-guide">Στόχευσε και πάτησε <span class="dot">·</span> <kbd>Esc</kbd> για κάρτες</span></div>',
   '<div id="touch-walk" class="touch-walk" hidden role="group" aria-label="Χειριστήριο κίνησης αφής"><div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span class="touch-walk-stick" id="touch-walk-stick" aria-hidden="true"></span></div><span class="touch-walk-label">Κίνηση</span></div>',
-  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία παραβολής"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool paper" id="restore-panel">Κάρτες</button><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
+  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία παραβολής"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
   '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
   '</main>',
   '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
-  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 3.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Αριστερός μοχλός: μπροστά/πίσω και πλάγια, προς την κατεύθυνση που κοιτάς. Δεξιός μοχλός: στροφή ανά 45° γύρω από τη θέση σου.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
+  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Ύμνος των Ταλάντων</dt><dd>Επίλεξε ένα χωρίο στο χειρόγραφο ή στον πίνακα και κατόπιν τον ενεργό σταθμό. Οι δύο λέξεις ταξιδεύουν στην εικόνα, η κίνηση παίζει μία φορά και εμφανίζεται η ερμηνεία. Η σωστή σύνδεση ανοίγει την επόμενη γέφυρα. Η «Πλήρης ύμνος» ανοίγει όλο το κείμενο σε σελίδες. Πάτησε λυμένο χωρίο ή σταθμό για επανεξέταση.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 3.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Αριστερός μοχλός: μπροστά/πίσω και πλάγια, προς την κατεύθυνση που κοιτάς. Δεξιός μοχλός: στροφή ανά 45° γύρω από τη θέση σου.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
   '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 3 / 3</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Άνοιξε και η γέφυρα επιστροφής. Διάσχισε το ποτάμι για να παρατηρήσεις τις σκηνές ή επέστρεψε στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
   '<dialog id="final-dialog" aria-labelledby="final-title"><p class="dialog-kicker">Η διαδρομή ολοκληρώθηκε · 16 / 16</p><h2 id="final-title">Σκέψου και σύνδεσε</h2><p id="final-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
   '<div id="scene-loading" hidden role="status">Μετάβαση…</div>',
@@ -43,9 +46,12 @@ if (import.meta.env.VITE_COLLECTION_URL) {
 
 let storage = null;
 try { storage = window.localStorage; } catch {}
-// Experimental gameplay has its own save slot, including on the same origin.
-const waterStorage = storage && { getItem: key => storage.getItem(key + '.water-v1'), setItem: (key, value) => storage.setItem(key + '.water-v1', value) };
+// Direct hymn review uses a separate save slot; normal lesson progress is retained.
+const hymnPreview = new URLSearchParams(location.search).get('preview') === 'talanta-hymn';
+const saveSuffix = hymnPreview ? '.hymn-preview-v1' : '.water-v1';
+const waterStorage = storage && { getItem: key => storage.getItem(key + saveSuffix), setItem: (key, value) => storage.setItem(key + saveSuffix, value) };
 const session = new LessonSession(waterStorage);
+if (hymnPreview && !session.unlocked) { session.state.counts.main = 4; session.enter('talanta'); }
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(66, 1, 0.08, 180);
 const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
@@ -57,8 +63,10 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.16;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9);
-let world = worlds[session.sceneId], level = null, courtyard = null, spatial = null, actors = null, waterQuiz = null;
+let world = worlds[session.sceneId], level = null, courtyard = null, spatial = null, actors = null, waterQuiz = null, hymn = null, hymnReveal = null;
 let waterMode = true;
+const isHymn = () => session.sceneId === 'talanta';
+const waterEnabled = () => waterMode && !isHymn();
 let firing = { active: false };
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(), cameraPosition = new THREE.Vector3(), rotationMatrix = new THREE.Matrix4();
@@ -66,7 +74,7 @@ let started = false, ready = false, changingScene = false, vrButton = null, reve
 let lastTime = performance.now(), lastProximity = null, hovered = null, motionOverride = null;
 let fpsTime = 0, fpsFrames = 0, desktopPose = null, teleportFlash = -1000;
 let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
-let worldCards = false, lastStationNear = null;
+let worldCards = false, lastStationNear = null, interfaceOpen = false;
 const preference = matchMedia('(prefers-reduced-motion: reduce)');
 const reducedMotion = () => motionOverride ?? preference.matches;
 const navigation = new Navigation(camera, renderer, world, [], {
@@ -75,8 +83,8 @@ const navigation = new Navigation(camera, renderer, world, [], {
   lock: locked => document.body.classList.toggle('pointer-locked', locked),
   escape: () => {
     if (session.selected) { session.selected = null; session.changed(false); }
-    document.body.classList.remove('panel-hidden');
     setWorldCards(false);
+    setInterfaceMenu(true);
   },
 });
 const choiceButtons = new Map();
@@ -86,7 +94,7 @@ function visibleInHierarchy(object) {
   return !object.userData.disabled;
 }
 function hitFromRay(ray, includeTeleport = false) {
-  const objects = [...(waterQuiz?.pickables || []), ...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
+  const objects = [...(hymn?.pickables || []), ...(waterQuiz?.pickables || []), ...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
   return ray.intersectObjects(objects, false).find(hit => hit.distance <= (includeTeleport ? 16 : 10)) || null;
 }
 function pickDesktop(point) {
@@ -103,8 +111,9 @@ function activeConfig() { return world.stations.find(s => s.id === session.visib
 function stationPose(station) {
   const index = world.stations.indexOf(station), approach = courtyard?.approaches?.[index];
   if (!approach) return station;
-  return { ...station, landing: approach.viewpoint, lookHeight: 1.35,
-    position: waterMode && session.current?.id === station.id ? approach.quizPosition : station.position };
+  const pose = { ...station, landing: approach.viewpoint, lookHeight: 1.35,
+    position: waterEnabled() && session.current?.id === station.id ? approach.quizPosition : station.position };
+  return hymn ? hymn.viewPose(station, pose) : pose;
 }
 function availableLandings() {
   return [world.spawn,...world.stations.slice(0,session.localCount+1).map(station=>stationPose(station).landing)];
@@ -118,7 +127,7 @@ function atActiveStation() {
   return Boolean(station && courtyard?.onLand(p.x,p.z) && Math.hypot(p.x-station.landing[0],p.z-station.landing[1]) < 2.5);
 }
 function canFire() {
-  return atActiveStation() && started && ready && waterMode && !changingScene && !session.busy && !session.sceneComplete && !session.reviewId && !document.querySelector('dialog[open]');
+  return atActiveStation() && started && ready && waterEnabled() && !changingScene && !session.busy && !session.sceneComplete && !session.reviewId && !document.querySelector('dialog[open]');
 }
 function beginFire(input) {
   if (!canFire() || firing.active) return;
@@ -145,7 +154,7 @@ function bindPourButton(button, id) {
   button.addEventListener('keyup', event => { if (event.code === 'Space' || event.code === 'Enter') stopFire(); });
 }
 function updateFire() {
-  const shot = { ...firing, xr: renderer.xr.isPresenting, worldPrompt: renderer.xr.isPresenting || document.body.classList.contains('panel-hidden'), direction: new THREE.Vector3() };
+  const shot = { ...firing, xr: renderer.xr.isPresenting, worldPrompt: renderer.xr.isPresenting || !interfaceOpen, direction: new THREE.Vector3() };
   camera.getWorldDirection(shot.direction);
   if (!shot.active || changingScene || !waterQuiz) return shot;
   if (shot.mode === 'guided') return shot;
@@ -224,17 +233,24 @@ function goTo(station = activeConfig()) {
 }
 function action(event) {
   if (!event || changingScene) return;
+  if (event.type === 'hymn-block') return;
+  if (event.type === 'hymn-page') { if (hymn) { hymn.setPage(event.page); renderUI(); } return; }
+  if (hymn && spatial.resetConfirm && !['confirm-reset','cancel-reset','hub'].includes(event.type)) return;
+  if (hymn && session.busy && ['word','target'].includes(event.type)) return { type: 'busy' };
   let result;
   if (event.type === 'target' && !atActiveStation() && !session.solved(event.id)) {
     session.message = 'Ανέβα στη γέφυρα προς τον ενεργό σταθμό'; session.changed(false); return;
   }
-  if (event.type === 'target' && waterMode && !event.water && !session.solved(event.id) && !session.sceneComplete) {
+  if (event.type === 'target' && waterEnabled() && !event.water && !session.solved(event.id) && !session.sceneComplete) {
     session.message = 'Γέμισε το δοχείο της απάντησης'; session.changed(false); return;
   }
   if (event.type === 'word') result = session.choose(event.id);
   if (event.type === 'target') result = session.target(event.id);
+  if (hymn && result?.type === 'empty') { session.message = 'Πρώτα επίλεξε ένα χωρίο'; session.changed(false); }
+  if (hymn && ((event.type === 'word' && session.reviewId === event.id) || result?.type === 'review')) { startHymnReveal(event.id, null, event.bookId); return result; }
   if (result?.type === 'enter') { void changeScene(result.sceneId); return; }
   if (result?.type === 'matched') {
+    if (hymn) { startHymnReveal(result.stationId, result.token); return result; }
     spatial.flash(result.stationId, performance.now());
     pendingFinal ||= result.scenarioCompleted;
     clearTimeout(revealTimer);
@@ -254,6 +270,8 @@ function action(event) {
   }
   if (event.type === 'cancel-reset') spatial.setResetConfirm(false);
   if (event.type === 'confirm-reset') {
+    cancelHymnReveal(false);
+    hymn?.setPage(-1);
     clearTimeout(revealTimer); pendingFinal = false; spatial.flashes.clear(); spatial.resetConfirm = false;
     if (resetScope === 'all' && !session.inHub) { void changeScene('main', true, true); return; }
     stopFire(); waterQuiz?.fill.reset(); session.reset(resetScope);
@@ -263,13 +281,45 @@ function action(event) {
   if (event.type === 'teleport') teleportTo(event.point);
   return result;
 }
+function startHymnReveal(id, token = null, bookId = null) {
+  if (!hymn || hymnReveal) return;
+  hymnReveal = { id, token };
+  setInterfaceMenu(false);
+  if (token === null) { session.busy = true; session.changed(false); }
+  camera.getWorldPosition(cameraPosition); hymn.start(id, reducedMotion(), cameraPosition, bookId);
+  session.message = 'Οι λέξεις ταξιδεύουν στην εικόνα…'; session.kind = 'success'; session.changed(false);
+}
+function finishHymnReveal() {
+  const pending = hymnReveal; hymnReveal = null; if (!pending) return;
+  if (pending.token !== null) session.finishReveal(pending.token);
+  else { session.busy = false; session.message = 'Η σύνδεση διατηρείται · συνέχισε την εξερεύνηση'; session.changed(false); }
+  rebuildTeleportTargets();
+}
+function cancelHymnReveal(settle = true) { hymn?.cancel(false); if (settle) finishHymnReveal(); else hymnReveal = null; }
+function renderHymnReading() {
+  const visible = isHymn() && Boolean(hymn), reading = visible && hymn.reading;
+  $('hymn-read').hidden = !visible || reading; $('hymn-reading').hidden = !reading;
+  if (!reading) return;
+  $('hymn-reading-text').textContent = hymn.page === 3 ? lesson.finalQuestion : hymnContent.readingPages[hymn.page];
+  $('hymn-reading-page').textContent = hymn.page === 3 ? 'Τελικό ερώτημα' : (hymn.page + 1) + ' / 3';
+  $('hymn-prev').disabled = hymn.page === 0 || hymn.page === 3; $('hymn-next').disabled = hymn.page >= 2;
+}
+let interpretationCaption = '';
+function renderHymnInterpretation() {
+  const text = hymn?.interpretationText || '';
+  if (text !== interpretationCaption) { interpretationCaption = text; $('hymn-interpretation').textContent = text; $('hymn-interpretation').hidden = !text; if (text) $('hymn-announcement').textContent = text; }
+  if (hymn) {
+    $('scene').dataset.hymnPhase = hymn.reading ? 'reading' : hymn.active ? hymn.active.elapsed < (hymn.active.reduced ? 0 : 800) ? 'words' : 'reveal' : 'explore';
+    $('scene').dataset.hymnElapsed = String(Math.round(hymn.active?.elapsed || 0));
+  } else { delete $('scene').dataset.hymnPhase; delete $('scene').dataset.hymnElapsed; }
+}
 function rebuildChoices() {
   if (uiScene === session.sceneId) return;
   uiScene = session.sceneId; choiceButtons.clear(); $('choices').replaceChildren();
   for (const station of session.choices) {
     const b = document.createElement('button');
     b.className = 'choice'; b.dataset.choice = station.id;
-    b.addEventListener('click', () => { if (!waterMode || session.sceneComplete || session.reviewId) action({ type: 'word', id: station.id }); });
+    b.addEventListener('click', () => { if (!waterEnabled() || session.sceneComplete || session.reviewId) action({ type: 'word', id: station.id }); });
     bindPourButton(b, station.id);
     choiceButtons.set(station.id, b);
   }
@@ -286,7 +336,9 @@ function rebuildChoices() {
     b.dataset.station = item.id; b.textContent = String(cfg.number).padStart(2, '0');
     b.setAttribute('aria-label', 'Σημείο ' + cfg.number + ': ' + item.word);
     b.addEventListener('click', () => {
-      if (session.solved(item.id)) session.review(item.id); else session.resume();
+      if (session.busy) return;
+      if (hymn && session.solved(item.id)) { goTo(cfg); action({type:'target',id:item.id}); return; }
+      if (session.solved(item.id)) { if (hymn) action({type:'target',id:item.id}); else session.review(item.id); } else session.resume();
       goTo(cfg);
     });
     nav.append(b);
@@ -296,6 +348,9 @@ function renderUI() {
   if (changingScene || !spatial) return;
   rebuildChoices();
   const reviewing = Boolean(session.reviewId), completed = session.sceneComplete;
+  const hymnMode = isHymn();
+  document.body.classList.toggle('hymn-mode', hymnMode);
+  $('choices').setAttribute('aria-label', hymnMode ? 'Χωρία ύμνου' : 'Κάρτες εννοιών');
   const traveling = !completed && !reviewing && !session.busy && !atActiveStation();
   const portal = session.inHub && session.unlocked, station = session.visibleStation;
   const number = session.sceneData.stations.findIndex(s => s.id === station.id) + 1;
@@ -311,9 +366,9 @@ function renderUI() {
   $('panel-kicker').textContent = portal ? 'Ο κεντρικός χάρτης φωτίστηκε' : reviewing ? 'Επανεξέταση' : completed ? 'Η ενότητα ολοκληρώθηκε · 3 / 3' : 'Σύνδεση ' + number + ' / ' + session.sceneData.stations.length;
   $('step-number').textContent = String(number).padStart(2, '0');
   $('lesson-prompt').textContent = traveling ? 'Προχώρησε στον σταθμό ' + number : portal ? 'Διάλεξε νησίδα' : reviewing || completed ? station.word : station.prompt;
-  $('lesson-panel').classList.toggle('route-panel', traveling);
-  $('choices').hidden = traveling;
-  $('feedback').textContent = traveling ? 'Ανέβα στην ανοιχτή γέφυρα για να εμφανιστούν τα δοχεία.' : session.message; $('feedback').dataset.kind = session.kind;
+  $('lesson-panel').classList.toggle('route-panel', traveling && !hymnMode);
+  $('choices').hidden = (traveling && !hymnMode) || Boolean(hymn?.reading);
+  $('feedback').textContent = traveling ? hymnMode ? 'Επίλεξε στίχους και προχώρησε στον ενεργό σταθμό.' : 'Ανέβα στην ανοιχτή γέφυρα για να εμφανιστούν τα δοχεία.' : session.message; $('feedback').dataset.kind = session.kind;
   $('hint-text').hidden = reviewing || completed || !session.hasHint(station.id);
   $('hint-text').textContent = station.hint;
   $('hint-button').hidden = reviewing || completed || traveling; $('hint-button').disabled = session.busy;
@@ -322,10 +377,12 @@ function renderUI() {
   $('saving-note').textContent = session.pilotCarry ? 'Η πρόοδος των Ταλάντων θα διατηρηθεί' : session.canStore ? 'Η πρόοδός σου αποθηκεύεται εδώ' : 'Μνήμη συνεδρίας';
   $('target-number').textContent = String(number).padStart(2, '0');
   $('connect-label').textContent = reviewing || completed ? 'Δες τη σκηνή' : session.selected ? 'Σύνδεσε στον στόχο' : 'Στον φωτεινό στόχο';
-  $('connect-target').classList.toggle('ready', Boolean(session.selected)); $('connect-target').hidden = traveling || portal || (waterMode && !reviewing && !completed);
-  session.choices.forEach(s => {
+  $('connect-target').classList.toggle('ready', Boolean(session.selected)); $('connect-target').hidden = traveling || portal || Boolean(hymn?.reading) || (waterEnabled() && !reviewing && !completed);
+  const displayChoices = hymnMode ? hymnContent.entries.map(entry => session.sceneData.stations.find(s => s.id === entry.stationId)) : session.choices;
+  displayChoices.forEach(s => {
     const b = choiceButtons.get(s.id); $('choices').append(b);
-    b.textContent = s.word; b.classList.toggle('portal-choice', portal);
+    b.textContent = hymnMode ? hymnEntry(s.id).text : s.word; b.classList.toggle('portal-choice', portal);
+    if (hymnMode && hymnEntry(s.id).note) { const note = document.createElement('span'); note.className = 'hymn-note'; note.textContent = 'Προσωπική εφαρμογή'; b.append(note); }
     if (portal) {
       const progress = document.createElement('span'); progress.className = 'choice-progress';
       progress.textContent = session.groupProgress(s.id) + ' / 3 ↗'; b.append(progress);
@@ -333,8 +390,8 @@ function renderUI() {
     b.classList.toggle('selected', session.selected === s.id || session.reviewId === s.id);
     b.classList.toggle('solved', session.solved(s.id) && !portal);
     b.setAttribute('aria-pressed', String(session.selected === s.id || session.reviewId === s.id));
-    b.disabled = session.busy || (waterMode && !portal && !reviewing && !completed && session.solved(s.id));
-    b.classList.toggle('pour-choice', waterMode && !portal && !reviewing && !completed);
+    b.disabled = session.busy || (waterEnabled() && !portal && !reviewing && !completed && session.solved(s.id));
+    b.classList.toggle('pour-choice', waterEnabled() && !portal && !reviewing && !completed);
   });
   document.querySelectorAll('[data-station]').forEach(b => {
     const id = b.dataset.station, solved = session.solved(id), active = session.current?.id === id;
@@ -356,19 +413,21 @@ function renderUI() {
   $('bridge-parts').replaceChildren(...session.sceneData.stations.map((_,i) => {
     const piece = document.createElement('i'); piece.className = i < session.localCount ? 'raised' : ''; return piece;
   }));
-  $('water-guide').textContent = completed ? 'Όλες οι γέφυρες άνοιξαν · εξερεύνησε ελεύθερα' : traveling ? 'Ανέβα στη γέφυρα · σταθμός ' + number : waterMode ? 'Απάντησε εδώ · γέμισε το σωστό δοχείο' : 'Απάντησε εδώ · σύνδεσε τη σωστή κάρτα';
+  $('water-guide').textContent = completed ? 'Όλες οι γέφυρες άνοιξαν · εξερεύνησε ελεύθερα' : traveling ? 'Ανέβα στη γέφυρα · σταθμός ' + number : hymnMode ? 'Επίλεξε στίχους · σύνδεσε με την εικόνα' : waterMode ? 'Απάντησε εδώ · γέμισε το σωστό δοχείο' : 'Απάντησε εδώ · σύνδεσε τη σωστή κάρτα';
   $('gameplay-toggle').textContent = waterMode ? 'Παιχνίδι νερού' : 'Κλασικές κάρτες';
   $('gameplay-toggle').setAttribute('aria-pressed', String(waterMode));
-  $('fire-button').hidden = !started || !waterMode || completed || reviewing || traveling;
-  $('look-button').hidden = waterMode && !completed;
+  $('gameplay-toggle').hidden = hymnMode;
+  $('fire-button').hidden = !started || !waterEnabled() || completed || reviewing || traveling;
+  $('look-button').hidden = hymnMode || (waterMode && !completed);
   $('go-station').textContent = traveling ? '↗ Στον σταθμό ' + number : '↗ Μπροστά στον σταθμό';
-  document.body.classList.toggle('water-mode',waterMode && !completed && !reviewing && started);
+  document.body.classList.toggle('water-mode',waterEnabled() && !completed && !reviewing && started);
+  renderHymnReading(); hymn?.sync();
   spatial.refresh(); renderProximity(true);
 }
 function renderProximity(force = false) {
   if (changingScene || !spatial) return;
   const station = activeConfig(), p = renderer.xr.isPresenting ? cameraPosition : camera.position;
-  const near = Math.hypot(p.x - station.position[0], p.z - station.position[1]) < 6;
+  const near = hymn ? atActiveStation() : Math.hypot(p.x - station.position[0], p.z - station.position[1]) < 6;
   const key = String(near) + String(session.busy);
   if (key !== lastProximity || force) {
     $('connect-target').disabled = session.busy;
@@ -393,13 +452,32 @@ function showReset(scope) {
   $('reset-all').hidden = scope === 'all';
   if (!$('reset-dialog').open) showDialog('reset-dialog');
 }
+function setInterfaceMenu(open) {
+  interfaceOpen = Boolean(open);
+  if (interfaceOpen && worldCards) {
+    worldCards = false; document.body.classList.remove('spatial-cards');
+    $('look-button').textContent = 'Κάρτες στον χώρο'; $('look-button').setAttribute('aria-pressed','false');
+  }
+  document.body.classList.toggle('interface-collapsed', started && !interfaceOpen && !renderer.xr.isPresenting);
+  const button = $('menu-toggle'); button.hidden = !started || renderer.xr.isPresenting;
+  button.setAttribute('aria-expanded',String(interfaceOpen));
+  button.setAttribute('aria-label',interfaceOpen?'Κλείσιμο μενού':'Άνοιγμα μενού');
+  button.title = interfaceOpen?'Κλείσιμο μενού':'Ερωτήσεις, κείμενα και επιλογές';
+  button.innerHTML = interfaceOpen?'<span aria-hidden="true">×</span><span>Κλείσιμο</span>':'<span aria-hidden="true">☰</span><span>Μενού</span>';
+}
 function start() {
   if (!ready) return;
   started = true; $('welcome').hidden = true; $('lesson-panel').hidden = false;
   $('bottom-bar').hidden = false; $('keyboard-guide').hidden = false; $('touch-walk').hidden = false;
+  setInterfaceMenu(false);
   syncNavigation(); renderUI();
 }
 $('start-button').addEventListener('click', start);
+$('menu-toggle').addEventListener('click', () => setInterfaceMenu(!interfaceOpen));
+$('hymn-read').addEventListener('click', () => action({type:'hymn-page',page:0}));
+$('hymn-reading-back').addEventListener('click', () => action({type:'hymn-page',page:-1}));
+$('hymn-prev').addEventListener('click', () => action({type:'hymn-page',page:hymn.page-1}));
+$('hymn-next').addEventListener('click', () => action({type:'hymn-page',page:hymn.page+1}));
 $('go-station').addEventListener('click', () => goTo());
 $('connect-target').addEventListener('click', () => action({ type: 'target', id: session.visibleStation.id }));
 $('hint-button').addEventListener('click', () => action({ type: 'hint' }));
@@ -423,12 +501,10 @@ $('look-button').addEventListener('click', () => {
 function setWorldCards(value) {
   worldCards = value;
   document.body.classList.toggle('spatial-cards', value);
-  document.body.classList.remove('panel-hidden');
+  if (worldCards) setInterfaceMenu(false);
   $('look-button').textContent = value ? 'Πίνακας καρτών' : 'Κάρτες στον χώρο';
   $('look-button').setAttribute('aria-pressed', String(value));
 }
-$('hide-panel').addEventListener('click', () => { setWorldCards(false); document.body.classList.add('panel-hidden'); });
-$('restore-panel').addEventListener('click', () => setWorldCards(false));
 $('retry-button').addEventListener('click', () => location.reload());
 function renderMotion() {
   $('motion-toggle').textContent = reducedMotion() ? 'Ενεργοποίηση κίνησης' : 'Παύση κίνησης';
@@ -436,7 +512,7 @@ function renderMotion() {
 }
 $('motion-toggle').addEventListener('click', () => { motionOverride = !reducedMotion(); renderMotion(); });
 preference.addEventListener('change', renderMotion);
-$('gameplay-toggle').addEventListener('click', () => { stopFire(); waterMode = !waterMode; setWorldCards(false); renderUI(); });
+$('gameplay-toggle').addEventListener('click', () => { if (isHymn()) return; stopFire(); waterMode = !waterMode; setWorldCards(false); renderUI(); });
 $('skybox-toggle').addEventListener('click', () => {
   skyboxEnabled = !skyboxEnabled; applyBackground(); renderUI();
 });
@@ -475,7 +551,7 @@ for (let i = 0; i < 2; i++) {
     if (!renderer.xr.isPresenting) return;
     controllerRay(controller);
     const hit = hitFromRay(raycaster, true);
-    if (waterMode && !session.sceneComplete && !session.reviewId && (!hit || hit.object.userData.action?.type === 'vessel')) { beginFire({ mode: 'xr', controller, id: hit?.object.userData.action?.id }); return; }
+    if (waterEnabled() && !session.sceneComplete && !session.reviewId && (!hit || hit.object.userData.action?.type === 'vessel')) { beginFire({ mode: 'xr', controller, id: hit?.object.userData.action?.id }); return; }
     if (hit) action(hit.object.userData.action);
   });
   controller.addEventListener('selectend', () => { if (firing.controller === controller) stopFire(); });
@@ -501,9 +577,11 @@ renderer.xr.addEventListener('sessionstart', () => {
 });
 renderer.xr.addEventListener('sessionend', () => {
   stopFire();
+  cancelHymnReveal(true);
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0);
   if (desktopPose) { camera.position.copy(desktopPose.position); camera.quaternion.copy(desktopPose.quaternion); }
   document.body.classList.remove('xr-active');
+  setInterfaceMenu(false);
   teleportTargets.forEach(m => { m.visible = false; }); controllers.forEach(c => { c.cursor.visible = false; });
   fade.visible = false; spatial.setResetConfirm(false); syncNavigation();
 });
@@ -526,7 +604,7 @@ function resize() {
   renderer.setSize(w, h, false); camera.aspect = w / h;
   const baseFov = world.kind === 'hub' ? 66 : 68;
   // Preserve the overview's horizontal framing in a narrow preview pane.
-  camera.fov = Math.min(105, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * Math.max(1, 1.6 / camera.aspect))));
+  camera.fov = Math.min(isHymn() ? 116 : 105, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * Math.max(1, 1.6 / camera.aspect))));
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe($('stage')); resize();
@@ -563,7 +641,7 @@ async function changeScene(id, force = false, resetAll = false) {
   if (changingScene || (!force && level && id === session.sceneId)) return;
   if (id !== 'main' && !session.unlocked) return;
   const previousId = session.sceneId, cfg = worlds[id];
-  changingScene = true; stopFire(); clearTimeout(revealTimer);
+  changingScene = true; stopFire(); clearTimeout(revealTimer); cancelHymnReveal(false);
   $('stage').setAttribute('aria-busy', 'true');
   $('scene-loading').textContent = 'Μετάβαση · ' + CoreTitle(id);
   $('scene-loading').hidden = !started; syncNavigation();
@@ -577,11 +655,14 @@ async function changeScene(id, force = false, resetAll = false) {
     const nextActors = await loadActors(next, cfg, import.meta.env.BASE_URL, progress => {
       if (!started) $('start-label').textContent = 'Ετοιμασία εικόνων · ' + Math.round(progress * 100) + '%';
     });
+    const nextHymn = id === 'talanta' ? new TalantaHymn(next, cfg, session, nextActors, nextEnvironment.approaches, finishHymnReveal) : null;
+    if (nextHymn) nextHymn.finalQuestion = lesson.finalQuestion;
     if (cfg.kind === 'hub') await getSkybox();
     waterQuiz?.dispose();
+    hymn?.dispose();
     const nextWaterQuiz = new WaterQuiz(next, cfg, session, camera, submitWater, nextEnvironment.approaches);
     if (level) { scene.remove(level); disposeLevel(level); }
-    level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; waterQuiz = nextWaterQuiz; world = cfg;
+    level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; waterQuiz = nextWaterQuiz; world = cfg; hymn = nextHymn;
     scene.add(level); navigation.world = cfg; navigation.obstacles = courtyard.obstacles;
     camera.fov = cfg.kind === 'hub' ? 66 : 58; camera.updateProjectionMatrix();
     if (renderer.xr.isPresenting) {
@@ -591,11 +672,11 @@ async function changeScene(id, force = false, resetAll = false) {
       desktopPose = { position: view.position.clone(), quaternion: view.quaternion.clone() };
     } else if (session.localCount > 0 && !session.sceneComplete) navigation.goTo(stationPose(cfg.stations[session.localCount-1]));
     else { navigation.spawn(); if (!session.sceneComplete) {
-      const first = nextEnvironment.approaches[0].quizPosition; camera.lookAt(first[0],1.2,first[1]);
+      const first = hymn ? [0,5.75] : nextEnvironment.approaches[0].quizPosition; camera.lookAt(first[0],hymn?1.55:1.2,first[1]);
     } }
     lastStationNear = null;
     rebuildTeleportTargets(); applyBackground(); ready = true; uiScene = null; lastProximity = null;
-    $('start-label').textContent = session.count ? 'Συνέχισε τη διαδρομή' : 'Μπες στη διαδρομή';
+    $('start-label').textContent = hymnPreview ? 'Στο χειρόγραφο' : session.count ? 'Συνέχισε τη διαδρομή' : 'Μπες στη διαδρομή';
     $('start-button').disabled = false;
     $('stage').dataset.space = id; $('scene').dataset.space = id; $('scene').dataset.animations = String(nextActors.actors.size);
     $('scene').dataset.animationFrames = JSON.stringify(Object.fromEntries([...nextActors.actors].map(([key, a]) => [key, a.animation.frameCount])));
@@ -623,11 +704,15 @@ renderer.setAnimationLoop(time => {
   const reduced = reducedMotion();
   courtyard?.update(now / 1000, reduced, session.localCount, dt);
   const waterShot = updateFire();
-  waterQuiz?.update(now,dt,session,cameraPosition,reduced,waterMode && started && !changingScene && (atActiveStation() || session.busy),waterShot);
+  waterQuiz?.update(now,dt,session,cameraPosition,reduced,waterEnabled() && started && !changingScene && (atActiveStation() || session.busy),waterShot);
   updateFillHUD();
+  const hymnPaused = !started || changingScene || document.hidden || Boolean(document.querySelector('dialog[open]')) || (xr && ['hidden','visible-blurred'].includes(renderer.xr.getSession()?.visibilityState));
+  hymn?.update(dt, cameraPosition, reduced, hymnPaused, spatial?.resetConfirm);
+  renderHymnInterpretation();
   actors?.update(now, cameraPosition, session, reduced, dt);
   if (!changingScene) spatial?.update(now, cameraPosition, reduced);
-  if (spatial) spatial.rack.visible = (xr || worldCards || navigation.controls.isLocked) && (!waterMode || session.sceneComplete || Boolean(session.reviewId));
+  if (hymn && spatial) for (const [id, label] of spatial.labels) label.group.visible = !(hymn.active?.id === id && hymn.interpretation.visible);
+  if (spatial) spatial.rack.visible = (xr || worldCards || navigation.controls.isLocked) && (!waterEnabled() || session.sceneComplete || Boolean(session.reviewId));
   if (started && !changingScene) {
     const near = atActiveStation();
     if (near !== lastStationNear) { lastStationNear = near; renderUI(); }
@@ -652,8 +737,9 @@ renderer.setAnimationLoop(time => {
   if (fpsTime >= 1) {
     $('scene').dataset.fps = String(Math.round(fpsFrames / fpsTime));
     $('scene').dataset.drawCalls = String(renderer.info.render.calls);
+    if (actors) $('scene').dataset.playbackFrames = JSON.stringify(Object.fromEntries([...actors.actors].map(([id, actor]) => [id, actor.frame])));
     $('scene').dataset.position = camera.position.toArray().map(v => v.toFixed(2)).join(',');
     fpsFrames = 0; fpsTime = 0;
   }
 });
-window.addEventListener('pagehide', () => { stopFire(); clearTimeout(revealTimer); navigation.keys.clear(); });
+window.addEventListener('pagehide', () => { stopFire(); clearTimeout(revealTimer); cancelHymnReveal(true); navigation.keys.clear(); });

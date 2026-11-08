@@ -48,4 +48,26 @@ body.water-mode #reticle{opacity:.65;width:10px;height:10px;border-color:#d6fffa
 #bridge-hud{backdrop-filter:none}
 @media(max-width:700px){body.water-mode #lesson-panel{left:15px;right:15px;bottom:104px;width:auto;max-height:183px;padding:12px 14px}body.water-mode #lesson-panel .panel-top{position:absolute;right:8px;top:5px;margin:0}body.water-mode #lesson-panel #panel-kicker,body.water-mode #lesson-panel #step-number{display:none}body.water-mode #lesson-panel h2{font-size:18px;margin:0 25px 8px 0}body.water-mode .choices{display:grid;grid-template-columns:1fr 1fr;gap:5px}body.water-mode .choice.pour-choice{padding:8px 9px;min-height:36px;font-size:11px;line-height:1.2}body.water-mode .panel-foot{margin-top:6px}body.water-mode #feedback{margin:5px 0 0;min-height:12px;font-size:9px}body.water-mode #fire-button{bottom:calc(299px + env(safe-area-inset-bottom));width:58px;height:58px}body.water-mode #touch-walk{bottom:calc(294px + env(safe-area-inset-bottom))}body.water-mode .touch-walk-pad{width:82px;height:82px}body.water-mode .touch-walk-stick{width:34px;height:34px}body.water-mode #keyboard-guide{display:none}}
 #lesson-panel.route-panel{min-height:0}.route-panel #feedback{line-height:1.6}.route-panel .choices{display:none!important}
+.hymn-mode #lesson-panel{width:410px;max-height:calc(100% - 190px)}
+.hymn-mode #choices{display:flex;flex-direction:column;gap:9px;max-height:42vh;overflow:auto;padding:2px 5px 2px 2px;scrollbar-width:thin}
+.hymn-mode .choice{display:block;font:16px/1.5 Georgia,'Times New Roman',serif;text-align:left;padding:12px 14px;min-height:0}
+.hymn-mode .choice::before{display:none}
+.hymn-note{display:block;margin-top:6px;color:#6c7358;font:10px/1.3 system-ui,sans-serif;letter-spacing:.03em}
+#hymn-read{margin:12px 0 4px;width:100%}
+#hymn-reading-text{font:20px/1.7 Georgia,'Times New Roman',serif;white-space:pre-line;color:#3b4b31;margin:10px 0 18px}
+.hymn-reading-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0}
+#hymn-reading-page{font-size:11px;color:#738164}
+#hymn-interpretation{font:18px/1.6 Georgia,'Times New Roman',serif;color:#355637;background:#e0e6cb;border-left:3px solid #a6894b;padding:12px 14px;margin:14px 0}
+.hymn-mode #bridge-hud{pointer-events:none}
+@media(max-width:1000px) and (min-width:701px){.hymn-mode #lesson-panel{width:350px}.hymn-mode .choice{font-size:15px}}
+@media(max-width:700px){.hymn-mode #lesson-panel{left:15px;right:15px;top:auto;bottom:100px;width:auto;max-height:48vh;padding:14px 16px}.hymn-mode #choices{max-height:25vh;gap:6px}.hymn-mode .choice{font-size:14px;line-height:1.4;padding:9px 11px}.hymn-mode #lesson-prompt{font-size:22px;min-height:0}.hymn-mode .panel-top{margin-bottom:10px}.hymn-mode #keyboard-guide{display:none}.hymn-mode #motion-toggle{display:inline-flex}#hymn-reading-text{font-size:18px}#hymn-interpretation{font-size:16px}}
 @media(max-width:700px){body.water-mode #lesson-panel.route-panel{max-height:160px}body.water-mode #lesson-panel.route-panel #go-station{display:block;margin:10px 0}}
+
+/* The full lesson interface opens on demand; gameplay remains on the scene. */
+.menu-toggle{position:absolute;z-index:12;top:20px;right:20px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border:1px solid #f0d59d;border-radius:12px;background:#1e493fe8;color:#fff0cd;box-shadow:0 8px 25px #0b2e2a44;backdrop-filter:blur(12px);font-size:13px;font-weight:650;letter-spacing:.02em;transition:background .16s,transform .16s}.menu-toggle:hover{background:#35604d;transform:translateY(-1px)}.menu-toggle>span:first-child{font-size:20px;line-height:1}.menu-toggle[hidden]{display:none!important}
+body.interface-collapsed .masthead,body.interface-collapsed #lesson-panel,body.interface-collapsed #bridge-hud,body.interface-collapsed .keyboard-guide,body.interface-collapsed .bottom-bar,body.interface-collapsed #fire-button{display:none!important}
+body.interface-collapsed #menu-toggle{display:inline-flex}body.interface-collapsed #menu-toggle[hidden],body.xr-active #menu-toggle{display:none!important}
+body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:84px}
+@media(max-width:1000px){.menu-toggle{right:21px}body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:75px}}
+@media(max-width:700px){.menu-toggle{top:15px;right:15px;min-height:38px;padding:8px 11px;font-size:12px}body:not(.interface-collapsed) #menu-toggle:not([hidden]){top:66px}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
