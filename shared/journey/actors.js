@@ -58,18 +58,23 @@ export async function loadActors(scene, world, base, onProgress) {
   }
   return {
     actors, manifest,
+    present(id, presentation) { const actor = actors.get(id); if (actor) actor.presentation = presentation; },
     pickables: [...actors.values()].map(actor => actor.plane),
     update(timeMs, cameraPosition, session, reduced, dt) {
       for (const [id, actor] of actors) {
         // A cylindrical billboard stays upright and retains a fixed foot point.
         actor.group.lookAt(cameraPosition.x, actor.group.position.y, cameraPosition.z);
         const solved = session.solved(id);
-        const frame = !reduced && solved ? frameAt(timeMs, actor.animation.durations) : 0;
+        const presentation = actor.presentation;
+        const duration = actor.animation.durations.reduce((sum, value) => sum + value, 0);
+        const frame = presentation
+          ? !reduced && presentation.elapsedMs >= 0 && presentation.elapsedMs < duration ? frameAt(presentation.elapsedMs, actor.animation.durations) : 0
+          : !reduced && solved ? frameAt(timeMs, actor.animation.durations) : 0;
         if (frame !== actor.frame) {
           actor.material.uniforms.uRect.value.set(...frameRect(frame, actor.animation)); actor.frame = frame;
         }
-        const goal = solved ? 1 : session.current?.id === id ? (world.kind === 'hub' ? 0.75 : 0.42) : (world.kind === 'hub' ? 0.5 : 0.16);
-        actor.value = reduced ? goal : THREE.MathUtils.damp(actor.value, goal, 3.7, dt);
+        const goal = presentation?.reveal ?? (solved ? 1 : session.current?.id === id ? (world.kind === 'hub' ? 0.75 : 0.42) : (world.kind === 'hub' ? 0.5 : 0.16));
+        actor.value = presentation || reduced ? goal : THREE.MathUtils.damp(actor.value, goal, 3.7, dt);
         actor.material.uniforms.uReveal.value = actor.value;
       }
     },
