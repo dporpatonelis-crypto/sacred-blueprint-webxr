@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { readCatalog, renderCards } from './catalog.mjs';
 import { validateWorldMedia } from './media-catalog.mjs';
+import { buildClassroom } from './build-classroom.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const lessons = await readCatalog(root), output = path.join(root, 'dist');
@@ -20,4 +21,5 @@ for (const lesson of lessons) {
   if (result.status !== 0) throw Error('Build failed for ' + lesson.id);
   await fs.access(path.join(output, 'lessons', lesson.id, 'index.html'));
 }
+await buildClassroom(root, output);
 console.log(`Published build: ${lessons.length} world(s) → dist/`);

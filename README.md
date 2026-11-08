@@ -12,6 +12,8 @@
 
 ## Δομή
 
+Πρώτο δείγμα για έλεγχο: [Puzzle εικόνας · Παλαιά Διαθήκη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/classroom/theia-oikonomia/?activity=old-sliding-puzzle). Προστίθεται στο αρχικό δισδιάστατο μάθημα, με χωριστή αποθήκευση και [αυτοτελές HTML για την τάξη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/downloads/theia-oikonomia-mindmap-puzzle.html). Η ενσωμάτωση στο WebXR και στις γέφυρες ακολουθεί τον έλεγχο του πρώτου δείγματος.
+
 ```text
 apps/                         Ανεξάρτητα έργα WebXR
   eikona-talanta-loukas/
