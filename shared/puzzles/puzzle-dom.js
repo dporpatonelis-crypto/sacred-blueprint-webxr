@@ -1,6 +1,6 @@
-export function mountPuzzle(container, activity, { image, title = 'Παλαιά Διαθήκη', onReset = () => activity.restart(), onSolved = () => {}, explanations = [] } = {}) {
+export function mountPuzzle(container, activity, { image, title = 'Παλαιά Διαθήκη', kicker = 'Δοκιμή · ξεχωριστή πρόοδος', solvedMessage = 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.', onReset = () => activity.restart(), onSolved = () => {}, explanations = [] } = {}) {
   container.innerHTML = `<section class="sliding-puzzle" aria-label="Puzzle εικόνας ${title}">
-    <p class="puzzle-kicker">Δοκιμή · ξεχωριστή πρόοδος</p><h2>${title} · Puzzle εικόνας</h2>
+    <p class="puzzle-kicker">${kicker}</p><h2>${title} · Puzzle εικόνας</h2>
     <p class="puzzle-instructions">Σύρε ένα διπλανό πλακίδιο προς το κενό με ποντίκι ή δάχτυλο, ή πάτησέ το. Με εστίαση στον πίνακα, τα βέλη μετακινούν το κενό.</p>
     <div class="puzzle-grid" tabindex="0" role="group" aria-label="Πίνακας puzzle. Τα βέλη μετακινούν το κενό."><span class="puzzle-blank" aria-label="Κενή θέση"></span><img class="puzzle-reference" alt="Η ολοκληρωμένη εικόνα της Παλαιάς Διαθήκης" hidden></div>
     <div class="puzzle-actions"><button type="button" class="puzzle-preview" aria-pressed="false">Δες την εικόνα</button><button type="button" class="puzzle-restart">Νέο ανακάτεμα</button><output class="puzzle-moves" aria-label="Κινήσεις">Κινήσεις: 0</output></div>
@@ -86,7 +86,7 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     const blank = root.querySelector('.puzzle-blank'); place(blank, puzzle.blank); blank.hidden = puzzle.solved;
     reference.hidden = !preview; previewButton.setAttribute('aria-pressed', String(preview)); previewButton.textContent = preview ? 'Επιστροφή στο puzzle' : 'Δες την εικόνα';
     explanationsNode.hidden = !puzzle.solved;
-    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.' : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Άφησε το πλακίδιο και η κίνηση ολοκληρώνεται προς το κενό.';
+    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? solvedMessage : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Άφησε το πλακίδιο και η κίνηση ολοκληρώνεται προς το κενό.';
     if (!activity.canStore) status.textContent += ' Η πρόοδος διατηρείται όσο μένει ανοιχτή η σελίδα.';
     if (puzzle.solved && !wasSolved) onSolved(); wasSolved = puzzle.solved;
   };

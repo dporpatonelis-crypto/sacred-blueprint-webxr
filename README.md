@@ -12,7 +12,7 @@
 
 ## Δομή
 
-Πρώτο δείγμα για έλεγχο: [Puzzle εικόνας · Παλαιά Διαθήκη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/classroom/theia-oikonomia/?activity=old-sliding-puzzle). Προστίθεται στο αρχικό δισδιάστατο μάθημα, με χωριστή αποθήκευση και [αυτοτελές HTML για την τάξη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/downloads/theia-oikonomia-mindmap-puzzle.html). Η ενσωμάτωση στο WebXR και στις γέφυρες ακολουθεί τον έλεγχο του πρώτου δείγματος.
+Πρώτο δείγμα για έλεγχο: [Puzzle εικόνας · Παλαιά Διαθήκη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/classroom/theia-oikonomia/?activity=old-sliding-puzzle). Προστίθεται στο αρχικό δισδιάστατο μάθημα, με χωριστή αποθήκευση και [αυτοτελές HTML για την τάξη](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/downloads/theia-oikonomia-mindmap-puzzle.html). Υπάρχει επίσης [προαιρετικό puzzle μέσα στο WebXR, μαζί με το νερό](https://dporpatonelis-crypto.github.io/sacred-blueprint-webxr/lessons/theia-oikonomia/?activity=old-sliding-puzzle). Η λύση του ανοίγει τις γέφυρες της Παλαιάς Διαθήκης και οι ερωτήσεις νερού συνεχίζουν ανεξάρτητα.
 
 ```text
 apps/                         Ανεξάρτητα έργα WebXR

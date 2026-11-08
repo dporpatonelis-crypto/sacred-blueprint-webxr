@@ -9,6 +9,10 @@ import { Navigation } from './navigation.js';
 import { SpatialUI } from './spatial-ui.js';
 import { loadActors } from './actors.js';
 import { WaterQuiz } from './water-quiz.js';
+import { PuzzleActivity } from '../../../shared/puzzles/puzzle-activity.js';
+import { mountPuzzle } from '../../../shared/puzzles/puzzle-dom.js';
+import { PuzzleBoard, PUZZLE_LANDING, PUZZLE_POSITION } from './puzzle-board.js';
+import './puzzle-ui.css';
 
 const $ = id => document.getElementById(id);
 document.getElementById('app').innerHTML = [
@@ -25,11 +29,12 @@ document.getElementById('app').innerHTML = [
   '<button id="fire-button" hidden aria-label="Κράτησε για βολή νερού προς το κέντρο"><span aria-hidden="true">◉</span><span>Νερό</span></button>',
   '<div class="keyboard-guide" id="keyboard-guide" hidden><span class="normal-guide"><span class="desktop-controls"><kbd>W A S D</kbd> κίνηση <span class="dot">·</span> σύρε για ματιά <span class="desktop-hint">· <kbd>Tab</kbd> κάρτες</span></span><span class="touch-controls">Κράτησε και σύρε τον μοχλό για κίνηση <span class="dot">·</span> σύρε για ματιά</span></span><span class="locked-guide">Στόχευσε και πάτησε <span class="dot">·</span> <kbd>Esc</kbd> για κάρτες</span></div>',
   '<div id="touch-walk" class="touch-walk" hidden role="group" aria-label="Χειριστήριο κίνησης αφής"><div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span class="touch-walk-stick" id="touch-walk-stick" aria-hidden="true"></span></div><span class="touch-walk-label">Κίνηση</span></div>',
-  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
+  '<footer class="bottom-bar" id="bottom-bar" hidden><nav class="scene-nav" aria-label="Σημεία μαθήματος"><span class="scene-nav-label">Η διαδρομή</span></nav><div><div id="saving-note" class="saving-note"></div><div class="explore-controls"><button class="tool" id="skybox-toggle" aria-pressed="true">Ορίζοντας: εικόνα</button><button class="tool" id="puzzle-open" hidden>Προαιρετικό puzzle</button><button class="tool" id="gameplay-toggle" aria-pressed="true">Παιχνίδι νερού</button><button class="tool" id="motion-toggle" aria-pressed="false">Παύση κίνησης</button><button class="tool" id="look-button">Κάρτες στον χώρο</button></div></div></footer>',
   '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
   '</main>',
+  '<dialog id="puzzle-dialog" aria-label="Προαιρετικό puzzle Παλαιάς Διαθήκης"><div class="puzzle-dialog-tools"><button id="puzzle-close" class="dialog-button">Στην αυλή</button><button id="puzzle-world" class="dialog-button">Πίνακας στον χώρο</button></div><p class="puzzle-supplement-note">Το νερό συνεχίζει κανονικά. Προαιρετικά, σύνθεσε την εικόνα για να ανοίξουν όλες οι γέφυρες αυτής της αυλής.</p><div id="puzzle-mount"></div></dialog>',
   '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
-  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 4.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Αριστερός μοχλός: μπροστά/πίσω και πλάγια, προς την κατεύθυνση που κοιτάς. Δεξιός μοχλός: στροφή ανά 45° γύρω από τη θέση σου.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
+  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 4.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Προαιρετικό puzzle</dt><dd>Στην Παλαιά Διαθήκη υπάρχει πίνακας εικόνας στην αρχική όχθη. Πάτησε ή σύρε ένα πλακίδιο δίπλα στο κενό· σε VR κράτησε trigger και άφησέ το για να ολοκληρωθεί η κίνηση. Η λύση ανοίγει όλες τις γέφυρες της αυλής. Το νερό και οι ερωτήσεις του συνεχίζουν κανονικά. Το νέο ανακάτεμα του puzzle διατηρεί τις κερδισμένες γέφυρες· η επαναφορά της ενότητας τις ξεκινά από την αρχή.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Αριστερός μοχλός: μπροστά/πίσω και πλάγια, προς την κατεύθυνση που κοιτάς. Δεξιός μοχλός: στροφή ανά 45° γύρω από τη θέση σου.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
   '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 4 / 4</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Άνοιξε και η γέφυρα επιστροφής. Διάσχισε το ποτάμι για να παρατηρήσεις τις σκηνές ή επέστρεψε στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
   '<dialog id="final-dialog" class="mind-map-dialog" aria-labelledby="final-title"><p class="dialog-kicker" id="final-kicker">Η διαδρομή ολοκληρώθηκε · 20 / 20</p><h2 id="final-title" tabindex="-1" autofocus>Ο νοητικός χάρτης της Θείας Οικονομίας</h2><section id="final-mind-map" class="mind-map" aria-label="Νοητικός χάρτης των τεσσάρων ενοτήτων"></section><p id="final-question" class="mind-map-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
   '<div id="scene-loading" hidden role="status">Μετάβαση…</div>',
@@ -45,8 +50,22 @@ if (import.meta.env.VITE_COLLECTION_URL) {
 let storage = null;
 try { storage = window.localStorage; } catch {}
 // Experimental gameplay has its own save slot, including on the same origin.
-const waterStorage = storage && { getItem: key => storage.getItem(key + '.water-v1'), setItem: (key, value) => storage.setItem(key + '.water-v1', value) };
+const puzzleDemo = new URLSearchParams(location.search).get('activity') === 'old-sliding-puzzle';
+const saveSuffix = puzzleDemo ? '.puzzle-demo-v1' : '.water-v1';
+const waterStorage = storage && { getItem: key => storage.getItem(key + saveSuffix), setItem: (key, value) => storage.setItem(key + saveSuffix, value) };
 const session = new LessonSession(waterStorage);
+// The direct review link has its own profile and starts at this courtyard.
+if (puzzleDemo) {
+  session.state.counts.main = lesson.scenes.find(item => item.id === 'main').stations.length;
+  session.enter('old');
+  $('welcome-title').innerHTML = 'Παλαιά<br>Διαθήκη.';
+  document.querySelector('.welcome-note').textContent = 'Δοκιμή με δική της πρόοδο · παιχνίδι νερού και προαιρετικό puzzle στην ίδια αυλή.';
+}
+const puzzleActivity = new PuzzleActivity({ key: 'theia-oikonomia.puzzle.old.webxr.v1' + (puzzleDemo ? '.demo' : ''), storage });
+const puzzleBonusKey = puzzleActivity.key + '.bridges';
+let puzzleBonus = puzzleActivity.puzzle.solved;
+try { puzzleBonus ||= storage?.getItem(puzzleBonusKey) === '1'; } catch {}
+if (puzzleBonus) { try { storage?.setItem(puzzleBonusKey, '1'); } catch {} }
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(66, 1, 0.08, 180);
 const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
@@ -68,6 +87,7 @@ let lastTime = performance.now(), lastProximity = null, hovered = null, motionOv
 let fpsTime = 0, fpsFrames = 0, desktopPose = null, teleportFlash = -1000;
 let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
 let worldCards = false, lastStationNear = null, interfaceOpen = false;
+let puzzleBoard = null, puzzlePointer = null, puzzleController = null;
 const preference = matchMedia('(prefers-reduced-motion: reduce)');
 const reducedMotion = () => motionOverride ?? preference.matches;
 const navigation = new Navigation(camera, renderer, world, [], {
@@ -87,7 +107,7 @@ function visibleInHierarchy(object) {
   return !object.userData.disabled;
 }
 function hitFromRay(ray, includeTeleport = false) {
-  const objects = [...(waterQuiz?.pickables || []), ...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
+  const objects = [...(puzzleBoard?.pickables || []), ...(waterQuiz?.pickables || []), ...(spatial?.pickables || []), ...(actors?.pickables || []), ...(includeTeleport ? teleportTargets : [])].filter(visibleInHierarchy);
   return ray.intersectObjects(objects, false).find(hit => hit.distance <= (includeTeleport ? 16 : 10)) || null;
 }
 function pickDesktop(point) {
@@ -108,7 +128,8 @@ function stationPose(station) {
     position: waterMode && session.current?.id === station.id ? approach.quizPosition : station.position };
 }
 function availableLandings() {
-  return [world.spawn,...world.stations.slice(0,session.localCount+1).map(station=>stationPose(station).landing)];
+  const count = world.id === 'old' && puzzleBonus ? world.stations.length : session.localCount + 1;
+  return [world.spawn, ...(world.id === 'old' ? [PUZZLE_LANDING] : []), ...world.stations.slice(0,count).map(station=>stationPose(station).landing)];
 }
 function atActiveStation() {
   if (session.sceneComplete) return true;
@@ -119,7 +140,7 @@ function atActiveStation() {
   return Boolean(station && courtyard?.onLand(p.x,p.z) && Math.hypot(p.x-station.landing[0],p.z-station.landing[1]) < 2.5);
 }
 function canFire() {
-  return atActiveStation() && started && ready && waterMode && !changingScene && !session.busy && !session.sceneComplete && !session.reviewId && !document.querySelector('dialog[open]');
+  return !puzzlePointer && !puzzleController && atActiveStation() && started && ready && waterMode && !changingScene && !session.busy && !session.sceneComplete && !session.reviewId && !document.querySelector('dialog[open]');
 }
 function beginFire(input) {
   if (!canFire() || firing.active) return;
@@ -186,6 +207,95 @@ function submitWater(id) {
     session.message = 'Σωστά! Άνοιξε η επόμενη γέφυρα.'; session.changed(false);
   }
 }
+// The optional puzzle earns bridge access independently of all water answers.
+mountPuzzle($('puzzle-mount'), puzzleActivity, {
+  image: import.meta.env.BASE_URL + 'media/focus-old.webp',
+  kicker: 'Προαιρετικό puzzle · ανεξάρτητη πρόοδος',
+  solvedMessage: 'Η εικόνα ολοκληρώθηκε · όλες οι γέφυρες άνοιξαν. Το παιχνίδι νερού συνεχίζεται.',
+  explanations: lesson.scenes.find(item => item.id === 'old').stations,
+  onReset: restartPuzzle,
+});
+puzzleActivity.subscribe(() => {
+  const earned = puzzleActivity.puzzle.solved && !puzzleBonus;
+  if (earned) {
+    puzzleBonus = true;
+    try { storage?.setItem(puzzleBonusKey, '1'); } catch {}
+    puzzleBoard?.setBonusUnlocked(true);
+  }
+  if (world.id === 'old') {
+    courtyard?.setPuzzleBonus(puzzleBonus);
+    if (earned) rebuildTeleportTargets();
+    renderUI();
+  }
+});
+function restartPuzzle() {
+  finishPuzzleInteraction(false);
+  if (puzzleBoard) puzzleBoard.preview = false;
+  puzzleActivity.restart();
+}
+function resetPuzzleReward() {
+  puzzleBonus = false;
+  try { storage?.setItem(puzzleBonusKey, '0'); } catch {}
+  puzzleBoard?.setBonusUnlocked(false);
+  restartPuzzle();
+}
+function goToPuzzle() {
+  if (world.id !== 'old' || changingScene || !puzzleBoard) return;
+  stopFire(); finishPuzzleInteraction(false);
+  if (renderer.xr.isPresenting) {
+    teleportTo(PUZZLE_LANDING);
+    const head = camera.getWorldQuaternion(new THREE.Quaternion());
+    rig.rotation.y -= new THREE.Euler().setFromQuaternion(head, 'YXZ').y;
+    rig.updateMatrixWorld(true);
+  } else navigation.goTo({ landing: PUZZLE_LANDING, position: [PUZZLE_POSITION[0], PUZZLE_POSITION[2]], lookHeight: 2.0 });
+}
+function puzzleRayAt(event) {
+  const rect = $('scene').getBoundingClientRect();
+  pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+}
+function finishPuzzleInteraction(commit = false, resync = true) {
+  const input = puzzlePointer;
+  puzzlePointer = null; puzzleController = null;
+  puzzleBoard?.finishDrag(commit);
+  if (input && $('scene').hasPointerCapture(input.pointerId)) $('scene').releasePointerCapture(input.pointerId);
+  if (resync) syncNavigation();
+}
+$('scene').addEventListener('pointerdown', event => {
+  if (!puzzleBoard || !started || changingScene || renderer.xr.isPresenting || event.button !== 0 || event.isPrimary === false) return;
+  if (puzzlePointer || puzzleController) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+  puzzleRayAt(event);
+  const hit = hitFromRay(raycaster), selected = hit?.object.userData.action;
+  if (!selected?.type.startsWith('puzzle-')) return;
+  event.preventDefault(); event.stopImmediatePropagation(); stopFire();
+  if (navigation.controls.isLocked) navigation.controls.unlock();
+  puzzlePointer = { pointerId: event.pointerId, selected, startX: event.clientX, startY: event.clientY, moved: false };
+  if (selected.type === 'puzzle-tile') puzzleBoard.beginDrag(selected.tile, raycaster.ray);
+  $('scene').setPointerCapture(event.pointerId); syncNavigation();
+}, true);
+$('scene').addEventListener('pointermove', event => {
+  if (puzzlePointer?.pointerId !== event.pointerId) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  puzzlePointer.moved ||= Math.hypot(event.clientX-puzzlePointer.startX,event.clientY-puzzlePointer.startY) > 6;
+  puzzleRayAt(event); puzzleBoard?.drag(raycaster.ray);
+}, true);
+const endPuzzlePointer = event => {
+  if (puzzlePointer?.pointerId !== event.pointerId) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  const input = puzzlePointer, commit = event.type === 'pointerup';
+  input.moved ||= Math.hypot(event.clientX-input.startX,event.clientY-input.startY) > 6;
+  if (commit) { puzzleRayAt(event); puzzleBoard?.drag(raycaster.ray); }
+  finishPuzzleInteraction(commit);
+  if (commit && !input.moved && input.selected.type !== 'puzzle-tile') action(input.selected);
+};
+for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) $('scene').addEventListener(name, endPuzzlePointer, true);
+window.addEventListener('blur', () => finishPuzzleInteraction(false));
+window.addEventListener('resize', () => finishPuzzleInteraction(false));
+document.addEventListener('visibilitychange', () => { if (document.hidden) finishPuzzleInteraction(false); });
+$('puzzle-open').addEventListener('click', () => { goToPuzzle(); showDialog('puzzle-dialog'); $('puzzle-mount').querySelector('.puzzle-grid').focus({preventScroll:true}); });
+$('puzzle-close').addEventListener('click', () => closeDialog('puzzle-dialog'));
+$('puzzle-world').addEventListener('click', () => { closeDialog('puzzle-dialog'); setInterfaceMenu(false); goToPuzzle(); });
+
 // Capture a hold on a vessel before the canvas navigation interprets it as drag.
 $('scene').addEventListener('pointerdown', event => {
   if (!canFire() || event.button !== 0) return;
@@ -226,6 +336,13 @@ function goTo(station = activeConfig()) {
 function action(event) {
   if (!event || changingScene) return;
   let result;
+  if (event.type.startsWith('puzzle-')) {
+    if (event.type === 'puzzle-focus') goToPuzzle();
+    if (event.type === 'puzzle-preview') puzzleBoard?.togglePreview();
+    if (event.type === 'puzzle-reset') restartPuzzle();
+    if (event.type === 'puzzle-return') { waterMode = true; goTo(); renderUI(); }
+    return;
+  }
   if (event.type === 'target' && !atActiveStation() && !session.solved(event.id)) {
     session.message = 'Ανέβα στη γέφυρα προς τον ενεργό σταθμό'; session.changed(false); return;
   }
@@ -256,8 +373,9 @@ function action(event) {
   if (event.type === 'cancel-reset') spatial.setResetConfirm(false);
   if (event.type === 'confirm-reset') {
     clearTimeout(revealTimer); pendingFinal = false; spatial.flashes.clear(); spatial.resetConfirm = false;
+    if (resetScope === 'all' || session.sceneId === 'old') resetPuzzleReward();
     if (resetScope === 'all' && !session.inHub) { void changeScene('main', true, true); return; }
-    stopFire(); waterQuiz?.fill.reset(); session.reset(resetScope);
+    stopFire(); waterQuiz?.fill.reset(); session.reset(resetScope); rebuildTeleportTargets();
     for (const actor of actors?.actors.values() || []) actor.value = 0.16;
     if (!renderer.xr.isPresenting) navigation.spawn(); else teleportTo(world.spawn);
   }
@@ -388,6 +506,7 @@ function renderUI() {
     b.classList.toggle('done', solved); b.classList.toggle('active', session.visibleStation.id === id);
     b.setAttribute('aria-current', session.visibleStation.id === id ? 'step' : 'false');
   });
+  $('puzzle-open').hidden = world.id !== 'old';
   $('skybox-toggle').hidden = !session.inHub;
   $('skybox-toggle').textContent = skyboxEnabled ? 'Ορίζοντας: εικόνα' : 'Ορίζοντας: απλός';
   $('skybox-toggle').setAttribute('aria-pressed', String(skyboxEnabled));
@@ -399,11 +518,15 @@ function renderUI() {
   renderFinalMindMap();
   waterQuiz?.sync(session);
   $('bridge-hud').hidden = !started;
-  $('bridge-count').textContent = session.localCount + ' / ' + session.sceneData.stations.length;
-  $('bridge-parts').replaceChildren(...session.sceneData.stations.map((_,i) => {
-    const piece = document.createElement('i'); piece.className = i < session.localCount ? 'raised' : ''; return piece;
+  const bonusHere = world.id === 'old' && puzzleBonus;
+  $('bridge-count').textContent = bonusHere ? '5 / 5' : session.localCount + ' / ' + session.sceneData.stations.length;
+  $('bridge-parts').replaceChildren(...Array.from({length: bonusHere ? 5 : session.sceneData.stations.length},(_,i) => {
+    const piece = document.createElement('i'); piece.className = bonusHere || i < session.localCount ? 'raised' : ''; return piece;
   }));
+  $('scene').dataset.puzzleBonus = String(bonusHere);
+  $('scene').dataset.puzzleMoves = String(puzzleActivity.puzzle.moves);
   $('water-guide').textContent = completed ? 'Όλες οι γέφυρες άνοιξαν · εξερεύνησε ελεύθερα' : traveling ? 'Ανέβα στη γέφυρα · σταθμός ' + number : waterMode ? 'Απάντησε εδώ · γέμισε το σωστό δοχείο' : 'Απάντησε εδώ · σύνδεσε τη σωστή κάρτα';
+  if (bonusHere && !completed) $('water-guide').textContent = 'Το puzzle άνοιξε τις γέφυρες · συνέχισε κανονικά με το νερό';
   $('gameplay-toggle').textContent = waterMode ? 'Παιχνίδι νερού' : 'Κλασικές κάρτες';
   $('gameplay-toggle').setAttribute('aria-pressed', String(waterMode));
   $('fire-button').hidden = !started || !waterMode || completed || reviewing || traveling;
@@ -424,8 +547,8 @@ function renderProximity(force = false) {
   }
 }
 function syncNavigation() {
-  if (document.querySelector('dialog[open]') || changingScene) stopFire();
-  navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]');
+  if (document.querySelector('dialog[open]') || changingScene) { stopFire(); finishPuzzleInteraction(false, false); }
+  navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]') && !puzzlePointer && !puzzleController;
   if (!navigation.enabled) navigation.keys.clear();
 }
 function showDialog(id) {
@@ -436,7 +559,7 @@ function closeDialog(id) { $(id).close(); syncNavigation(); }
 function showReset(scope) {
   resetScope = scope;
   $('reset-title').textContent = scope === 'all' ? 'Νέα αρχή;' : 'Επαναφορά ενότητας;';
-  $('reset-description').textContent = scope === 'all' ? 'Θα ξεκινήσουν από την αρχή και οι 20 συνδέσεις.' : 'Θα ξεκινήσουν από την αρχή οι τέσσερις συνδέσεις αυτής της ενότητας.';
+  $('reset-description').textContent = scope === 'all' ? 'Θα ξεκινήσουν από την αρχή και οι 20 συνδέσεις και το προαιρετικό puzzle.' : session.sceneId === 'old' ? 'Θα ξεκινήσουν από την αρχή οι τέσσερις συνδέσεις και το προαιρετικό puzzle της ενότητας.' : 'Θα ξεκινήσουν από την αρχή οι τέσσερις συνδέσεις αυτής της ενότητας.';
   $('reset-all').hidden = scope === 'all';
   if (!$('reset-dialog').open) showDialog('reset-dialog');
 }
@@ -538,13 +661,22 @@ for (let i = 0; i < 2; i++) {
   const cursor = new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe7a7, toneMapped: false }));
   cursor.visible = false; scene.add(cursor);
   controller.addEventListener('selectstart', () => {
-    if (!renderer.xr.isPresenting) return;
+    if (!renderer.xr.isPresenting || puzzleController || puzzlePointer) return;
     controllerRay(controller);
     const hit = hitFromRay(raycaster, true);
+    if (hit?.object.userData.action?.type.startsWith('puzzle-')) {
+      stopFire();
+      const selected = hit.object.userData.action;
+      if (selected.type === 'puzzle-tile') {
+        if (puzzleBoard?.beginDrag(selected.tile, raycaster.ray)) { puzzleController = controller; syncNavigation(); }
+      } else action(selected);
+      return;
+    }
     if (waterMode && !session.sceneComplete && !session.reviewId && (!hit || hit.object.userData.action?.type === 'vessel')) { beginFire({ mode: 'xr', controller, id: hit?.object.userData.action?.id }); return; }
     if (hit) action(hit.object.userData.action);
   });
-  controller.addEventListener('selectend', () => { if (firing.controller === controller) stopFire(); });
+  controller.addEventListener('selectend', () => { if (puzzleController === controller) finishPuzzleInteraction(true); if (firing.controller === controller) stopFire(); });
+  controller.addEventListener('disconnected', () => { if (puzzleController === controller) finishPuzzleInteraction(false); if (firing.controller === controller) stopFire(); });
   controllers.push({ controller, line, cursor });
 }
 function controllerRay(controller) {
@@ -553,7 +685,7 @@ function controllerRay(controller) {
   raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix).normalize();
 }
 renderer.xr.addEventListener('sessionstart', () => {
-  stopFire();
+  stopFire(); finishPuzzleInteraction(false);
   desktopPose = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
   if (navigation.controls.isLocked) navigation.controls.unlock();
   const yaw = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ').y;
@@ -566,7 +698,7 @@ renderer.xr.addEventListener('sessionstart', () => {
   start(); syncNavigation();
 });
 renderer.xr.addEventListener('sessionend', () => {
-  stopFire();
+  stopFire(); finishPuzzleInteraction(false);
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0);
   if (desktopPose) { camera.position.copy(desktopPose.position); camera.quaternion.copy(desktopPose.quaternion); }
   document.body.classList.remove('xr-active');
@@ -634,6 +766,7 @@ async function changeScene(id, force = false, resetAll = false) {
   if (changingScene || (!force && level && id === session.sceneId)) return;
   if (id !== 'main' && !session.unlocked) return;
   const previousId = session.sceneId, cfg = worlds[id];
+  finishPuzzleInteraction(false);
   changingScene = true; stopFire(); clearTimeout(revealTimer);
   $('stage').setAttribute('aria-busy', 'true');
   $('scene-loading').textContent = 'Μετάβαση · ' + CoreTitle(id);
@@ -641,17 +774,25 @@ async function changeScene(id, force = false, resetAll = false) {
   if (resetAll) session.reset('all');
   session.enter(id);
   const next = new THREE.Scene();
+  let nextPuzzleBoard = null;
   try {
-    const quiz = { segments: session.sceneData.stations.length, progress: session.localCount };
+    const quiz = { segments: session.sceneData.stations.length, progress: session.localCount, puzzleBonus: id === 'old' && puzzleBonus };
     const nextEnvironment = cfg.kind === 'hub' ? buildHub(next, cfg, quiz) : buildCourtyard(next, cfg, quiz);
     const nextSpatial = new SpatialUI(next, cfg, session, action);
     const nextActors = await loadActors(next, cfg, import.meta.env.BASE_URL, progress => {
       if (!started) $('start-label').textContent = 'Ετοιμασία εικόνων · ' + Math.round(progress * 100) + '%';
     });
     if (cfg.kind === 'hub') await getSkybox();
-    waterQuiz?.dispose();
+    if (id === 'old') {
+      const texture = await new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL + 'media/focus-old.webp');
+      texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+      nextPuzzleBoard = new PuzzleBoard(next, puzzleActivity, texture, puzzleBonus);
+      nextEnvironment.obstacles.push({type:'box',minX:PUZZLE_POSITION[0]-1.75,maxX:PUZZLE_POSITION[0]+1.75,minZ:PUZZLE_POSITION[2]-.15,maxZ:PUZZLE_POSITION[2]+.15});
+    }
+    waterQuiz?.dispose(); puzzleBoard?.dispose();
     const nextWaterQuiz = new WaterQuiz(next, cfg, session, camera, submitWater, nextEnvironment.approaches);
     if (level) { scene.remove(level); disposeLevel(level); }
+    puzzleBoard = nextPuzzleBoard;
     level = next; courtyard = nextEnvironment; spatial = nextSpatial; actors = nextActors; waterQuiz = nextWaterQuiz; world = cfg;
     scene.add(level); navigation.world = cfg; navigation.obstacles = courtyard.obstacles;
     camera.fov = cfg.kind === 'hub' ? 66 : 58; camera.updateProjectionMatrix();
@@ -664,6 +805,7 @@ async function changeScene(id, force = false, resetAll = false) {
     else { navigation.spawn(); if (!session.sceneComplete) {
       const first = nextEnvironment.approaches[0].quizPosition; camera.lookAt(first[0],1.2,first[1]);
     } }
+    if (puzzleDemo && id === 'old' && !renderer.xr.isPresenting) navigation.goTo({ landing: PUZZLE_LANDING, position: [PUZZLE_POSITION[0],PUZZLE_POSITION[2]], lookHeight: 2.0 });
     lastStationNear = null;
     rebuildTeleportTargets(); applyBackground(); ready = true; uiScene = null; lastProximity = null;
     $('start-label').textContent = session.count ? 'Συνέχισε τη διαδρομή' : 'Μπες στη διαδρομή';
@@ -676,7 +818,7 @@ async function changeScene(id, force = false, resetAll = false) {
     if (pendingFinal && started && !renderer.xr.isPresenting) { pendingFinal = false; showDialog('final-dialog'); }
     if (!vrButton) await prepareVR().catch(error => console.warn('WebXR:', error.message));
   } catch (error) {
-    disposeLevel(next); changingScene = false; session.enter(previousId);
+    nextPuzzleBoard?.dispose(); disposeLevel(next); changingScene = false; session.enter(previousId);
     $('scene-loading').hidden = true; $('stage').setAttribute('aria-busy', 'false');
     fail('Δεν φορτώθηκε η ενότητα. ' + (error?.message || 'Παρουσιάστηκε σφάλμα φόρτωσης.')); console.error(error); syncNavigation();
   }
@@ -692,6 +834,11 @@ renderer.setAnimationLoop(time => {
   const xr = renderer.xr.isPresenting;
   camera.getWorldPosition(cameraPosition);
   const reduced = reducedMotion();
+  if (puzzleController) {
+    if (renderer.xr.getSession()?.visibilityState !== 'visible') finishPuzzleInteraction(false);
+    else { controllerRay(puzzleController); puzzleBoard?.drag(raycaster.ray); }
+  }
+  puzzleBoard?.update(dt, reduced);
   courtyard?.update(now / 1000, reduced, session.localCount, dt);
   const waterShot = updateFire();
   waterQuiz?.update(now,dt,session,cameraPosition,reduced,waterMode && started && !changingScene && (atActiveStation() || session.busy),waterShot);
@@ -723,6 +870,7 @@ renderer.setAnimationLoop(time => {
   if (fpsTime >= 1) {
     $('scene').dataset.fps = String(Math.round(fpsFrames / fpsTime));
     $('scene').dataset.drawCalls = String(renderer.info.render.calls);
+    $('scene').dataset.openBridges = String(courtyard?.bridges?.filter(bridge => bridge.panels.every(panel => panel.value > .97)).length || 0);
     $('scene').dataset.position = camera.position.toArray().map(v => v.toFixed(2)).join(',');
     fpsFrames = 0; fpsTime = 0;
   }

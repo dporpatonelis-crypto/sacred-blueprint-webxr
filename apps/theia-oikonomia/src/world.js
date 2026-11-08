@@ -4,6 +4,7 @@ import { risingBridge, stationApproach } from '../../../shared/journey/river-bri
 
 // Four learning banks, with an open entry and four answer-controlled crossings.
 export function buildCourtyard(scene, config, quiz) {
+  let puzzleBonus = Boolean(quiz.puzzleBonus);
   const columns=config.stations.map(s=>s.position[0]), cuts=[-7,0,7], obstacles=[];
   scene.background=new THREE.Color(config.theme==='church'?0xdde6d3:config.theme==='old'?0xe6ddbd:0xc2dde2);
   scene.fog=new THREE.Fog(0xcddfd5,32,105);
@@ -72,7 +73,7 @@ export function buildCourtyard(scene, config, quiz) {
     const water=new THREE.Mesh(new THREE.PlaneGeometry(w,d),waterMaterial);water.rotation.x=-Math.PI/2;water.position.set(x,w===180?-.53:-.075,z);scene.add(water);
   }
   const routes=[{from:[-10.5,4.4],to:[-10.5,1.6]},...cuts.map(x=>({from:[x-.95,.8],to:[x+.95,.8]})),{from:[10.5,1.6],to:[10.5,4.4]}];
-  const bridges=routes.map((route,index)=>risingBridge(scene,{...route,width:2.1,segments:1,progress:index===0||quiz.progress>=index?1:0}));
+  const bridges=routes.map((route,index)=>risingBridge(scene,{...route,width:2.1,segments:1,progress:Number(puzzleBonus||index===0||quiz.progress>=index)}));
   const onLand=(x,z)=>!((z>1.66&&z<4.34)||(z<2.34&&cuts.some(c=>Math.abs(x-c)<.89)));
   const bankRanges=[[-15,-7.89],[-6.11,-.89],[.89,6.11],[7.89,15]];
   const approaches=bankRanges.map(([left,right],index)=>stationApproach(bridges[index],(x,z)=>x>=left&&x<=right&&z>=-8&&z<=1.66));
@@ -82,7 +83,8 @@ export function buildCourtyard(scene, config, quiz) {
   }
   batchStatic(scene,new Set([...leaves.map(x=>x.mesh),...bridges.flatMap(b=>[...b.exclude])]));
   return {obstacles,bridges,approaches,onLand,
+    setPuzzleBonus(solved){puzzleBonus=Boolean(solved);},
     canWalk(x,z){return onLand(x,z)||bridges.some(b=>b.allows(x,z));},
-    update(time,reduced,correct=quiz.progress,dt=0){waterMaterial.uniforms.uTime.value=reduced?0:time;bridges.forEach((b,i)=>b.update(i===0||correct>=i?1:0,dt,reduced));if(!reduced)leaves.forEach(l=>{l.mesh.rotation.z=Math.sin(time*.6+l.phase)*.02;});}
+    update(time,reduced,correct=quiz.progress,dt=0){waterMaterial.uniforms.uTime.value=reduced?0:time;bridges.forEach((b,i)=>b.update(Number(puzzleBonus||i===0||correct>=i),dt,reduced));if(!reduced)leaves.forEach(l=>{l.mesh.rotation.z=Math.sin(time*.6+l.phase)*.02;});}
   };
 }
