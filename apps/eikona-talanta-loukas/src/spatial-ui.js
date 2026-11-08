@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { revealProgress } from './animation-timing.js';
 import { lesson } from './session.js';
+import { manuscriptForWorld } from './manuscript-content.js';
 
 import { panel, setText } from '../../../shared/journey/text-panels.js';
 export { panel, setText } from '../../../shared/journey/text-panels.js';
@@ -61,7 +62,7 @@ export class SpatialUI {
     else card.position.set((index - 1) * 1.19, 0, 0);
   }
   refresh() {
-    const session = this.session, hymn = this.world.id === 'talanta';
+    const session = this.session, hymn = Boolean(manuscriptForWorld(this.world.id));
     this.finalPanel.visible = !hymn && session.complete && !this.resetConfirm && !session.reviewId;
     const station = this.world.stations.find(s => s.id === session.visibleStation.id);
     this.rack.position.set(station.position[0], this.world.kind === 'hub' ? 1.1 : 0.95, station.position[1] + (this.world.kind === 'hub' ? 1.4 : 2.0));

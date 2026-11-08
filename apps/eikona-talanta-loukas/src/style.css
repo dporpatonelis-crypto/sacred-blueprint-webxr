@@ -50,12 +50,15 @@ body.water-mode #reticle{opacity:.65;width:10px;height:10px;border-color:#d6fffa
 #lesson-panel.route-panel{min-height:0}.route-panel #feedback{line-height:1.6}.route-panel .choices{display:none!important}
 .hymn-mode #lesson-panel{width:410px;max-height:calc(100% - 190px)}
 .hymn-mode #choices{display:flex;flex-direction:column;gap:9px;max-height:42vh;overflow:auto;padding:2px 5px 2px 2px;scrollbar-width:thin}
-.hymn-mode .choice{display:block;font:16px/1.5 Georgia,'Times New Roman',serif;text-align:left;padding:12px 14px;min-height:0}
+.hymn-mode .choice{display:block;flex-shrink:0;font:16px/1.5 Georgia,'Times New Roman',serif;text-align:left;padding:12px 14px;min-height:0}
 .hymn-mode .choice::before{display:none}
 .hymn-note{display:block;margin-top:6px;color:#6c7358;font:10px/1.3 system-ui,sans-serif;letter-spacing:.03em}
 #hymn-read{margin:12px 0 4px;width:100%}
 #hymn-reading-text{font:20px/1.7 Georgia,'Times New Roman',serif;white-space:pre-line;color:#3b4b31;margin:10px 0 18px}
+.hymn-reading-source{font:11px/1.6 system-ui,sans-serif;color:#6c7358}.hymn-reading-source a{color:inherit;text-underline-offset:3px}
 .hymn-reading-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0}
+#hymn-reading-sections .text-button{padding:7px 10px;border:1px solid #a88c5a66;border-radius:7px}#hymn-reading-sections .text-button[aria-pressed="true"]{background:#dce3c6;color:#244638}
+.completed-actions{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 16px}.completed-actions .dialog-button{padding:10px 12px;font-size:12px;min-height:44px}
 #hymn-reading-page{font-size:11px;color:#738164}
 #hymn-interpretation{font:18px/1.6 Georgia,'Times New Roman',serif;color:#355637;background:#e0e6cb;border-left:3px solid #a6894b;padding:12px 14px;margin:14px 0}
 .hymn-mode #bridge-hud{pointer-events:none}
