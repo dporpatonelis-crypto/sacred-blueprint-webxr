@@ -28,7 +28,7 @@ document.getElementById('app').innerHTML = [
   '<div class="failure-banner" id="failure-banner" role="alert" hidden><span id="failure-text"></span><button id="retry-button">Επαναφόρτωση</button></div>',
   '</main>',
   '<dialog id="reset-dialog" aria-labelledby="reset-title"><p class="dialog-kicker">Η διαδρομή σου</p><h2 id="reset-title">Νέα αρχή;</h2><p id="reset-description">Οι συνδέσεις θα ξεκινήσουν από την αρχή.</p><div class="dialog-actions"><button class="dialog-button" id="reset-cancel">Ακύρωση</button><button class="dialog-button" id="reset-all" hidden>Όλη η διαδρομή</button><button class="dialog-button primary" id="reset-confirm">Επαναφορά</button></div></dialog>',
-  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 3.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Joystick δεξιά/αριστερά για στροφή ανά 45°.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
+  '<dialog id="help-dialog" aria-labelledby="help-title"><p class="dialog-kicker">Ένας μικρός οδηγός</p><h2 id="help-title">Βήματα στην αυλή</h2><dl><dt>Παρατήρησε</dt><dd>Σύρε με το ποντίκι ή το δάχτυλο για να κοιτάξεις γύρω σου.</dd><dt>Περπάτησε</dt><dd>WASD ή βελάκια στον υπολογιστή· σε tablet/κινητό, κράτησε και σύρε τον μοχλό κάτω αριστερά. Το «Στο σημείο» σε μεταφέρει δίπλα στην ενεργή σκηνή.</dd><dt>Γέμισε</dt><dd>Κράτησε πατημένο ένα δοχείο ή την κάρτα της απάντησης για περίπου 1,5 δευτερόλεπτο. Το water blaster γεμίζει το δοχείο. Με Space ή το «Νερό» πυροβολείς προς το κέντρο της οθόνης.</dd><dt>Χτίσε</dt><dd>Σωστή απάντηση: ανοίγει η επόμενη γέφυρα. Λάθος απάντηση: το δοχείο αδειάζει· άφησε τη βολή και δοκίμασε ξανά. Με δύο λάθη εμφανίζεται υπόδειξη. Η πρώτη γέφυρα είναι έτοιμη. Τα δοχεία εμφανίζονται μόλις ανέβεις στην ανοιχτή γέφυρα, προς τον σταθμό. Απάντησε για να ανοίξει η επόμενη. Ο χάρτης έχει 4 απαντήσεις, κάθε ενότητα 3.</dd><dt>Κλασικές κάρτες</dt><dd>Το «Παιχνίδι νερού» εναλλάσσει τον μηχανισμό με την αρχική επιλογή κάρτας και στόχου.</dd><dt>Χωρικές κάρτες</dt><dd>Το «Κάρτες στον χώρο» μεταφέρει τις επιλογές μέσα στη σκηνή. Πάτησέ τες με το ποντίκι. Esc ή «Πίνακας καρτών» για επιστροφή.</dd><dt>Ξαναδές</dt><dd>Πάτησε μια λυμένη κάρτα ή σκηνή για επανεξέταση.</dd><dt>Σε VR</dt><dd>Κράτησε trigger στο δοχείο για νερό. Πάτησε για επιλογή ή για τα ανοιχτά σημεία τηλεμεταφοράς στο δάπεδο. Αριστερός μοχλός: μπροστά/πίσω και πλάγια, προς την κατεύθυνση που κοιτάς. Δεξιός μοχλός: στροφή ανά 45° γύρω από τη θέση σου.</dd></dl><div class="dialog-actions"><button class="dialog-button primary" id="help-close">Στην αυλή</button></div></dialog>',
   '<dialog id="completion-dialog" aria-labelledby="completion-title"><div class="completion-seal" aria-hidden="true">✧</div><p class="dialog-kicker" id="completion-kicker">Η ενότητα φωτίστηκε · 3 / 3</p><h2 id="completion-title">Η ενότητα<br>φωτίστηκε.</h2><p>Άνοιξε και η γέφυρα επιστροφής. Διάσχισε το ποτάμι για να παρατηρήσεις τις σκηνές ή επέστρεψε στον κεντρικό χάρτη.</p><div class="completion-words" id="completion-words"></div><div class="dialog-actions"><button id="completion-hub" class="dialog-button primary">Στον χάρτη</button><button id="completion-close" class="dialog-button primary">Συνέχισε την περιήγηση</button><button id="completion-reset" class="dialog-button">Νέα αρχή</button></div></dialog>',
   '<dialog id="final-dialog" aria-labelledby="final-title"><p class="dialog-kicker">Η διαδρομή ολοκληρώθηκε · 16 / 16</p><h2 id="final-title">Σκέψου και σύνδεσε</h2><p id="final-question"></p><div class="dialog-actions"><button class="dialog-button primary" id="final-back">Στον χάρτη</button></div></dialog>',
   '<div id="scene-loading" hidden role="status">Μετάβαση…</div>',
@@ -64,7 +64,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(), cameraPosition = new THREE.Vector3(), rotationMatrix = new THREE.Matrix4();
 let started = false, ready = false, changingScene = false, vrButton = null, revealTimer = 0, pendingFinal = false;
 let lastTime = performance.now(), lastProximity = null, hovered = null, motionOverride = null;
-let fpsTime = 0, fpsFrames = 0, desktopPose = null, turnLatched = false, teleportFlash = -1000;
+let fpsTime = 0, fpsFrames = 0, desktopPose = null, teleportFlash = -1000;
 let resetScope = 'all', uiScene = null, skybox = null, skyboxEnabled = true;
 let worldCards = false, lastStationNear = null;
 const preference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -378,7 +378,7 @@ function renderProximity(force = false) {
 }
 function syncNavigation() {
   if (document.querySelector('dialog[open]') || changingScene) stopFire();
-  navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]') && !renderer.xr.isPresenting;
+  navigation.enabled = started && !changingScene && !document.querySelector('dialog[open]');
   if (!navigation.enabled) navigation.keys.clear();
 }
 function showDialog(id) {
@@ -442,7 +442,7 @@ $('skybox-toggle').addEventListener('click', () => {
 });
 session.onChange = renderUI; renderMotion(); setWorldCards(false);
 
-// Fixed landing points avoid continuous artificial motion in VR.
+// Fixed landing points complement thumbstick walking in VR.
 const teleportTargets = [];
 function rebuildTeleportTargets() {
   for (const marker of teleportTargets) { scene.remove(marker); marker.geometry.dispose(); marker.material.dispose(); }
@@ -462,7 +462,7 @@ function teleportTo(point) {
   if (!permitted.some(p=>p[0]===point[0] && p[1]===point[1])) return;
   teleportFlash = performance.now();
   fade.visible = true; fade.material.opacity = 0.95;
-  rig.position.x = point[0]; rig.position.z = point[1]; rig.updateMatrixWorld(true);
+  navigation.landXR(point);
 }
 const controllers = [];
 for (let i = 0; i < 2; i++) {
@@ -493,6 +493,7 @@ renderer.xr.addEventListener('sessionstart', () => {
   const yaw = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ').y;
   rig.position.set(camera.position.x, 0, camera.position.z); rig.rotation.y = yaw;
   camera.position.set(0, 0, 0); camera.quaternion.identity();
+  navigation.landXR([desktopPose.position.x, desktopPose.position.z]);
   document.body.classList.add('xr-active');
   document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
   teleportTargets.forEach(m => { m.visible = true; });
@@ -585,6 +586,7 @@ async function changeScene(id, force = false, resetAll = false) {
     camera.fov = cfg.kind === 'hub' ? 66 : 58; camera.updateProjectionMatrix();
     if (renderer.xr.isPresenting) {
       rig.position.set(cfg.spawn[0], 0, cfg.spawn[1]); rig.rotation.set(0, 0, 0);
+      navigation.landXR(cfg.spawn);
       const view = new THREE.PerspectiveCamera(); view.position.set(cfg.spawn[0], 1.65, cfg.spawn[1]); view.lookAt(...(cfg.lookAt || [0, 1.65, -5]));
       desktopPose = { position: view.position.clone(), quaternion: view.quaternion.clone() };
     } else if (session.localCount > 0 && !session.sceneComplete) navigation.goTo(stationPose(cfg.stations[session.localCount-1]));
@@ -616,8 +618,8 @@ renderer.setAnimationLoop(time => {
   const rawDt = Math.max(0, (now - lastTime) / 1000);
   const dt = Math.min(0.06, rawDt); lastTime = now;
   navigation.update(dt);
-  const xr = renderer.xr.isPresenting, viewCamera = xr ? renderer.xr.getCamera() : camera;
-  viewCamera.getWorldPosition(cameraPosition);
+  const xr = renderer.xr.isPresenting;
+  camera.getWorldPosition(cameraPosition);
   const reduced = reducedMotion();
   courtyard?.update(now / 1000, reduced, session.localCount, dt);
   const waterShot = updateFire();
@@ -643,17 +645,6 @@ renderer.setAnimationLoop(time => {
       item.cursor.visible = Boolean(hit);
       if (hit) item.cursor.position.copy(hit.point);
     }
-    let axis = 0;
-    for (const input of renderer.xr.getSession()?.inputSources || []) {
-      if (input.gamepad && (input.handedness === 'right' || !axis)) {
-        const axes = input.gamepad.axes; axis = axes.length >= 4 ? axes[2] : axes[0] || 0;
-      }
-    }
-    if (Math.abs(axis) > 0.72 && !turnLatched) {
-      const delta = -Math.sign(axis) * Math.PI / 4;
-      rig.position.sub(cameraPosition).applyAxisAngle(THREE.Object3D.DEFAULT_UP, delta).add(cameraPosition);
-      rig.rotation.y += delta; rig.updateMatrixWorld(true); turnLatched = true;
-    } else if (Math.abs(axis) < 0.3) turnLatched = false;
     if (fade.visible) { fade.material.opacity = Math.max(0, 0.95 * (1 - (now - teleportFlash) / 180)); if (!fade.material.opacity) fade.visible = false; }
   }
   renderer.render(scene, camera);
