@@ -64,7 +64,122 @@
     "atlas": "Runtime PNG sheets",
     "gif": "FFmpeg palette-encoded reference previews; not used by runtime"
   },
-  "panoramaExport": "Original 180 degree Unity panoramas encoded as JPEG; UV calibration preserved",
+  "panoramaExport": "Five ImageGen full 360 degree equirectangular panoramas, referenced from the original Unity front panoramas and Talanta skybox. The sea surrounds the city. Original 180 degree JPGs are archived outside public/.",
   "videoExport": "Original 45 second Unity film transcoded to 1280×720 H.264/AAC; faststart; source unchanged",
-  "mapExport": "Byte-for-byte original GLB; scaled by 2 in the world, station coordinates use the same scale"
+  "mapExport": "Retired from runtime; preserved in media/source/mediterranean.glb with original geographic metadata.",
+  "editions": {
+    "v1": "Archived observatory, crank and 180 degree city panoramas.",
+    "v2": "Five islands using the identical shared Talanta hub geometry and skybox. New independent save starts from zero, as explicitly requested."
+  },
+  "skyboxes360": [
+    {
+      "id": "damascus",
+      "master": "media/panorama/damascus-skybox-360-v1.png",
+      "runtime": "public/media/damascus-skybox-360-v1.jpg",
+      "prompt": "prompts/damascus-skybox-360-v1.txt",
+      "tool": "built-in image_gen.imagegen",
+      "reference": "media/panorama/original-180/damascus-panorama.jpg"
+    },
+    {
+      "id": "philippi",
+      "master": "media/panorama/philippi-skybox-360-v1.png",
+      "runtime": "public/media/philippi-skybox-360-v1.jpg",
+      "prompt": "prompts/philippi-skybox-360-v1.txt",
+      "tool": "built-in image_gen.imagegen",
+      "reference": "media/panorama/original-180/philippi-panorama.jpg"
+    },
+    {
+      "id": "athens",
+      "master": "media/panorama/athens-skybox-360-v1.png",
+      "runtime": "public/media/athens-skybox-360-v1.jpg",
+      "prompt": "prompts/athens-skybox-360-v1.txt",
+      "tool": "built-in image_gen.imagegen",
+      "reference": "media/panorama/original-180/athens-panorama.jpg"
+    },
+    {
+      "id": "ephesus",
+      "master": "media/panorama/ephesus-skybox-360-v1.png",
+      "runtime": "public/media/ephesus-skybox-360-v1.jpg",
+      "prompt": "prompts/ephesus-skybox-360-v1.txt",
+      "tool": "built-in image_gen.imagegen",
+      "reference": "media/panorama/original-180/ephesus-panorama.jpg"
+    },
+    {
+      "id": "rome",
+      "master": "media/panorama/rome-skybox-360-v1.png",
+      "runtime": "public/media/rome-skybox-360-v1.jpg",
+      "prompt": "prompts/rome-skybox-360-v1.txt",
+      "tool": "built-in image_gen.imagegen",
+      "reference": "media/panorama/original-180/rome-panorama.jpg"
+    }
+  ],
+  "islandsSkybox": {
+    "source": "apps/eikona-talanta-loukas/public/media/hub-skybox-v1.jpg",
+    "runtime": "public/media/islands-skybox.jpg",
+    "sha256": "05724df403cae04c33b609fe9aecaf101a28a8317540ea50473580417e03c8b6",
+    "geometry": "shared/journey/hub-world.js without modifications; five station islands plus the entry island."
+  },
+  "puzzleImages": [
+    {
+      "id": "damascus",
+      "source": "apps/paulos-school-mindmap/assets/paulos-school-mindmap-v1.png",
+      "cropPixels": [
+        390,
+        0,
+        530,
+        370
+      ],
+      "runtime": "public/media/damascus-puzzle.jpg",
+      "conversion": "FFmpeg extract crop; no invented content"
+    },
+    {
+      "id": "philippi",
+      "source": "apps/paulos-school-mindmap/assets/paulos-school-mindmap-v1.png",
+      "cropPixels": [
+        1222,
+        0,
+        450,
+        450
+      ],
+      "runtime": "public/media/philippi-puzzle.jpg",
+      "conversion": "FFmpeg extract crop; no invented content"
+    },
+    {
+      "id": "athens",
+      "source": "apps/paulos-school-mindmap/assets/paulos-school-mindmap-v1.png",
+      "cropPixels": [
+        1230,
+        470,
+        442,
+        471
+      ],
+      "runtime": "public/media/athens-puzzle.jpg",
+      "conversion": "FFmpeg extract crop; no invented content"
+    },
+    {
+      "id": "ephesus",
+      "source": "apps/paulos-school-mindmap/assets/paulos-school-mindmap-v1.png",
+      "cropPixels": [
+        820,
+        520,
+        440,
+        421
+      ],
+      "runtime": "public/media/ephesus-puzzle.jpg",
+      "conversion": "FFmpeg extract crop; no invented content"
+    },
+    {
+      "id": "rome",
+      "source": "MindPalaceVR video paul-journey.mp4",
+      "timeSeconds": 40,
+      "cropAt1280x720": [
+        80,
+        84,
+        1120,
+        536
+      ],
+      "runtime": "public/media/rome-puzzle.jpg",
+      "conversion": "FFmpeg frame extraction, black border/caption excluded, scaled to 960 px width"
+    }
+  ]
 }

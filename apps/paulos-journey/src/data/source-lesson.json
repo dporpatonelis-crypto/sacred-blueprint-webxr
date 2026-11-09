@@ -1,6 +1,27 @@
 {
   "id": "paulos-journey",
-  "groups": [],
+  "groups": [
+    {
+      "id": "damascus",
+      "imageId": "damascus-puzzle"
+    },
+    {
+      "id": "philippi",
+      "imageId": "philippi-puzzle"
+    },
+    {
+      "id": "athens",
+      "imageId": "athens-puzzle"
+    },
+    {
+      "id": "ephesus",
+      "imageId": "ephesus-puzzle"
+    },
+    {
+      "id": "rome",
+      "imageId": "rome-puzzle"
+    }
+  ],
   "sources": {
     "school": {
       "title": "Το σχολικό κείμενο",
@@ -23,6 +44,23 @@
       "title": "Από την παλιά στη νέα ζωή",
       "text": "ἐγὼ γὰρ διὰ νόμου νόμῳ ἀπέθανον, ἵνα Θεῷ ζήσω.\n\nΟ Παύλος περιγράφει μια ριζική αλλαγή: η ζωή του έχει πλέον κέντρο τον Θεό και τη ζωντανή σχέση με τον Χριστό.\n\nΓαλ. 2:19–20. Η σύνδεση με τη Δαμασκό είναι θεματική.",
       "url": "https://www.biblegateway.com/passage/?search=Galatians+2%3A19-20&version=TR1894"
+    }
+  },
+  "images": {
+    "damascus-puzzle": {
+      "src": "media/damascus-puzzle.jpg"
+    },
+    "philippi-puzzle": {
+      "src": "media/philippi-puzzle.jpg"
+    },
+    "athens-puzzle": {
+      "src": "media/athens-puzzle.jpg"
+    },
+    "ephesus-puzzle": {
+      "src": "media/ephesus-puzzle.jpg"
+    },
+    "rome-puzzle": {
+      "src": "media/rome-puzzle.jpg"
     }
   }
 }
