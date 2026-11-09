@@ -46,6 +46,7 @@ export class XRMenu {
       this.root.position.copy(this.head).addScaledVector(this.direction, 3.2);
       this.root.position.y = Math.max(1.55, this.head.y + .1);
     }
+    let order=990;this.root.traverse(object=>{if(object.material){object.material.depthTest=false;object.material.depthWrite=false;object.renderOrder=order++;}});
     this.root.lookAt(this.head);
     this.root.visible = true;
   }

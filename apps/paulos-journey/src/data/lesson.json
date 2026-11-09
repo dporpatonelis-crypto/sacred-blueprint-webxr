@@ -59,7 +59,8 @@
       ],
       "media": {
         "atlas": "media/damascus-atlas.png",
-        "panorama": "media/damascus-panorama.jpg"
+        "skybox": "media/damascus-skybox-360-v1.jpg",
+        "puzzle": "media/damascus-puzzle.jpg"
       }
     },
     {
@@ -116,7 +117,8 @@
       ],
       "media": {
         "atlas": "media/philippi-atlas.png",
-        "panorama": "media/philippi-panorama.jpg"
+        "skybox": "media/philippi-skybox-360-v1.jpg",
+        "puzzle": "media/philippi-puzzle.jpg"
       }
     },
     {
@@ -171,7 +173,8 @@
       ],
       "media": {
         "atlas": "media/athens-atlas.png",
-        "panorama": "media/athens-panorama.jpg"
+        "skybox": "media/athens-skybox-360-v1.jpg",
+        "puzzle": "media/athens-puzzle.jpg"
       }
     },
     {
@@ -228,7 +231,8 @@
       ],
       "media": {
         "atlas": "media/ephesus-atlas.png",
-        "panorama": "media/ephesus-panorama.jpg"
+        "skybox": "media/ephesus-skybox-360-v1.jpg",
+        "puzzle": "media/ephesus-puzzle.jpg"
       }
     },
     {
@@ -283,7 +287,8 @@
       ],
       "media": {
         "atlas": "media/rome-atlas.png",
-        "panorama": "media/rome-panorama.jpg"
+        "skybox": "media/rome-skybox-360-v1.jpg",
+        "puzzle": "media/rome-puzzle.jpg"
       }
     }
   ],

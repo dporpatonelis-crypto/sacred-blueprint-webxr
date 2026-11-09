@@ -1,6 +1,201 @@
 {
-  "observatory": {
-    "stations": []
+  "islands": {
+    "id": "islands",
+    "kind": "hub",
+    "spawn": [
+      0,
+      10
+    ],
+    "lookAt": [
+      0,
+      1.9,
+      -7
+    ],
+    "hubCenter": [
+      0,
+      7.5
+    ],
+    "bounds": {
+      "minX": -16,
+      "maxX": 17,
+      "minZ": -19,
+      "maxZ": 13
+    },
+    "skybox": "media/islands-skybox.jpg",
+    "stations": [
+      {
+        "id": "damascus",
+        "number": 1,
+        "position": [
+          -10,
+          -3
+        ],
+        "landing": [
+          -10,
+          0.3999999999999999
+        ],
+        "asset": "damascus",
+        "height": 3.35
+      },
+      {
+        "id": "philippi",
+        "number": 2,
+        "position": [
+          -4,
+          -11
+        ],
+        "landing": [
+          -4,
+          -7.6
+        ],
+        "asset": "philippi",
+        "height": 3.35
+      },
+      {
+        "id": "athens",
+        "number": 3,
+        "position": [
+          5,
+          -11
+        ],
+        "landing": [
+          5,
+          -7.6
+        ],
+        "asset": "athens",
+        "height": 3.35
+      },
+      {
+        "id": "ephesus",
+        "number": 4,
+        "position": [
+          11,
+          -3
+        ],
+        "landing": [
+          11,
+          0.3999999999999999
+        ],
+        "asset": "ephesus",
+        "height": 3.35
+      },
+      {
+        "id": "rome",
+        "number": 5,
+        "position": [
+          10.5,
+          7
+        ],
+        "landing": [
+          10.5,
+          10.4
+        ],
+        "asset": "rome",
+        "height": 3.35
+      }
+    ],
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 7.5,
+          "radius": 4.1
+        },
+        {
+          "x": -10,
+          "z": -3,
+          "radius": 4
+        },
+        {
+          "x": -4,
+          "z": -11,
+          "radius": 4
+        },
+        {
+          "x": 5,
+          "z": -11,
+          "radius": 4
+        },
+        {
+          "x": 11,
+          "z": -3,
+          "radius": 4
+        },
+        {
+          "x": 10.5,
+          "z": 7,
+          "radius": 4
+        }
+      ],
+      "paths": [
+        {
+          "from": [
+            0,
+            7.5
+          ],
+          "to": [
+            -10,
+            -3
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            -10,
+            -3
+          ],
+          "to": [
+            -4,
+            -11
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            -4,
+            -11
+          ],
+          "to": [
+            5,
+            -11
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            5,
+            -11
+          ],
+          "to": [
+            11,
+            -3
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            11,
+            -3
+          ],
+          "to": [
+            10.5,
+            7
+          ],
+          "width": 2.2
+        },
+        {
+          "from": [
+            10.5,
+            7
+          ],
+          "to": [
+            0,
+            7.5
+          ],
+          "width": 2.2
+        }
+      ]
+    }
   },
   "damascus": {
     "stations": [
@@ -13,7 +208,8 @@
         "height": 3.35,
         "asset": "damascus"
       }
-    ]
+    ],
+    "skybox": "media/damascus-skybox-360-v1.jpg"
   },
   "philippi": {
     "stations": [
@@ -26,7 +222,8 @@
         "height": 3.35,
         "asset": "philippi"
       }
-    ]
+    ],
+    "skybox": "media/philippi-skybox-360-v1.jpg"
   },
   "athens": {
     "stations": [
@@ -39,7 +236,8 @@
         "height": 3.35,
         "asset": "athens"
       }
-    ]
+    ],
+    "skybox": "media/athens-skybox-360-v1.jpg"
   },
   "ephesus": {
     "stations": [
@@ -52,7 +250,8 @@
         "height": 3.35,
         "asset": "ephesus"
       }
-    ]
+    ],
+    "skybox": "media/ephesus-skybox-360-v1.jpg"
   },
   "rome": {
     "stations": [
@@ -65,6 +264,7 @@
         "height": 3.35,
         "asset": "rome"
       }
-    ]
+    ],
+    "skybox": "media/rome-skybox-360-v1.jpg"
   }
 }
