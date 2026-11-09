@@ -31,6 +31,22 @@
       ],
       "connections": 20,
       "status": "published"
+    },
+    {
+      "id": "paulos-journey",
+      "directory": "apps/paulos-journey",
+      "title": "Η πορεία του Παύλου",
+      "description": "Παρατηρητήριο, πέντε πόλεις και δέκα συνδέσεις. Γεγονότα, χειρόγραφα και αιωρούμενες λέξεις οδηγούν από τη συνάντηση στην προσφορά.",
+      "preview": "previews/paulos-journey.jpg",
+      "topics": [
+        "Παύλος",
+        "Βάπτισμα",
+        "Σοφία και Σταυρός",
+        "Συμπαράσταση",
+        "Χαρίσματα"
+      ],
+      "connections": 10,
+      "status": "published"
     }
   ]
 }

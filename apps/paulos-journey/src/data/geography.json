@@ -1,0 +1,58 @@
+{
+  "source": "Natural Earth ne_50m_land, public domain",
+  "source_sha256": "e874b27a51d146452be360cafb3cc50c86001074a67d534113e6534682f9826b",
+  "projection": {
+    "longitude_center": 16,
+    "latitude_center": 37.5,
+    "latitude_scale": 0.12469483330713166,
+    "longitude_scale": 0.09826086956521739,
+    "z_offset": -0.15
+  },
+  "stations": [
+    {
+      "id": "damascus",
+      "longitude": 36.306,
+      "latitude": 33.511,
+      "x": 1.995285217391304,
+      "z": -0.6474076900621478
+    },
+    {
+      "id": "philippi",
+      "longitude": 24.285,
+      "latitude": 41.013,
+      "x": 0.8140913043478261,
+      "z": 0.28805294940795334
+    },
+    {
+      "id": "athens",
+      "longitude": 23.725,
+      "latitude": 37.972,
+      "x": 0.7590652173913044,
+      "z": -0.09114403867903369
+    },
+    {
+      "id": "ephesus",
+      "longitude": 27.342,
+      "latitude": 37.941,
+      "x": 1.1144747826086954,
+      "z": -0.09500957851155462
+    },
+    {
+      "id": "rome",
+      "longitude": 12.485,
+      "latitude": 41.892,
+      "x": -0.3453869565217391,
+      "z": 0.39765970788492255
+    }
+  ],
+  "home": {
+    "x": 1.88955652173913,
+    "z": -0.863254446516793
+  },
+  "triangles": 23040,
+  "materials": 1,
+  "colliders": 0,
+  "max_height": 0.2947053946435471,
+  "route_flatness_max": 0.02,
+  "bytes": 656932
+}

@@ -1,0 +1,70 @@
+{
+  "observatory": {
+    "stations": []
+  },
+  "damascus": {
+    "stations": [
+      {
+        "id": "damascus",
+        "position": [
+          1.4,
+          -5.0
+        ],
+        "height": 3.35,
+        "asset": "damascus"
+      }
+    ]
+  },
+  "philippi": {
+    "stations": [
+      {
+        "id": "philippi",
+        "position": [
+          1.4,
+          -5.0
+        ],
+        "height": 3.35,
+        "asset": "philippi"
+      }
+    ]
+  },
+  "athens": {
+    "stations": [
+      {
+        "id": "athens",
+        "position": [
+          1.4,
+          -5.0
+        ],
+        "height": 3.35,
+        "asset": "athens"
+      }
+    ]
+  },
+  "ephesus": {
+    "stations": [
+      {
+        "id": "ephesus",
+        "position": [
+          1.4,
+          -5.0
+        ],
+        "height": 3.35,
+        "asset": "ephesus"
+      }
+    ]
+  },
+  "rome": {
+    "stations": [
+      {
+        "id": "rome",
+        "position": [
+          1.4,
+          -5.0
+        ],
+        "height": 3.35,
+        "asset": "rome"
+      }
+    ]
+  }
+}

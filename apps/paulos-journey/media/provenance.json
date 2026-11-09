@@ -1,0 +1,70 @@
+{
+  "sources": [
+    {
+      "name": "paulos-school-mindmap.html",
+      "source": "apps/paulos-school-mindmap/paulos-school-mindmap.html",
+      "sha256": "6a3a3dfa2cbc27ce26b348268f5a192fc432acaed50444ec02d55a53dc4109c9",
+      "bytes": 4648785
+    },
+    {
+      "name": "paulos_apostolos_ethnon.html",
+      "source": "apps/paulos_apostolos_ethnon.html",
+      "sha256": "c20343f3bf87bc697abcee95291c236c39281173d725db161a36589b2d3044e1",
+      "bytes": 11760392
+    },
+    {
+      "name": "Mediterranean_Sculpted_Map.glb",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Relief/Models/Mediterranean_Sculpted_Map.glb",
+      "sha256": "68a307a430ddc57c9bf38f8e1b004bf6afb1d16f4d81f337bea906341fb61cd5",
+      "bytes": 656932
+    },
+    {
+      "name": "paul-journey.mp4",
+      "source": "MindPalaceVR/Assets/CollectionQuest/Jerusalem/LessonFigureVideos/Videos/paul-journey.mp4",
+      "sha256": "24d138da743112e0bdfd8d1d97560531335188fb9c9922422a30b123b58d940b",
+      "bytes": 45885143
+    },
+    {
+      "name": "damascus_panorama.png",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Textures/damascus_panorama.png",
+      "sha256": "e4d5532a7abd7f935f7791b5244ce52b4dc8697d82182e7adfaccc49cbc4d3da",
+      "bytes": 3019365
+    },
+    {
+      "name": "philippi_panorama.png",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Textures/philippi_panorama.png",
+      "sha256": "2b22a00c838f392b63f7436284ea711b44f9ab30bc2644be25ac5994e874021a",
+      "bytes": 2913795
+    },
+    {
+      "name": "athens_panorama.png",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Textures/athens_panorama.png",
+      "sha256": "c4486abb7611cb04dd3005f0ccd7f709b34cdabe07d1f7dd9e592841c166ca42",
+      "bytes": 2909250
+    },
+    {
+      "name": "ephesus_panorama.png",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Textures/ephesus_panorama.png",
+      "sha256": "a5ef0e0f08b28c58f5fd548737646316dbd2f6a2b340c409c9e7e88003c5b483",
+      "bytes": 2887609
+    },
+    {
+      "name": "rome_panorama.png",
+      "source": "MindPalaceVR/Assets/ChronologyHall/Journey/PaulApostolicJourney/Textures/rome_panorama.png",
+      "sha256": "be21c0dbc9785444f2372dba3ec51ac8c51f45d1575da21fa165c9adcf4c5475",
+      "bytes": 2878947
+    }
+  ],
+  "animationTool": "built-in image_gen.imagegen; generated keyframes, not recorded 3D motion",
+  "animationExports": {
+    "cells": "4×2; 384×512 each; 1536×1024 RGBA",
+    "frames": 8,
+    "frameDurationMs": 280,
+    "durationMs": 2240,
+    "atlas": "Runtime PNG sheets",
+    "gif": "FFmpeg palette-encoded reference previews; not used by runtime"
+  },
+  "panoramaExport": "Original 180 degree Unity panoramas encoded as JPEG; UV calibration preserved",
+  "videoExport": "Original 45 second Unity film transcoded to 1280×720 H.264/AAC; faststart; source unchanged",
+  "mapExport": "Byte-for-byte original GLB; scaled by 2 in the world, station coordinates use the same scale"
+}
