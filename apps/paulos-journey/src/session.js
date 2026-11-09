@@ -9,13 +9,14 @@ export class PaulSession {
   constructor(storage) {
     this.storage=storage; this.canStore=Boolean(storage); this.onChange=()=>{}; this.activities=new Map();
     let saved; try { saved=JSON.parse(storage?.getItem(SAVE_KEY)||'null'); } catch { /* Fresh, playable state. */ }
-    this.state={version:2,cities:{},view:'islands'};
+    this.state={version:2,cities:{},view:'islands',returnIsland:null};
     for(const city of lesson.cities) {
       const value=saved?.version===2?saved.cities?.[city.id]:null;
       this.state.cities[city.id]={...emptyCity(),biography:value?.biography===true,teaching:value?.biography===true&&value?.teaching===true,
         unlocked:value?.unlocked===true||value?.biography===true,wrongBio:Math.max(0,Math.min(99,Number(value?.wrongBio)||0)),wrongMeaning:Math.max(0,Math.min(99,Number(value?.wrongMeaning)||0)),puzzle:value?.puzzle||null};
     }
     if(saved?.version===2&&(saved.view==='islands'||lesson.cities.some(c=>c.id===saved.view)))this.state.view=saved.view;
+    if(lesson.cities.some(c=>c.id===saved?.returnIsland))this.state.returnIsland=saved.returnIsland;
     // DOM and 3D boards share these activities and the same serialized save.
     for(const city of lesson.cities) {
       const storageAdapter={getItem:()=>JSON.stringify(this.city(city.id).puzzle),setItem:(_,value)=>{const puzzle=JSON.parse(value),state=this.city(city.id);state.puzzle=puzzle;if(puzzle.tiles.every((tile,index)=>tile===(index===5?null:index)))state.unlocked=true;this.persist();}};
@@ -26,10 +27,11 @@ export class PaulSession {
   get count(){return Object.values(this.state.cities).reduce((n,c)=>n+Number(c.biography)+Number(c.teaching),0);}
   get complete(){return this.count===10;}
   get next(){return lesson.cities.find(c=>!this.done(c.id));}
-  get completedCities(){let count=0;for(const city of lesson.cities){if(!this.done(city.id))break;count++;}return count;}
+  get nextPuzzle(){return lesson.cities.find(c=>!this.allowed(c.id));}
+  get unlockedCount(){return lesson.cities.filter(c=>this.allowed(c.id)).length;}
   done(id){return this.city(id)?.teaching===true;}
   activity(id){return this.activities.get(id);}
-  islandAvailable(id){const index=lesson.cities.findIndex(c=>c.id===id);return index>=0&&(index<=this.completedCities||this.done(id));}
+  islandAvailable(id){return lesson.cities.some(c=>c.id===id);}
   allowed(id){return this.islandAvailable(id)&&(this.city(id).unlocked||this.activity(id)?.puzzle.solved===true);}
   city(id){return this.state.cities[id];}
   persist(){try{this.storage?.setItem(SAVE_KEY,JSON.stringify(this.state));}catch{this.canStore=false;}this.onChange();}
@@ -39,10 +41,10 @@ export class PaulSession {
     if(choice!==id){state[phase==='bio'?'wrongBio':'wrongMeaning']++;this.persist();return 'wrong';}
     state[key]=true;this.persist();return 'correct';
   }
-  enter(id){if(id!=='islands'&&!this.allowed(id))return false;this.state.view=id;this.persist();return true;}
+  enter(id){if(id!=='islands'&&!this.allowed(id))return false;this.state.view=id;if(id!=='islands')this.state.returnIsland=id;this.persist();return true;}
   reset(id){
     const ids=id==='all'?lesson.cities.map(c=>c.id):[id];
     for(const key of ids){this.state.cities[key]=emptyCity();this.activity(key).restart();}
-    this.state.view='islands';this.persist();
+    this.state.view='islands';this.state.returnIsland=id==='all'?null:id;this.persist();
   }
 }

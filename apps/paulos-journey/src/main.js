@@ -6,7 +6,8 @@ import { loadActors } from '../../../shared/journey/actors.js';
 import { panel } from '../../../shared/journey/text-panels.js';
 import { PaulSession, lesson } from './session.js';
 import { HUB, CITY, buildCity, buildIslands, disposeScene } from './world.js';
-import { ManuscriptConnections, manuscriptProfile, presentationSession, readingPages } from './manuscript.js';
+import { manuscriptProfile, presentationSession, readingPages } from './manuscript.js';
+import { PaulManuscript } from './manuscript-view.js';
 import { XRMenu } from './xr-menu.js';
 import { mountPuzzle } from '../../../shared/puzzles/puzzle-dom.js';
 import { installInterface } from './ui.js';
@@ -22,6 +23,9 @@ const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,powerPr
 let level=null,environment=null,city=null,actors=null,water=null,manuscript=null,view='islands',started=false,changing=false,ready=false,menuOpen=false,selected=null,activeIsland=null,puzzleView=null,puzzlePointer=null,puzzleController=null,revealing=false,focus=null,motionOverride=null,waterAdapter=null,teleports=[],videoWorld=null,desktopPose=null,zoomFactor=1,messageUntil=0;
 const head=new THREE.Vector3(),ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),rotation=new THREE.Matrix4();
 const reducedPreference=matchMedia('(prefers-reduced-motion: reduce)'),reduced=()=>motionOverride??reducedPreference.matches;
+const compactScreen=()=>!renderer.xr.isPresenting&&($('scene').clientWidth<700||$('scene').clientHeight<500);
+const compactLandscape=()=>compactScreen()&&$('scene').clientWidth>$('scene').clientHeight;
+const closeLayout=()=>compactLandscape()?{book:[-3,1.9,-5.6],water:[-.2,.65,-5.05],landing:[-1.5,-1.9],position:[-1.5,-5.05],lookHeight:1.6,fov:46}:{book:[-2,2.35,-5.6],water:[-2,.55,-5.05],landing:[-2,-1.9],position:[-2,-5.05],lookHeight:1.25,fov:74};
 let firing={active:false},feedback='Συναρμολόγησε το παζλ της πρώτης νησίδας.';
 const navigation=new Navigation(camera,renderer,HUB,[],{pick:point=>pick(point),lock:()=>{},escape:()=>{selected=null;openMenu(true);},canWalk:(x,z)=>environment?.canWalk(x,z)??true});
 const xrMenu=new XRMenu(scene,camera),xrPages=readingPages();
@@ -103,7 +107,7 @@ async function enter(id,force=false){
       nextActors=await loadActors(next,world,import.meta.env.BASE_URL);
       const quiz=createWater(next,c);nextWater=quiz.water;adapter=quiz.adapter;
       const present=presentationSession(session,c,()=>selected,()=>revealing||!session.city(id).biography);
-      nextManuscript=new ManuscriptConnections(next,world,present,nextActors,[{quizPosition:[-2.25,-3.3]}],()=>finishReveal(),manuscriptProfile(c));nextManuscript.finalQuestion=lesson.finalQuestion;
+      nextManuscript=new PaulManuscript(next,world,present,nextActors,[{quizPosition:[-2.25,-3.3]}],()=>finishReveal(),manuscriptProfile(c));nextManuscript.finalQuestion=lesson.finalQuestion;
       const target=panel('Γέμισε το σωστό χωρίο',2.4,.42,{type:'target',id},{dark:true});target.position.set(1.4,1.6,-3.75);next.add(target);env.target=target;env.pickables.push(target);
       const go=panel('Στο χειρόγραφο ↗',2.3,.4,{type:'go'},{dark:true});go.position.set(-2.8,1.1,1.9);next.add(go);env.go=go;env.pickables.push(go);
       const hub=panel('Στις νησίδες',2.2,.42,{type:'hub'},{dark:true});hub.position.set(-4.6,1.35,-3.6);next.add(hub);env.pickables.push(hub);
@@ -112,10 +116,11 @@ async function enter(id,force=false){
     }
     disposeWater(water);manuscript?.dispose();environment?.dispose?.();if(level){scene.remove(level);disposeScene(level);}level=next;scene.add(level);environment=env;actors=nextActors||null;water=nextWater||null;manuscript=nextManuscript||null;city=c||null;waterAdapter=adapter||null;view=id;session.enter(id);
     scene.background=next.background;scene.backgroundRotation.copy(next.backgroundRotation);scene.fog=next.fog;navigation.world=c?{...CITY,id}:HUB;navigation.obstacles=env.obstacles||[];
-    if(renderer.xr.isPresenting){navigation.landXR(navigation.world.spawn);desktopPose=null;}else navigation.spawn();
-    activeIsland=c?.id||session.next?.id||lesson.cities[0].id;makeTeleports();ready=true;changing=false;feedback=c?c.story:session.complete?lesson.finalQuestion:'Συναρμολόγησε το παζλ στη νησίδα '+session.next.title+'.';
+    const returning=!c&&HUB.stations.find(station=>station.id===session.state.returnIsland);
+    if(renderer.xr.isPresenting){navigation.landXR(returning?.landing||navigation.world.spawn);desktopPose=null;}else if(returning)navigation.goTo({...returning,lookHeight:1.95});else navigation.spawn();
+    activeIsland=c?.id||session.state.returnIsland||session.nextPuzzle?.id||lesson.cities[0].id;makeTeleports();ready=true;changing=false;feedback=c?c.story:session.complete?lesson.finalQuestion:session.nextPuzzle?'Διάλεξε ελεύθερα νησίδα και συναρμολόγησε την εικόνα της.':'Όλες οι πόλεις άνοιξαν. Διάλεξε μια εικόνα ή χρησιμοποίησε το Μενού.';
     $('loading').hidden=true;$('transition').style.opacity='0';$('error').hidden=true;$('start').disabled=false;$('start').textContent='Στις νησίδες ↗';buildMenu();renderUI();resize();syncInput();$('menu').scrollTop=0;
-    if(started&&!renderer.xr.isPresenting)openMenu(true);if(started&&c&&session.done(id))showCompletion();
+    openMenu(false);if(c&&!session.done(id)&&(!renderer.xr.isPresenting&&(compactScreen()||session.city(id).biography)))goScene();
   }catch(error){disposeWater(nextWater);nextManuscript?.dispose();env?.dispose?.();disposeScene(next);changing=false;$('loading').hidden=true;$('transition').style.opacity='0';showError(error);syncInput();}
 }
 function buildMenu(){
@@ -130,8 +135,8 @@ function buildAnswers(){
 function renderUI(){
   if(!ready)return;$('place-title').textContent=city?city.title:'Οι νησίδες του Παύλου';$('progress').textContent=session.count+' / 10';$('save-note').textContent=session.canStore?'Η πρόοδός σου αποθηκεύεται σε αυτή τη συσκευή.':'Η πρόοδος κρατιέται όσο μένει ανοιχτή η σελίδα.';
   $('hub-activity').hidden=Boolean(city);$('city-activity').hidden=!city;$('hub').hidden=!city;$('video-open').hidden=!session.complete;$('motion').setAttribute('aria-pressed',String(reduced()));$('motion').textContent=reduced()?'Ενεργοποίηση κίνησης':'Μειωμένη κίνηση';
-  $('hub-instruction').textContent=session.complete?'Οι πέντε πόλεις φωτίστηκαν. Επίλεξε μια νησίδα για επανεξέταση.':'Συναρμολόγησε το παζλ 3 × 2 της νησίδας '+session.next.title+'. Έπειτα μπες στην πόλη και γέμισε τις δύο σωστές απαντήσεις με νερό.';
-  $('next-island').hidden=session.complete;$('next-island').textContent=session.next?'Στη νησίδα '+session.next.title+' ↗':'Συνέχεια εξερεύνησης';
+  $('hub-instruction').textContent=session.complete?'Οι πέντε πόλεις φωτίστηκαν. Επίλεξε ελεύθερα μια πόλη για επανεξέταση.':session.nextPuzzle?'Διάλεξε οποιαδήποτε νησίδα. Κάθε παζλ 3 × 2 ανοίγει την πόλη και τη γέφυρά του, χωρίς να χρειάζονται πρώτα οι απαντήσεις μέσα στην πόλη.':'Όλες οι πόλεις άνοιξαν. Επίλεξέ τες ελεύθερα, με όποια σειρά θέλεις.';
+  $('next-island').hidden=!session.nextPuzzle;$('next-island').textContent=session.nextPuzzle?'Στη νησίδα '+session.nextPuzzle.title+' ↗':'Όλες οι πόλεις άνοιξαν';
   document.querySelectorAll('[data-city]').forEach(button=>{const id=button.dataset.city,c=lesson.cities.find(value=>value.id===id);button.disabled=!session.islandAvailable(id);button.textContent=(lesson.cities.indexOf(c)+1)+' · '+c.title+' · '+(session.done(id)?'Ολοκληρώθηκε':session.allowed(id)?'Στην πόλη':'Παζλ 3 × 2');button.classList.toggle('done',session.done(id));});
   if($('puzzle-dialog').open){$('puzzle-enter').disabled=!session.allowed(activeIsland);$('puzzle-enter').textContent='Στην πόλη '+lesson.cities.find(c=>c.id===activeIsland).title+' →';}
   if(city){
@@ -151,7 +156,7 @@ function action(event){
     const board=environment?.boards?.get(event.id);if(!board||!session.islandAvailable(event.id))return;activeIsland=event.id;
     if(event.type==='puzzle-preview')board.togglePreview();else if(event.type==='puzzle-reset')session.activity(event.id).restart();else if(event.type==='puzzle-enter'&&session.allowed(event.id))enter(event.id);return;
   }
-  if(!city)return;if(event.type==='hymn-block')return;if(event.type==='hymn-page'){stopFire();manuscript.setPage(event.page);return;}if(revealing)return;
+  if(!city)return;if(event.type==='hymn-block')return;if(event.type==='hymn-page'){stopFire();manuscript.setPage(event.page);return;}if(revealing)return;if(event.type==='hymn-choice'){stopFire();manuscript.setChoice(event.index);return;}
   if(event.type==='go'){goScene();return;}if(event.type==='replay'){startReveal(true);return;}
   if(event.type==='word'){if(!session.city(city.id).biography){announce('Πρώτα γέμισε τη σωστή απάντηση για το γεγονός.');return;}if(session.done(city.id)){if(event.id===city.id)startReveal(true);return;}aimAnswer(event.id);return;}
   if(event.type==='target'){if(session.done(city.id))startReveal(true);else announce('Γέμισε το δοχείο του σωστού χωρίου με νερό.');}
@@ -159,12 +164,12 @@ function action(event){
 function answerWater(id){
   if(!city)return;const biography=!session.city(city.id).biography,result=session.answer(city.id,biography?'bio':'meaning',id);stopFire();
   if(result==='wrong'){water.reject(id,performance.now());selected=null;announce('Δοκίμασε ξανά. Άφησε τη βολή και στόχευσε άλλο δοχείο.');}
-  else if(result==='correct'&&biography){selected=null;rebuildWater();makeTeleports();announce('Το πέρασμα ανοίγει. Διάλεξε το σωστό χωρίο και γέμισε το δοχείο του.');if(renderer.xr.isPresenting)showWorldMenu();else openMenu(true);}
+  else if(result==='correct'&&biography){selected=null;rebuildWater();layoutCity();makeTeleports();announce('Το πέρασμα ανοίγει. Διάβασε το χειρόγραφο και γέμισε το δοχείο του σωστού χωρίου.');if(!renderer.xr.isPresenting)goScene();}
   else if(result==='correct')startReveal(false);renderUI();
 }
 function goScene(){
-  if(!city)return;cancelFocus(false);const meaning=session.city(city.id).biography,landing=meaning?[0,1.3]:[0,5.8],position=meaning?[0,-1]:[0,3.1];
-  if(renderer.xr.isPresenting)navigation.landXR(landing);else navigation.goTo({landing,position,lookHeight:1.1});openMenu(false);
+  if(!city)return;cancelFocus(false);const meaning=session.city(city.id).biography,compact=compactScreen(),layout=closeLayout(),landing=meaning?compact?layout.landing:[0,1.3]:compact?[0,6.2]:[0,5.8],position=meaning?compact?layout.position:[0,-1]:[0,3.1];
+  if(renderer.xr.isPresenting)navigation.landXR(landing);else navigation.goTo({landing,position,lookHeight:compact?meaning?layout.lookHeight:1.25:1.1});openMenu(false);
 }
 function aimAnswer(id){
   if(!city||changing||revealing||session.done(city.id))return;selected=id;if(renderer.xr.isPresenting){announce('Στόχευσε και γέμισε το δοχείο του επιλεγμένου χωρίου.');renderUI();return;}goScene();
@@ -176,7 +181,7 @@ function startReveal(review){
   if(!renderer.xr.isPresenting){const returnQuaternion=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(camera.position,new THREE.Vector3(-.3,1.6,-4),camera.up));if(reduced())camera.quaternion.copy(returnQuaternion);else focus={...currentCameraPose(),returnQuaternion,target:new THREE.Vector3(1.4,1.9,-5)};}
   announce(review?'Δες ξανά τη σύνδεση. Η πρόοδος διατηρείται.':'Οι λέξεις ταξιδεύουν στην εικόνα…');manuscript.userReview=review;renderUI();
 }
-function finishReveal(){const review=manuscript?.userReview;revealing=false;cancelFocus(true);announce(city.teaching.interpretation);renderUI();if(!review)showCompletion();}
+function finishReveal(){const review=manuscript?.userReview;revealing=false;cancelFocus(true);if(compactScreen()){navigation.spawn();resize();}announce(city.teaching.interpretation);renderUI();if(!review)showCompletion();}
 function visible(o){for(let n=o;n;n=n.parent)if(!n.visible)return false;return !o.userData.disabled;}
 function pickables(){if(xrMenu.opened)return xrMenu.pickables.filter(visible);if(videoWorld)return videoWorld.pickables.filter(visible);return[...(environment?.pickables||[]),...(manuscript?.pickables||[]),...(actors?.pickables||[]),...(water?.root.visible?water.pickables:[]),...teleports,...xrMenu.pickables].filter(visible);}
 function rayHit(){if(renderer.xr.isPresenting&&xrMenu.toggle.visible){const menu=ray.intersectObject(xrMenu.toggle,false)[0];if(menu?.distance<20)return menu;}return ray.intersectObjects(pickables(),false).find(h=>h.distance<20);}
@@ -217,8 +222,7 @@ function openPuzzle(id){
 function closePuzzle(){if($('puzzle-dialog').open)closeDialog('puzzle-dialog');puzzleView?.dispose();puzzleView=null;$('puzzle-mount').replaceChildren();}
 function islandSolved(id){
   announce('Η εικόνα ολοκληρώθηκε. Η πόλη '+lesson.cities.find(value=>value.id===id).title+' άνοιξε.');renderUI();
-  if(renderer.xr.isPresenting){xrMenu.show('Η πόλη άνοιξε','Η εικόνα ολοκληρώθηκε. Προχώρησε στις δύο συνδέσεις της πόλης.',[{label:'Στην πόλη →',action:{type:'xr-island',id}},{label:'Συνέχεια εξερεύνησης',action:{type:'xr-close'}}]);syncInput();}
-  else if($('puzzle-dialog').open&&activeIsland===id)$('puzzle-enter').focus();
+  if(!renderer.xr.isPresenting&&$('puzzle-dialog').open&&activeIsland===id)$('puzzle-enter').focus();
 }
 $('scene').addEventListener('pointerdown',event=>{
   if(event.button!==0||!started||changing||document.querySelector('dialog[open]')||renderer.xr.isPresenting)return;
@@ -248,7 +252,7 @@ document.addEventListener('keydown',event=>{
 document.addEventListener('keyup',event=>{if(event.code==='Space'&&firing.keyboard)stopFire();});
 window.addEventListener('blur',()=>{stopFire();finishPuzzle(false);});window.addEventListener('resize',()=>finishPuzzle(false));
 document.addEventListener('visibilitychange',()=>{stopFire();if(document.hidden){finishPuzzle(false);film.pause();}});
-$('next-island').addEventListener('click',()=>{if(session.next)visitIsland(session.next.id);});
+$('next-island').addEventListener('click',()=>{if(session.nextPuzzle)visitIsland(session.nextPuzzle.id);});
 for(const id of ['puzzle-close','puzzle-back'])$(id).addEventListener('click',closePuzzle);
 $('puzzle-world').addEventListener('click',()=>{const id=activeIsland;closePuzzle();goIsland(id);});
 $('puzzle-enter').addEventListener('click',()=>{const id=activeIsland;if(session.allowed(id)){closePuzzle();enter(id);}});
@@ -256,7 +260,7 @@ function sourceReader(){const id=$('reader-select').value,source=lesson.sources[
 for(const[id,s]of Object.entries(lesson.sources)){const o=document.createElement('option');o.value=id;o.textContent=s.title;$('reader-select').append(o);}
 $('reader-select').addEventListener('change',sourceReader);
 $('read').addEventListener('click',()=>{sourceReader();dialog('reader');});for(const id of ['reader-close','reader-back'])$(id).addEventListener('click',()=>closeDialog('reader'));
-$('menu-toggle').addEventListener('click',()=>openMenu(!menuOpen));$('start').addEventListener('click',()=>{started=true;$('welcome').hidden=true;$('menu-toggle').hidden=false;$('touch-walk').hidden=false;openMenu(true);syncInput();if(city&&session.done(city.id))showCompletion();});
+$('menu-toggle').addEventListener('click',()=>openMenu(!menuOpen));$('start').addEventListener('click',()=>{started=true;$('welcome').hidden=true;$('menu-toggle').hidden=false;$('touch-walk').hidden=false;openMenu(false);syncInput();});
 for(const id of ['hub','completed-hub'])$(id).addEventListener('click',()=>enter('islands'));
 $('go-scene').addEventListener('click',goScene);$('replay').addEventListener('click',()=>startReveal(true));
 $('hint').addEventListener('click',()=>{if(city){const s=session.city(city.id);s[s.biography?'wrongMeaning':'wrongBio']=Math.max(2,s[s.biography?'wrongMeaning':'wrongBio']);session.persist();renderUI();}});
@@ -298,10 +302,16 @@ for(let i=0;i<2;i++){
   controller.addEventListener('disconnected',()=>{if(puzzleController?.controller===controller)finishPuzzle(false);if(firing.controller===controller)stopFire();});controllers.push({controller,line,cursor});
 }
 function controllerRay(c){rotation.identity().extractRotation(c.matrixWorld);ray.ray.origin.setFromMatrixPosition(c.matrixWorld);ray.ray.direction.set(0,0,-1).applyMatrix4(rotation).normalize();}
-renderer.xr.addEventListener('sessionstart',()=>{cancelPresentation();desktopPose=currentCameraPose();closeVideo();for(const d of document.querySelectorAll('dialog[open]'))d.close();const yaw=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ').y;rig.position.set(camera.position.x,0,camera.position.z);rig.rotation.y=yaw;camera.position.set(0,0,0);camera.quaternion.identity();navigation.landXR([desktopPose.position.x,desktopPose.position.z]);document.body.classList.add('xr');xrMenu.enable(true);$('menu-toggle').hidden=true;openMenu(false);teleports.forEach(t=>t.visible=true);started=true;$('welcome').hidden=true;syncInput();});
+renderer.xr.addEventListener('sessionstart',()=>{cancelPresentation();layoutCity();desktopPose=currentCameraPose();closeVideo();for(const d of document.querySelectorAll('dialog[open]'))d.close();const yaw=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ').y;rig.position.set(camera.position.x,0,camera.position.z);rig.rotation.y=yaw;camera.position.set(0,0,0);camera.quaternion.identity();navigation.landXR([desktopPose.position.x,desktopPose.position.z]);document.body.classList.add('xr');xrMenu.enable(true);$('menu-toggle').hidden=true;openMenu(false);teleports.forEach(t=>t.visible=true);started=true;$('welcome').hidden=true;syncInput();});
 renderer.xr.addEventListener('sessionend',()=>{cancelPresentation();closeVideo();xrMenu.enable(false);rig.position.set(0,0,0);rig.rotation.set(0,0,0);if(desktopPose){camera.position.copy(desktopPose.position);camera.quaternion.copy(desktopPose.quaternion);}else navigation.spawn();document.body.classList.remove('xr');$('menu-toggle').hidden=false;openMenu(false);teleports.forEach(t=>t.visible=false);controllers.forEach(c=>c.cursor.visible=false);syncInput();resize();});
 async function prepareVR(){if(!navigator.xr||!await navigator.xr.isSessionSupported('immersive-vr').catch(()=>false))return;const button=VRButton.createButton(renderer,{optionalFeatures:['local-floor','bounded-floor']});button.style.cssText='';$('vr-slot').append(button);}
-function resize(){if(renderer.xr.isPresenting)return;const w=$('scene').clientWidth,h=$('scene').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;if(!focus){const baseFov=Math.min(120,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(66)/2)*Math.max(1,1.5/camera.aspect))));camera.fov=THREE.MathUtils.clamp(baseFov*zoomFactor,25,120);}camera.updateProjectionMatrix();}
+function layoutCity(){
+  if(!city||revealing)return;const compact=compactScreen(),meaning=session.city(city.id).biography;
+  const layout=closeLayout();manuscript?.setCompact(compact,compact?layout.book:undefined);
+  water.root.scale.setScalar(compact ? .5 : .62);water.root.position.set(...(meaning&&compact?layout.water:[0,compact ? .55 : .3,meaning?-1:3.1]));water.question.scale.setScalar(compact ? .8 : 1);
+}
+let lastCompact='';
+function resize(){if(renderer.xr.isPresenting)return;const w=$('scene').clientWidth,h=$('scene').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;const compact=compactScreen(),mode=compact?compactLandscape()?'landscape':'portrait':'wide',changed=mode!==lastCompact;lastCompact=mode;layoutCity();if(!focus){const baseFov=city&&compact&&!session.done(city.id)?closeLayout().fov:Math.min(120,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(66)/2)*Math.max(1,1.5/camera.aspect))));camera.fov=THREE.MathUtils.clamp(baseFov*zoomFactor,25,120);}camera.updateProjectionMatrix();if(changed&&city&&!revealing&&!session.done(city.id))goScene();}
 new ResizeObserver(resize).observe($('stage'));window.addEventListener('pagehide',()=>{cancelPresentation();film.pause();navigation.keys.clear();});
 let last=performance.now(),diagnostic=0;
 
@@ -314,17 +324,17 @@ renderer.setAnimationLoop(time=>{
     }else{
       environment.update(stopped?0:dt,head,reduced());environment.go.visible=session.city(city.id).biography&&!session.done(city.id);environment.target.visible=session.city(city.id).biography&&!session.done(city.id)&&!revealing;environment.story.visible=renderer.xr.isPresenting&&!session.city(city.id).biography;environment.replay.visible=session.done(city.id)&&!revealing;
       for(const item of environment.pickables)item.lookAt(head.x,item.position.y,head.z);
-      manuscript.update(dt,head,reduced(),stopped);actors.update(now,head,presentationSession(session,city,()=>selected,()=>revealing),reduced(),dt);
-      const shot=waterShot(stopped);water.update(now,stopped?0:dt,waterAdapter,head,reduced(),started&&!changing&&!revealing&&!manuscript.reading,shot);
+      environment.title.visible=!(compactScreen()&&session.city(city.id).biography);manuscript.root.visible=session.city(city.id).biography;manuscript.update(dt,head,reduced(),stopped);actors.update(now,head,presentationSession(session,city,()=>selected,()=>revealing),reduced(),dt);
+      const shot=waterShot(stopped);water.update(now,stopped?0:dt,waterAdapter,head,reduced(),started&&!changing&&!revealing&&!manuscript.reading,shot);if(compactScreen()&&session.city(city.id).biography){water.question.visible=false;water.instruction.visible=false;environment.target.visible=false;}
       if(focus&&navigation.touchAxes.lengthSq()>.02)cancelFocus(false);
-      if(focus&&manuscript.active&&!stopped){const t=manuscript.active.elapsed/1000,entrance=Math.min(1,t/.8),exit=Math.min(1,Math.max(0,(t-4.5)/.5)),amount=entrance*(1-exit);const target=new THREE.Quaternion();camera.lookAt(focus.target);target.copy(camera.quaternion);const close=focus.quaternion.clone().slerp(target,.55);camera.quaternion.copy(t<.8?focus.quaternion:close).slerp(t<.8?close:focus.returnQuaternion,t<.8?entrance:exit);camera.fov=focus.fov*(1-amount*.12);camera.updateProjectionMatrix();}
+      if(focus&&manuscript.active&&!stopped){const t=manuscript.active.elapsed/1000,entrance=Math.min(1,t/.8),exit=Math.min(1,Math.max(0,(t-4.5)/.5)),amount=entrance*(1-exit);const target=new THREE.Quaternion();camera.lookAt(focus.target);target.copy(camera.quaternion);const close=focus.quaternion.clone().slerp(target,compactScreen()?1:.55);camera.quaternion.copy(t<.8?focus.quaternion:close).slerp(t<.8?close:focus.returnQuaternion,t<.8?entrance:exit);camera.fov=focus.fov*(1-amount*.12);camera.updateProjectionMatrix();}
       const interpretation=manuscript.interpretationText;if(interpretation&&$('announcement').textContent!==interpretation)$('announcement').textContent=interpretation;
     }
   }
   updateWaterControls();$('world-feedback').hidden=!started||menuOpen||stopped||now>messageUntil||renderer.xr.isPresenting;
   if(renderer.xr.isPresenting){xrMenu.update(head);for(const input of controllers){controllerRay(input.controller);const hit=rayHit();input.line.scale.z=hit?hit.distance:8;input.cursor.visible=Boolean(hit);if(hit)input.cursor.position.copy(hit.point);}if(videoWorld)videoWorld.root.lookAt(head.x,videoWorld.root.position.y,head.z);}
   renderer.render(scene,camera);diagnostic+=dt;
-  if(diagnostic>.3){diagnostic=0;Object.assign($('scene').dataset,{view,phase:changing?'loading':$('puzzle-dialog').open?'puzzle':manuscript?.reading?'reading':revealing?'reveal':city?session.city(city.id).teaching?'complete':session.city(city.id).biography?'meaning':'biography':'islands',elapsed:String(Math.round(manuscript?.active?.elapsed||0)),count:String(session.count),puzzles:String([...session.activities.values()].filter(a=>a.puzzle.solved).length),aim:!renderer.xr.isPresenting&&canFire()?centerVessel()||'':'',skybox:'360',position:camera.position.toArray().map(value=>value.toFixed(2)).join(','),frames:JSON.stringify(Object.fromEntries([...(actors?.actors||[])].map(([id,actor])=>[id,actor.frame])))});}
+  if(diagnostic>.3){diagnostic=0;Object.assign($('scene').dataset,{view,phase:changing?'loading':$('puzzle-dialog').open?'puzzle':manuscript?.reading?'reading':revealing?'reveal':city?session.city(city.id).teaching?'complete':session.city(city.id).biography?'meaning':'biography':'islands',elapsed:String(Math.round(manuscript?.active?.elapsed||0)),count:String(session.count),puzzles:String([...session.activities.values()].filter(a=>a.puzzle.solved).length),unlocked:String(session.unlockedCount),bridges:JSON.stringify((environment?.bridges||[]).map(b=>b.panels.every(p=>p.value>.97))),compact:String(compactScreen()),aim:!renderer.xr.isPresenting&&canFire()?centerVessel()||'':'',skybox:'360',position:camera.position.toArray().map(value=>value.toFixed(2)).join(','),frames:JSON.stringify(Object.fromEntries([...(actors?.actors||[])].map(([id,actor])=>[id,actor.frame])))});}
 });
 
 session.onChange=()=>{if(ready&&!changing)renderUI();};

@@ -60,7 +60,7 @@ export class IslandPuzzle {
     }
     this.reference.visible = this.preview;
     setText(this.previewButton, this.preview ? 'Στο puzzle' : 'Δες την εικόνα', { dark: true, small: true });
-    setText(this.status,!this.enabled?'Ολοκλήρωσε την προηγούμενη πόλη':puzzle.solved?'Η πόλη άνοιξε · πάτησε «Στην πόλη»':this.preview?'Εικόνα αναφοράς · επέστρεψε στο παζλ':'Κινήσεις: '+puzzle.moves+' · πάτησε ή σύρε δίπλα στο κενό',{dark:true,small:true});
+    setText(this.status,!this.enabled?'Το παζλ ετοιμάζεται':puzzle.solved?'Η πόλη άνοιξε · πάτησε «Στην πόλη»':this.preview?'Εικόνα αναφοράς · επέστρεψε στο παζλ':'Κινήσεις: '+puzzle.moves+' · πάτησε ή σύρε δίπλα στο κενό',{dark:true,small:true});
     for(const mesh of this.pickables)mesh.userData.disabled=!this.enabled||mesh===this.enterButton&&!puzzle.solved&&!this.unlocked;
   }
   setEnabled(value){if(this.enabled===value)return;this.enabled=value;this.refresh();}

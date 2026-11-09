@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import './style.css';
+import '../../../shared/journey/compact-water-controls.css';
 import worlds from './data/worlds.json' with { type: 'json' };
 import { LessonSession, lesson } from './session.js';
 import { buildCourtyard } from './world.js';
@@ -146,11 +147,13 @@ function beginFire(input) {
   if (!canFire() || firing.active) return;
   firing = { active: true, ...input };
   $('fire-button').classList.add('firing');
+  $('fire-button').setAttribute('aria-pressed','true');
 }
 function stopFire() {
   firing = { active: false };
   waterQuiz?.fill.release();
   $('fire-button').classList.remove('firing');
+  $('fire-button').setAttribute('aria-pressed','false');
 }
 function bindPourButton(button, id) {
   button.addEventListener('pointerdown', event => {
@@ -200,6 +203,7 @@ function updateFillHUD() {
 function submitWater(id) {
   const current = session.current;
   if (!current || session.busy || session.solved(id)) return;
+  stopFire();
   session.choose(id);
   const result = action({ type: 'target', id: current.id, water: true });
   if (result?.type === 'wrong') waterQuiz.reject(id,performance.now());
@@ -315,8 +319,11 @@ for (const name of ['pointerup','pointercancel','lostpointercapture']) window.ad
   if (firing.pointerId===event.pointerId) stopFire();
 });
 $('fire-button').addEventListener('pointerdown',event=> {
+  if(event.button!==0||!canFire())return;
   event.preventDefault(); beginFire({ mode:'center', pointerId:event.pointerId }); $('fire-button').setPointerCapture(event.pointerId);
 });
+$('fire-button').addEventListener('keydown',event=>{if(!['Space','Enter'].includes(event.code)||event.repeat||!canFire())return;event.preventDefault();event.stopPropagation();beginFire({mode:'center',keyboard:true});});
+$('fire-button').addEventListener('keyup',event=>{if(['Space','Enter'].includes(event.code)&&firing.keyboard){event.preventDefault();stopFire();}});
 document.addEventListener('keydown',event=> {
   if (event.code!=='Space' || event.repeat || /^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(event.target.tagName)) return;
   if (canFire()) { event.preventDefault(); beginFire({mode:'center',keyboard:true}); }
@@ -851,11 +858,11 @@ renderer.setAnimationLoop(time => {
     if (near !== lastStationNear) { lastStationNear = near; renderUI(); }
     renderProximity();
   }
-  if (navigation.controls.isLocked && !xr) {
+  if (!xr&&(navigation.controls.isLocked||canFire())) {
     raycaster.setFromCamera(pointer.set(0, 0), camera);
-    hovered = hitFromRay(raycaster);
+    hovered = waterMode?raycaster.intersectObjects(waterQuiz.pickables.filter(visibleInHierarchy),false).find(hit=>hit.distance<=10):hitFromRay(raycaster);
     $('reticle').classList.toggle('hot', Boolean(hovered));
-  }
+  }else $('reticle').classList.remove('hot');
   if (xr) {
     for (const item of controllers) {
       controllerRay(item.controller); const hit = hitFromRay(raycaster, true);
