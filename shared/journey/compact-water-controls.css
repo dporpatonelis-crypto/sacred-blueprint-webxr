@@ -1,0 +1,8 @@
+/* Gameplay controls stay available while the optional lesson menu is closed. */
+body.interface-collapsed #fire-button{right:max(24px,env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom));width:86px;height:86px;padding:7px;border:3px solid #d7e8c9bb;background:#1b615ce8;box-shadow:0 6px 30px #163e3655;color:#f6edca;font-size:12px;gap:0}
+body.interface-collapsed #fire-button>span:first-child{font-size:30px;color:#a7eced}
+body.interface-collapsed #fire-button.firing{background:#287f86;border-color:#fff0ad;box-shadow:0 0 0 7px #b9eff433}
+body.interface-collapsed #touch-walk{bottom:calc(25px + env(safe-area-inset-bottom))}
+body.interface-collapsed.water-mode #reticle{width:16px;height:16px;border-width:2px;opacity:.8}
+body.interface-collapsed.water-mode #reticle.hot{border-color:#ffe28c;background:#ffe28c77;box-shadow:0 0 0 5px #ffe28c22}
+@media(max-width:700px){body.interface-collapsed #fire-button{right:20px;width:82px;height:82px}body.interface-collapsed .touch-walk-pad{width:86px;height:86px}}
