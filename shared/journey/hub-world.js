@@ -43,8 +43,9 @@ export function buildHub(scene, config, quiz = null) {
     }
   });
   const segments = quiz?.segments || 4, progress = quiz?.progress ?? segments;
+  const bridgeOpen = (index, count) => index === 0 || (quiz?.bridgeProgress ? quiz.bridgeProgress(index) : count >= index);
   const bridges = config.walkable.paths.map((path,index) => risingBridge(scene, {
-    from: path.from, to: path.to, width: path.width - .04, segments: 1, inset: 2.9, progress: index === 0 || progress >= index ? 1 : 0,
+    from: path.from, to: path.to, width: path.width - .04, segments: 1, inset: 2.9, progress: Number(bridgeOpen(index, progress)),
   }));
   const approaches = config.stations.map((station,index)=>stationApproach(bridges[index],
     (x,z)=>Math.hypot(x-station.position[0],z-station.position[1])<=3.8));
@@ -80,7 +81,7 @@ export function buildHub(scene, config, quiz = null) {
     },
     update(time, reduced, count = progress, dt = 0) {
       water.uniforms.uTime.value = reduced ? 0 : time;
-      bridges.forEach((bridge,index) => bridge.update(index === 0 || count >= index ? 1 : 0,dt,reduced));
+      bridges.forEach((bridge,index) => bridge.update(Number(bridgeOpen(index, count)),dt,reduced));
     },
   };
 }

@@ -18,7 +18,7 @@ async function skybox(scene,path,rotation){
 }
 export async function buildIslands(scene,session,onSolved){
   // Exactly the same geometry, water, flowers and materials as the Talanta hub.
-  const landscape=buildHub(scene,HUB,{segments:5,progress:session.completedCities});
+  const landscape=buildHub(scene,HUB,{segments:5,bridgeProgress:index=>session.allowed(HUB.stations[index-1].id)});
   await skybox(scene,HUB.skybox,2.25);
   const textures=await Promise.all(lesson.cities.map(c=>new THREE.TextureLoader().loadAsync(import.meta.env.BASE_URL+c.media.puzzle)));
   const boards=new Map();
@@ -33,10 +33,10 @@ export async function buildIslands(scene,session,onSolved){
   let elapsed=0,lastCopy='';
   return {...landscape,boards,pickables:[...boards.values()].flatMap(b=>b.pickables),
     update(dt,head,reduced){
-      elapsed+=reduced?0:dt;landscape.update(elapsed,reduced,session.completedCities,dt);
+      elapsed+=reduced?0:dt;landscape.update(elapsed,reduced,0,dt);
       for(const [id,board]of boards){board.setEnabled(session.islandAvailable(id));board.setUnlocked(session.city(id).unlocked);board.update(dt,reduced);}
       billboard(welcome,head);billboard(next,head);
-      const copy=session.complete?lesson.finalQuestion:'Συναρμολόγησε την εικόνα στη νησίδα '+session.next.title+' · άνοιξε την πόλη';
+      const copy=session.complete?lesson.finalQuestion:session.nextPuzzle?'Διάλεξε οποιαδήποτε νησίδα · κάθε παζλ ανοίγει την πόλη και τη γέφυρά του':'Οι πέντε πόλεις άνοιξαν · εξερεύνησέ τες με όποια σειρά θέλεις';
       if(copy!==lastCopy){setText(next,copy,{dark:true,paragraph:true});lastCopy=copy;}
     },dispose(){for(const board of boards.values())board.dispose();}
   };
@@ -55,7 +55,7 @@ export async function buildCity(scene,city,state){
   const title=panel(city.title+' · '+city.theme,5.8,.6,null,{dark:true});title.position.set(0,4.2,-7.6);scene.add(title);
   const story=panel(city.story,4.6,.95,null,{dark:true,paragraph:true});story.position.set(0,2.85,2.8);scene.add(story);
   const back=panel('Στις νησίδες',2.6,.46,{type:'hub'},{dark:true});back.position.set(-4.6,1.4,4.3);scene.add(back);
-  return {bridge,story,pickables:[back],update(dt,head,reduced){oceanTime+=reduced?0:dt;ocean.uniforms.uTime.value=reduced?0:oceanTime;bridge.update(Number(state.biography),dt,reduced);billboard(back,head);story.visible=!state.biography;billboard(story,head);},
+  return {bridge,story,title,pickables:[back],update(dt,head,reduced){oceanTime+=reduced?0:dt;ocean.uniforms.uTime.value=reduced?0:oceanTime;bridge.update(Number(state.biography),dt,reduced);billboard(back,head);story.visible=!state.biography;billboard(story,head);},
     canWalk(x,z){return z>1.7||z< -1.7||bridge.allows(x,z);}
   };
 }
