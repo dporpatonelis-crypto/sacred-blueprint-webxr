@@ -374,11 +374,8 @@ function dispatch(type, value, node) {
     case 'pause': sound.togglePause(); break;
     case 'stop': sound.stop(); break;
     case 'menu':
-      if (inXR()) {
-        if (node === 'toggle' && xrMenu.opened) xrMenu.close();
-        else xrMain();
-        render();
-      } else openDialog('menu');
+      if (inXR()) xrMain();
+      else openDialog('menu');
       break;
     case 'read':
       if (inXR()) { handCarry.cancel(); sound.stop(); xrRead(); }
@@ -516,7 +513,7 @@ function connectXR() {
       ray.ray.origin.setFromMatrixPosition(controller.matrixWorld);
       ray.ray.direction.set(0, 0, -1).applyMatrix4(controllerRotation).normalize();
       const action = hit()?.object.userData.action;
-      if (action) dispatch(action.type === 'xr-menu' ? 'menu' : action.type, action.value, action.type === 'xr-menu' ? 'toggle' : undefined);
+      if (action) dispatch(action.type === 'xr-menu' ? 'menu' : action.type, action.value);
     });
     controller.addEventListener('selectend', () => dropCarry(controller, 'trigger'));
     controller.addEventListener('disconnected', () => handCarry.cancel(controller));
@@ -592,7 +589,7 @@ async function startWorld() {
     environments = await buildBethlehem(scene);
     navigation = new Navigation(camera, renderer, worlds[stage()], [], { pick: pickScreen, escape, lock: () => {}, xrSingleStick: true }, rig);
     handCarry = new HandCarry(scene);
-    xrMenu = new XRMenu(scene, camera);
+    xrMenu = new XRMenu(scene, camera, { hideToggleWhileOpen: true });
     xrMenu.toggle.position.set(.92, -.72, -1.75);
     xrFeedback = panel('', 2.48, .33, null, { dark: true });
     xrFeedback.position.set(0, .64, -1.9);

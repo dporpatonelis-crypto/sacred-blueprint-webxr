@@ -617,7 +617,7 @@ function showXRReading(id, index) {
 }
 function handleXRAction(action) {
   if (!action.type.startsWith('xr-') || !xr()) return false;
-  if (action.type === 'xr-menu') { if (xrMenu.opened) { xrMenu.close(); syncInput(); } else showXRMain(); }
+  if (action.type === 'xr-menu') showXRMain();
   else if (action.type === 'xr-close') { xrMenu.close(); syncInput(); }
   else if (action.type === 'xr-back') showXRMain();
   else if (action.type === 'xr-planets') {
@@ -779,7 +779,7 @@ try {
     lock() {},
     escape() { stopFire(); if (ready && !hasModal() && !xr()) openDialog('menu-dialog'); }
   });
-  xrMenu = new XRMenu(scene, camera);
+  xrMenu = new XRMenu(scene, camera, { hideToggleWhileOpen: true });
   connectXR();
   window.addEventListener('resize', resize);
   motionPreference.addEventListener('change', render);
