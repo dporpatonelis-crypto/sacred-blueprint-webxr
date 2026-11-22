@@ -69,18 +69,25 @@ export function installInterface(session, actions) {
 
   $('reader-religion').addEventListener('change', () => chooseReading());
   $('reader-axis').addEventListener('change', renderReader);
-  $('read').addEventListener('click', actions.read);
-  $('overview').addEventListener('click', actions.overview);
-  $('hub').addEventListener('click', actions.hub);
+  function fromMenu(action) {
+    $('menu-dialog').close();
+    action();
+  }
+  $('read').addEventListener('click', () => fromMenu(actions.read));
+  $('overview').addEventListener('click', () => fromMenu(actions.overview));
+  $('hub').addEventListener('click', () => fromMenu(actions.hub));
   $('menu').addEventListener('click', actions.menu);
-  $('hint').addEventListener('click', actions.hint);
-  $('book-focus').addEventListener('click', actions.manuscript);
+  $('book-focus').addEventListener('click', () => fromMenu(actions.manuscript));
   $('continue').addEventListener('click', actions.proceed);
   $('motion').addEventListener('click', actions.motion);
   $('reset').addEventListener('click', actions.confirmReset);
   $('reset-current').addEventListener('click', () => actions.reset(session.state.selectedPlanet));
   $('reset-all').addEventListener('click', () => actions.reset('all'));
   $('retry').addEventListener('click', actions.retry);
+  $('menu-dialog').addEventListener('close', () => {
+    $('menu-hint').open = false;
+    $('choices').open = false;
+  });
 
   if (import.meta.env.VITE_COLLECTION_URL) {
     $('collection').href = import.meta.env.VITE_COLLECTION_URL;
@@ -96,7 +103,7 @@ export function installInterface(session, actions) {
         const station = religion.scenes.find(scene => scene.id === id);
         const button = element('button', station.cardTitle);
         button.dataset.answer = id;
-        button.addEventListener('click', () => actions.aim(id));
+        button.addEventListener('click', () => fromMenu(() => actions.aim(id)));
         button.disabled = session.solved(religion.id, id);
         return button;
       }));
@@ -108,7 +115,7 @@ export function installInterface(session, actions) {
     $('review-list').hidden = track.count === 0;
     $('review-list').replaceChildren(...religion.scenes.slice(0, track.count).map(station => {
       const button = element('button', 'Δες ξανά · ' + station.axis);
-      button.addEventListener('click', () => actions.review(station.id));
+      button.addEventListener('click', () => fromMenu(() => actions.review(station.id)));
       return button;
     }));
   }
@@ -128,9 +135,10 @@ export function installInterface(session, actions) {
       const active = ready && Boolean(religion) && !revealing && !interpretation;
       $('hub').hidden = !religion;
       $('hub-controls').hidden = !ready || Boolean(religion);
-      $('activity').hidden = !active;
+      $('menu-station').hidden = !active;
+      $('book-focus').hidden = !active || route.phase !== 'ready';
       $('interpretation').hidden = !ready || revealing || !interpretation;
-      $('water-controls').hidden = !canFire || xr;
+      $('water-controls').hidden = !canFire || xr || !aim;
       $('reticle').hidden = !canFire || xr;
       $('touch-walk').hidden = !ready || !coarse || xr || hasModal || revealing || Boolean(interpretation);
       $('place').textContent = religion ? religion.label : 'Πέντε διαδρομές μελέτης';
@@ -156,9 +164,7 @@ export function installInterface(session, actions) {
         $('statement').textContent = finished ? 'Επίλεξε μια φωτισμένη εικόνα για να ξαναδείς τη σύνδεση.' : current?.statement || '';
         $('reflection').textContent = current?.question || '';
         $('choices').hidden = finished;
-        $('hint').hidden = finished;
-        $('book-focus').hidden = finished;
-        $('hint-copy').hidden = finished || !current || !route.hints.includes(current.id);
+        $('menu-hint').hidden = finished || !current;
         $('hint-copy').textContent = current?.hint || '';
         answers(religion, route, aim);
         reviews(religion, route);

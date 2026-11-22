@@ -191,12 +191,17 @@ export class Navigation {
   updateXR(dt, session) {
     this.xrMoveAxes.set(0, 0);
     this.xrTurnAxes.set(0, 0);
-    // Roles depend on handedness, never on connection order or an idle axis.
+    let hasLeftStick = false;
+    // Roles depend on handedness, even when one of the sticks is idle.
     for (const input of session.inputSources) {
-      if (!input.gamepad) continue;
-      if (input.handedness === 'left') readXRStick(input, this.xrMoveAxes);
+      if (!input.gamepad?.axes.length) continue;
+      if (input.handedness === 'left') {
+        hasLeftStick = true;
+        readXRStick(input, this.xrMoveAxes);
+      }
       if (input.handedness === 'right') readXRStick(input, this.xrTurnAxes);
     }
+    if (!hasLeftStick && this.hooks.xrSingleStick) this.xrMoveAxes.y = this.xrTurnAxes.y;
     const turn = this.xrTurnAxes.x;
     if (Math.abs(turn) > 0.72 && !this.turnLatched) {
       const delta = -Math.sign(turn) * Math.PI / 4;

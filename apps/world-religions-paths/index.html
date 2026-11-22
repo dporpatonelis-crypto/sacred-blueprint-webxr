@@ -17,9 +17,6 @@
           <h1>Θρησκείες του κόσμου</h1>
         </div>
         <nav aria-label="Εργαλεία μαθήματος">
-          <button id="hub" type="button" hidden>Στους πλανήτες</button>
-          <button id="overview" type="button">Συνολική εικόνα</button>
-          <button id="read" type="button">Κείμενα και πηγές</button>
           <button id="vr" type="button" hidden>Είσοδος VR</button>
           <button id="menu" type="button">Μενού</button>
         </nav>
@@ -32,23 +29,6 @@
         </div>
         <div id="planets" class="planets"></div>
       </section>
-
-      <aside id="activity" class="activity glass" aria-labelledby="station-title" hidden>
-        <p class="overline" id="station-progress"></p>
-        <h2 id="station-title"></h2>
-        <p id="statement" class="statement"></p>
-        <p id="reflection" class="reflection"></p>
-        <div class="station-tools">
-          <button id="hint" type="button" class="quiet">Μικρή υπόδειξη</button>
-          <button id="book-focus" type="button" class="quiet">Στο χειρόγραφο</button>
-        </div>
-        <p id="hint-copy" class="hint" hidden></p>
-        <details id="choices">
-          <summary>Στόχευση δοχείου</summary>
-          <div id="answers" class="answers"></div>
-        </details>
-        <div id="review-list" class="review-list" hidden></div>
-      </aside>
 
       <section id="interpretation" class="interpretation glass" aria-labelledby="interpretation-title" hidden>
         <p id="interpretation-source" class="overline"></p>
@@ -116,7 +96,26 @@
       <form method="dialog"><button class="close" aria-label="Κλείσιμο μενού">×</button></form>
     </header>
     <p id="input-help"></p>
+    <section id="menu-station" aria-labelledby="station-title" hidden>
+      <p class="overline" id="station-progress"></p>
+      <h3 id="station-title"></h3>
+      <p id="statement" class="statement"></p>
+      <p id="reflection" class="reflection"></p>
+      <details id="menu-hint">
+        <summary>Μικρή υπόδειξη</summary>
+        <p id="hint-copy" class="hint"></p>
+      </details>
+      <details id="choices">
+        <summary>Στόχευση δοχείου</summary>
+        <div id="answers" class="answers"></div>
+      </details>
+      <div id="review-list" class="review-list" hidden></div>
+    </section>
     <div class="menu-actions">
+      <button id="book-focus" type="button" hidden>Στο χειρόγραφο</button>
+      <button id="hub" type="button" hidden>Στους πλανήτες</button>
+      <button id="overview" type="button">Συνολική εικόνα</button>
+      <button id="read" type="button">Κείμενα και πηγές</button>
       <button id="motion" type="button" aria-pressed="false">Μειωμένη κίνηση</button>
       <button id="reset" type="button">Από την αρχή</button>
       <a id="collection" class="button" href="../../" hidden>Στη συλλογή WebXR</a>

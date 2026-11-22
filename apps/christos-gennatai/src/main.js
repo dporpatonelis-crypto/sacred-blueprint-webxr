@@ -6,6 +6,7 @@ import { byId, excerpt, fullHymn, ids, lesson, music, stages, tiles, worlds } fr
 import { $, installInterface } from './interface.js';
 import { ChristmasSession } from './session.js';
 import { HymnAudio } from './audio.js';
+import { HandCarry } from './hand-carry.js';
 import { buildBethlehem, setSign } from './world.js';
 import './style.css';
 
@@ -18,7 +19,7 @@ const canvas = $('scene');
 const view = {
   tile: null, missedSlot: null, card: null, meaningTarget: ids[0], phrase: null,
   ring: ids.find(id => !session.state.hymn.includes(id)) || ids[0],
-  reference: false, assisting: false, reduced: motion.matches, audio: 'idle', feedback: null
+  reference: false, assisting: false, reduced: motion.matches, audio: 'idle', feedback: null, immersive: false
 };
 const attempts = { meaning: {}, hymn: {} };
 const hints = { meaning: {}, hymn: {} };
@@ -32,7 +33,9 @@ const sound = new HymnAudio(info => {
   else render();
 });
 
-let renderer, scene, camera, rig, navigation, environments, xrMenu, xrFeedback, desktopPose;
+let renderer, scene, camera, rig, navigation, environments, xrMenu, xrFeedback, desktopPose, handCarry;
+const hands = [];
+const handOnly = new Set(['tile', 'slot', 'card', 'phrase']);
 let solveTimer, messageTimer;
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -43,6 +46,7 @@ const currentDialog = () => [...document.querySelectorAll('dialog[open]')].at(-1
 const stage = () => session.state.stage;
 
 function render() {
+  view.immersive = inXR();
   ui.render(view);
   for (const [id, environment] of Object.entries(environments || {})) {
     environment.group.visible = id === stage();
@@ -106,6 +110,7 @@ for (const dialog of document.querySelectorAll('dialog')) {
 
 function travel(destination) {
   if (!session.travel(destination)) return;
+  handCarry?.cancel();
   stopAssist();
   sound.stop();
   clearNotice();
@@ -115,7 +120,7 @@ function travel(destination) {
   xrMenu?.close();
   if (navigation) {
     navigation.world = worlds[destination];
-    if (inXR()) navigation.landXR(navigation.world.spawn);
+    if (inXR()) navigation.landXR(navigation.world.xrSpawn);
     else navigation.spawn();
   }
   render();
@@ -153,6 +158,7 @@ function autoAssist() {
     return;
   }
   if (stage() !== 'gate' || session.gateOpen) return;
+  handCarry?.cancel();
   clearNotice();
   view.assisting = true;
   view.reference = false;
@@ -183,6 +189,7 @@ function autoAssist() {
 
 function guide(title, text, tone = '') {
   if (inXR()) {
+    handCarry?.cancel();
     xrMenu.show(title, text, [{ label: 'Συνέχεια', action: { type: 'close-xr' } }], true);
     render();
   } else announce(text, tone);
@@ -289,6 +296,7 @@ function resetAll() {
 }
 
 function xrMain() {
+  handCarry.cancel();
   const buttons = [
     { label: 'Είσοδος', action: { type: 'travel', value: 'gate' } },
     ...(session.gateOpen ? [{ label: 'Αναλόγιο', action: { type: 'travel', value: 'meaning' } }] : []),
@@ -298,7 +306,8 @@ function xrMain() {
     { label: 'Επανεκκίνηση', action: { type: 'confirm-reset' } },
     { label: 'Κλείσιμο', action: { type: 'close-xr' } }
   ];
-  xrMenu.show('Χριστός γεννάται', stages[stage()].name, buttons);
+  xrMenu.show('Χριστός γεννάται',
+    stages[stage()].name + ' · Αριστερός μοχλός για κίνηση, δεξιός για στροφή. Πλησίασε και κράτησε τη λαβή για να πιάσεις ένα αντικείμενο.', buttons);
   render();
 }
 
@@ -343,9 +352,10 @@ function dispatch(type, value, node) {
       }
       break;
     case 'slot': placeTile(Number(value), node); break;
-    case 'preview': view.reference = !view.reference; render(); break;
+    case 'preview': handCarry?.cancel(); view.reference = !view.reference; render(); break;
     case 'shuffle':
       if (view.assisting || session.gateOpen) break;
+      handCarry?.cancel();
       session.shuffleTray();
       view.tile = null;
       clearNotice();
@@ -364,14 +374,11 @@ function dispatch(type, value, node) {
     case 'pause': sound.togglePause(); break;
     case 'stop': sound.stop(); break;
     case 'menu':
-      if (inXR()) {
-        if (node === 'toggle' && xrMenu.opened) xrMenu.close();
-        else xrMain();
-        render();
-      } else openDialog('menu');
+      if (inXR()) xrMain();
+      else openDialog('menu');
       break;
     case 'read':
-      if (inXR()) { sound.stop(); xrRead(); }
+      if (inXR()) { handCarry.cancel(); sound.stop(); xrRead(); }
       else openDialog('reader');
       break;
     case 'xr-read': xrRead(value); break;
@@ -407,7 +414,12 @@ function dispatch(type, value, node) {
 
 function hit() {
   const pool = xrMenu.opened ? xrMenu.pickables : [...environments[stage()].actions, ...xrMenu.pickables];
-  const active = pool.filter(node => node.visible && !node.userData.disabled);
+  const active = pool.filter(node => {
+    if (!node.visible || !node.parent?.visible || node.userData.disabled) return false;
+    if (!inXR()) return true;
+    const { type, value } = node.userData.action;
+    return !handOnly.has(type) && (type !== 'target' || session.state.meaning.includes(value));
+  });
   return ray.intersectObjects(active, false).find(result => result.distance < 20);
 }
 
@@ -429,34 +441,101 @@ function escape() {
   render();
 }
 
+function canCarry() {
+  return environments && inXR() && !xrMenu.opened && !view.assisting && !view.reference;
+}
+
+function beginCarry(controller, grip, key) {
+  if (!canCarry()) return false;
+  const pose = grip.visible ? grip : controller;
+  if (!handCarry.grab(controller, key, pose, environments[stage()].carry.sources)) return false;
+  clearNotice();
+  render();
+  return true;
+}
+
+function dropCarry(controller, key) {
+  if (!canCarry()) { handCarry.cancel(controller); return; }
+  const placement = handCarry.release(controller, key, environments[stage()].carry.targets);
+  if (!placement) return;
+  const { action, target } = placement;
+  if (!target) {
+    announce('Το αντικείμενο επέστρεψε. Άφησέ το όταν φωτιστεί μια θέση.');
+  } else if (action.type === 'tile') {
+    view.tile = action.value;
+    placeTile(target.value);
+  } else if (action.type === 'card') {
+    view.card = action.value;
+    seeMeaning(target.value);
+  } else {
+    view.phrase = action.value;
+    pickRing(target.value);
+  }
+}
+
+function updateHands() {
+  const play = inXR();
+  const enabled = play && canCarry();
+  if (enabled && handCarry.held && !handCarry.held.pose.visible) handCarry.cancel();
+  handCarry.update(enabled ? environments[stage()].carry.targets : []);
+  for (const { controller, grip, line, cursor } of hands) {
+    const pose = grip.visible ? grip : controller;
+    const holding = handCarry.held?.owner === controller;
+    const near = enabled && Boolean(handCarry.near(pose, environments[stage()].carry.sources));
+    cursor.visible = play && pose.visible && !xrMenu.opened;
+    if (cursor.visible) {
+      pose.localToWorld(cursor.position.set(0, 0, -.07));
+      cursor.material.color.setHex(holding || near ? 0xffde86 : 0xd2dfef);
+    }
+    line.visible = play && !holding && !near;
+  }
+}
+
 function connectXR() {
   for (const index of [0, 1]) {
     const controller = renderer.xr.getController(index);
-    rig.add(controller);
+    const grip = renderer.xr.getControllerGrip(index);
+    rig.add(controller, grip);
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -7)]),
       new THREE.LineBasicMaterial({ color: 0xffd98c, transparent: true, opacity: .82 }));
     controller.add(line);
+    const cursor = new THREE.Mesh(new THREE.SphereGeometry(.032, 12, 8), new THREE.MeshBasicMaterial({ color: 0xd2dfef }));
+    cursor.visible = false;
+    scene.add(cursor);
+    hands.push({ controller, grip, line, cursor });
+    controller.addEventListener('squeezestart', () => beginCarry(controller, grip, 'grip'));
+    controller.addEventListener('squeezeend', () => dropCarry(controller, 'grip'));
     controller.addEventListener('selectstart', () => {
       if (!environments) return;
+      if (beginCarry(controller, grip, 'trigger') || handCarry.held?.owner === controller) return;
       controller.updateWorldMatrix(true, false);
       controllerRotation.extractRotation(controller.matrixWorld);
       ray.ray.origin.setFromMatrixPosition(controller.matrixWorld);
       ray.ray.direction.set(0, 0, -1).applyMatrix4(controllerRotation).normalize();
       const action = hit()?.object.userData.action;
-      if (action) dispatch(action.type === 'xr-menu' ? 'menu' : action.type, action.value, action.type === 'xr-menu' ? 'toggle' : undefined);
+      if (action) dispatch(action.type === 'xr-menu' ? 'menu' : action.type, action.value);
     });
+    controller.addEventListener('selectend', () => dropCarry(controller, 'trigger'));
+    controller.addEventListener('disconnected', () => handCarry.cancel(controller));
   }
   renderer.xr.addEventListener('sessionstart', () => {
     desktopPose = { stage: stage(), position: camera.position.clone(), quaternion: camera.quaternion.clone() };
     for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
     stopAssist();
     sound.stop();
+    view.tile = view.card = view.phrase = null;
+    view.reference = false;
     document.body.classList.add('xr-active');
     xrMenu.enable(true);
-    navigation.landXR(navigation.world.spawn);
-    render();
+    navigation.landXR(navigation.world.xrSpawn);
+    const session = renderer.xr.getSession();
+    session.addEventListener('visibilitychange', () => {
+      if (session.visibilityState !== 'visible') handCarry.cancel();
+    });
+    announce('Αριστερός μοχλός για κίνηση. Πλησίασε, κράτησε τη λαβή και άφησε στη φωτισμένη θέση.');
   });
   renderer.xr.addEventListener('sessionend', () => {
+    handCarry.cancel();
     sound.stop();
     stopAssist();
     xrMenu.enable(false);
@@ -508,8 +587,10 @@ async function startWorld() {
     rig.add(camera);
     scene.add(rig);
     environments = await buildBethlehem(scene);
-    navigation = new Navigation(camera, renderer, worlds[stage()], [], { pick: pickScreen, escape, lock: () => {}, canWalk: () => !inXR() }, rig);
-    xrMenu = new XRMenu(scene, camera);
+    navigation = new Navigation(camera, renderer, worlds[stage()], [], { pick: pickScreen, escape, lock: () => {}, xrSingleStick: true }, rig);
+    handCarry = new HandCarry(scene);
+    xrMenu = new XRMenu(scene, camera, { hideToggleWhileOpen: true });
+    xrMenu.toggle.position.set(.92, -.72, -1.75);
     xrFeedback = panel('', 2.48, .33, null, { dark: true });
     xrFeedback.position.set(0, .64, -1.9);
     xrFeedback.material.depthTest = false;
@@ -524,6 +605,7 @@ async function startWorld() {
       last = time;
       navigation.update(dt);
       environments[stage()].tick(dt);
+      updateHands();
       if (xrMenu.opened) {
         camera.getWorldPosition(head);
         xrMenu.update(head);
@@ -546,6 +628,7 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) return;
   sound.stop();
   stopAssist();
+  handCarry?.cancel();
   render();
 });
 render();

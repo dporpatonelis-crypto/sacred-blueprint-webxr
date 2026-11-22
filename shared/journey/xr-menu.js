@@ -3,8 +3,10 @@ import { panel } from './text-panels.js';
 
 /** Controller-accessible counterpart of the single native Menu button. */
 export class XRMenu {
-  constructor(scene, camera) {
+  constructor(scene, camera, { hideToggleWhileOpen = false } = {}) {
     this.camera = camera;
+    this.enabled = false;
+    this.hideToggleWhileOpen = hideToggleWhileOpen;
     this.root = new THREE.Group();
     this.root.visible = false;
     scene.add(this.root);
@@ -18,9 +20,17 @@ export class XRMenu {
     this.head = new THREE.Vector3();
   }
   get opened() { return this.root.visible; }
-  get pickables() { return this.toggle.visible ? [this.toggle, ...(this.opened ? this.buttons : [])] : []; }
-  enable(value) { this.toggle.visible = value; if (!value) this.close(); }
-  close() { this.root.visible = false; }
+  get pickables() {
+    if (!this.enabled) return [];
+    return [...(this.toggle.visible ? [this.toggle] : []), ...(this.opened ? this.buttons : [])];
+  }
+  enable(value) {
+    this.enabled = value;
+    if (!value) this.close();
+    else this.updateToggle();
+  }
+  updateToggle() { this.toggle.visible = this.enabled && (!this.opened || !this.hideToggleWhileOpen); }
+  close() { this.root.visible = false; this.updateToggle(); }
   clear() {
     this.root.traverse(o => { o.geometry?.dispose(); if(o.material) { o.material.map?.dispose(); o.material.dispose(); } });
     this.root.clear(); this.buttons = [];
@@ -49,6 +59,7 @@ export class XRMenu {
     let order=990;this.root.traverse(object=>{if(object.material){object.material.depthTest=false;object.material.depthWrite=false;object.renderOrder=order++;}});
     this.root.lookAt(this.head);
     this.root.visible = true;
+    this.updateToggle();
   }
   update(head) { if(this.opened) this.root.lookAt(head); }
 }
