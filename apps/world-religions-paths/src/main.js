@@ -3,7 +3,6 @@ import { Navigation } from '../../../shared/journey/navigation.js';
 import { WaterQuiz } from '../../../shared/journey/water-quiz.js';
 import { ManuscriptConnections } from '../../../shared/journey/manuscript-connections.js';
 import { XRMenu } from '../../../shared/journey/xr-menu.js';
-import { panel, setText } from '../../../shared/journey/text-panels.js';
 import { mountPuzzle } from '../../../shared/puzzles/puzzle-dom.js';
 import { lesson, ReligionsSession } from './session.js';
 import { $, installInterface, lessonReadingPages } from './interface.js';
@@ -31,7 +30,7 @@ const hasModal = () => Boolean(document.querySelector('dialog[open]'));
 const route = () => religion && session.route(religion.id);
 const current = () => religion && session.current(religion.id);
 
-let renderer, navigation, xrMenu, xrFeedback, worldScene, environment, religion, water, quiz, manuscript;
+let renderer, navigation, xrMenu, worldScene, environment, religion, water, quiz, manuscript;
 let ready = false, changing = false, revealing = false, interpretation = null;
 let feedback = null, firing = null, gesture = null, aim = null, motionOverride, desktopPose, overview = false;
 let puzzleView = null, puzzlePlanet = null, lastTime = 0, failedView = 'hub';
@@ -43,7 +42,6 @@ const ui = installInterface(session, {
   overview: showOverview,
   hub: () => enter('hub'),
   menu: () => openDialog('menu-dialog'),
-  hint: showHint,
   proceed: proceed,
   motion: () => { motionOverride = !reduced(); render(); },
   confirmReset: () => {
@@ -81,7 +79,6 @@ function render() {
 
 function announce(text, kind = '') {
   feedback = text ? { text, kind, until: performance.now() + 5700 } : null;
-  if (xrFeedback && text) setText(xrFeedback, text, { dark: true, small: true });
   render();
 }
 
@@ -97,12 +94,6 @@ function openReader() {
   const id = religion?.id || session.state.selectedPlanet;
   ui.reading(id, interpretation?.station.id || current()?.id);
   openDialog('reader');
-}
-
-function showHint() {
-  if (!religion || route().phase !== 'ready') return;
-  session.hint(religion.id);
-  render();
 }
 
 function createLearningView(parent, next, definition) {
@@ -228,6 +219,7 @@ function setBoardFocus(active) {
 
 function showOverview() {
   stopFire();
+  aim = null;
   setBoardFocus(false);
   if (xr()) {
     navigation.landXR(navigation.world.spawn);
@@ -301,11 +293,13 @@ function focusStation(id) {
 }
 
 function showBook() {
-  if (!religion || xr() || revealing || interpretation) return;
+  if (!religion || revealing || interpretation) return;
   stopFire();
+  aim = null;
   overview = false;
-  navigation.goTo({ landing: [0, 1.42], position: [0, -1.58], lookHeight: 2.23 });
-  announce('Πάτησε μια γραμμή στο χειρόγραφο για να στοχεύσεις το δοχείο της.');
+  if (xr()) navigation.landXR([0, 1.42]);
+  else navigation.goTo({ landing: [0, 1.42], position: [0, -1.58], lookHeight: 2.23 });
+  render();
 }
 
 function aimChoice(id) {
@@ -320,9 +314,9 @@ function aimChoice(id) {
     root.updateMatrixWorld(true);
     const target = water.getTarget(id, aimTarget);
     if (target) camera.lookAt(target);
-    $('water').focus({ preventScroll: true });
   }
   render();
+  if (!xr()) $('water').focus({ preventScroll: true });
 }
 
 function activateStation(id) {
@@ -332,7 +326,7 @@ function activateStation(id) {
     overview = false;
     if (xr()) navigation.landXR(WATER_APPROACH.landing);
     else navigation.goTo(WATER_APPROACH);
-    announce('Διάβασε τη διδασκαλία και γέμισε το δοχείο με τον σωστό τίτλο.');
+    render();
   } else announce('Ακολούθησε τον επόμενο αριθμημένο σταθμό.', 'warn');
 }
 
@@ -355,7 +349,6 @@ function answerWater(id) {
   if (result === 'wrong') {
     water.reject(id, performance.now());
     announce('Ο τίτλος δεν ταιριάζει σε αυτή τη διδασκαλία. Άφησε τη ροή και δοκίμασε ξανά.', 'warn');
-    if (xr() && route().wrong[station.id] >= 2) showXRHint();
   } else if (result === 'correct') {
     startReveal(station, false);
   }
@@ -571,7 +564,8 @@ function showXRMain() {
     item('Από την αρχή', 'xr-confirm'),
     item('Έξοδος VR', 'xr-exit')
   ];
-  if (route()?.phase === 'ready') options.splice(2, 0, item('Μικρή υπόδειξη', 'xr-hint'));
+  if (religion) options.splice(2, 0, item('Ο σταθμός', 'xr-station'));
+  if (route()?.phase === 'ready') options.splice(3, 0, item('Μικρή υπόδειξη', 'xr-hint'));
   xrMenu.show(religion?.label || 'Θρησκείες του κόσμου', religion
     ? route().count + ' / 5 σταθμοί · ' + (current()?.axis || 'Η διαδρομή ολοκληρώθηκε.')
     : 'Επίλεξε πλανήτη και λύσε το παζλ της εισόδου.', options);
@@ -585,8 +579,25 @@ function showXRInterpretation() {
   syncInput();
 }
 function showXRHint() {
-  showHint();
-  xrMenu.show('Μικρή υπόδειξη', current()?.hint || '', [item('Στη διαδρομή', 'xr-close')], true);
+  const station = current();
+  if (!station || route()?.phase !== 'ready') return;
+  xrMenu.show('Μικρή υπόδειξη', station.hint, [item('Στο μενού', 'xr-back'), item('Στη διαδρομή', 'xr-close')], true);
+  syncInput();
+}
+function showXRStation() {
+  const station = current();
+  const options = [item('Στο χειρόγραφο', 'xr-book'), item('Στο μενού', 'xr-back')];
+  if (route().count) options.unshift(item('Επανεξέταση', 'xr-reviews'));
+  xrMenu.show(station?.axis || religion.label,
+    station ? station.statement + '\n\n' + station.question : 'Η διαδρομή ολοκληρώθηκε.', options, true);
+  syncInput();
+}
+function showXRReviews() {
+  const stations = religion.scenes.slice(0, route().count);
+  xrMenu.show('Επανεξέταση', 'Επίλεξε μία από τις φωτισμένες συνδέσεις.', [
+    ...stations.map(station => item(station.axis, 'xr-review', { id: station.id })),
+    item('Στο μενού', 'xr-back')
+  ]);
   syncInput();
 }
 function showXRReading(id, index) {
@@ -615,6 +626,10 @@ function handleXRAction(action) {
     ]);
   } else if (action.type === 'xr-visit') { xrMenu.close(); visitPlanet(action.id); syncInput(); }
   else if (action.type === 'xr-overview') { xrMenu.close(); showOverview(); syncInput(); }
+  else if (action.type === 'xr-station') showXRStation();
+  else if (action.type === 'xr-book') { xrMenu.close(); showBook(); }
+  else if (action.type === 'xr-reviews') showXRReviews();
+  else if (action.type === 'xr-review') { xrMenu.close(); reviewStation(action.id); }
   else if (action.type === 'xr-hint') showXRHint();
   else if (action.type === 'xr-proceed') proceed();
   else if (action.type === 'xr-reader') {
@@ -738,7 +753,7 @@ function frame(time) {
     }
     water.update(time, dt, quiz, head, reduced(), permitted, {
       id, active: Boolean(input && permitted), xr: immersive, direction,
-      origin: input?.mode === 'xr' ? origin : null, worldPrompt: immersive
+      origin: input?.mode === 'xr' ? origin : null
     });
     if (!immersive) {
       const choice = quiz.choices.find(value => value.id === id);
@@ -747,7 +762,6 @@ function frame(time) {
   }
   manuscript?.update(dt, head, reduced(), document.hidden || hasModal() || xrMenu.opened);
   xrMenu.update(head);
-  xrFeedback.visible = Boolean(immersive && feedback && !xrMenu.opened);
   if (feedback && time >= feedback.until) { feedback = null; render(); }
   renderer.render(scene, camera);
 }
@@ -766,12 +780,6 @@ try {
     escape() { stopFire(); if (ready && !hasModal() && !xr()) openDialog('menu-dialog'); }
   });
   xrMenu = new XRMenu(scene, camera);
-  xrFeedback = panel('', 2.3, .33, null, { dark: true, small: true });
-  xrFeedback.position.set(0, .7, -2.0);
-  xrFeedback.material.depthTest = false;
-  xrFeedback.renderOrder = 1000;
-  xrFeedback.visible = false;
-  camera.add(xrFeedback);
   connectXR();
   window.addEventListener('resize', resize);
   motionPreference.addEventListener('change', render);

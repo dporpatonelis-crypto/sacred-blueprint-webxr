@@ -20,8 +20,6 @@ function fresh(religion) {
     focus: null,
     unlocked: false,
     puzzle: null,
-    wrong: {},
-    hints: [],
     order: shuffled(religion.scenes.map(scene => scene.id))
   };
 }
@@ -38,13 +36,9 @@ function restored(religion, saved) {
   }
   route.unlocked = saved.unlocked === true || route.count > 0;
   route.puzzle = saved.puzzle ?? null;
-  route.hints = Array.isArray(saved.hints) ? [...new Set(saved.hints.filter(id => ids.includes(id)))] : [];
   if (Array.isArray(saved.order) && saved.order.length === ids.length &&
       new Set(saved.order).size === ids.length && saved.order.every(id => ids.includes(id))) {
     route.order = [...saved.order];
-  }
-  for (const id of ids) {
-    if (Number.isInteger(saved.wrong?.[id]) && saved.wrong[id] > 0) route.wrong[id] = saved.wrong[id];
   }
   return route;
 }
@@ -122,27 +116,12 @@ export class ReligionsSession {
     const station = this.current(id);
     if (!this.isOpen(id) || route.phase !== 'ready' || !station ||
         !route.order.includes(choiceId) || this.solved(id, choiceId)) return null;
-    if (choiceId !== station.id) {
-      route.wrong[station.id] = (route.wrong[station.id] || 0) + 1;
-      if (route.wrong[station.id] >= 2 && !route.hints.includes(station.id)) {
-        route.hints.push(station.id);
-      }
-      this.persist();
-      return 'wrong';
-    }
+    if (choiceId !== station.id) return 'wrong';
     route.count++;
     route.phase = 'explaining';
     route.focus = station.id;
     this.persist();
     return 'correct';
-  }
-
-  hint(id) {
-    const station = this.current(id);
-    const route = this.route(id);
-    if (!station || route.phase !== 'ready' || route.hints.includes(station.id)) return;
-    route.hints.push(station.id);
-    this.persist();
   }
 
   proceed(id) {

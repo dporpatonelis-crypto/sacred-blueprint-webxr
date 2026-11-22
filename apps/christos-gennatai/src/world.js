@@ -165,6 +165,7 @@ function buildGate(group, texture, pickables) {
   pickables.push(see, shuffle, auto, enter);
   let first = true;
   return {
+    carry: { sources: parts.map(({ part }) => part), targets },
     sync(session, view) {
       const { placed, tray: order } = session.state;
       setSign(progress, placed.length + '/6', session.gateOpen ? 'gold' : 'dark');
@@ -176,7 +177,7 @@ function buildGate(group, texture, pickables) {
       parts.forEach(({ part, goal }, tile) => {
         const locked = placed.includes(tile);
         goal.copy(locked ? slots[tile] : tray[order.indexOf(tile)]);
-        if (first || view.reduced) part.position.copy(goal);
+        if ((first || view.reduced) && !part.userData.carried) part.position.copy(goal);
         part.material.color.copy(view.tile === tile ? gold : white);
         part.userData.disabled = locked || view.assisting;
       });
@@ -191,7 +192,9 @@ function buildGate(group, texture, pickables) {
     },
     tick(dt) {
       const amount = 1 - Math.exp(-dt * 16);
-      parts.forEach(({ part, goal }) => part.position.lerp(goal, amount));
+      parts.forEach(({ part, goal }) => {
+        if (!part.userData.carried) part.position.lerp(goal, amount);
+      });
     }
   };
 }
@@ -212,6 +215,7 @@ function learningPicture(group, stage, texture, w, x, y, z, pickables) {
     return { layer, id: region.id, opacity: 0 };
   });
   return {
+    targets: layers.map(({ layer }) => layer),
     sync(solved, reduced) {
       layers.forEach(item => {
         item.opacity = Number(solved.includes(item.id));
@@ -233,22 +237,34 @@ function buildMeaning(group, texture, pickables) {
     -3.41 + index * 1.79, .84, -1.92, { type: 'target', value: id }));
   const cards = ['welcome', 'uplift', 'birth'].map((id, index) => sign(group, byId[id].concept, 2.34, .49,
     2.76, 2.96 - index * .72, -1.95, { type: 'card', value: id }, 'paper'));
+  const cardRest = cards.map(card => card.position.clone());
   const hint = sign(group, 'Υπόδειξη', 1.15, .37, 2.15, .97, -1.95, { type: 'hint' });
   const next = sign(group, 'Στον ύμνο →', 1.44, .37, 3.5, .97, -1.95, { type: 'travel', value: 'hymn' }, 'locked');
   const progress = sign(group, '0/3', 1.3, .32, -1.64, .33, -1.95);
   pickables.push(...targets, ...cards, hint, next);
   return {
+    carry: { sources: cards, targets: [...picture.targets, ...targets] },
     sync(session, view) {
       const solved = session.state.meaning;
       picture.sync(solved, view.reduced);
       targets.forEach((target, index) => {
         const id = ids[index];
+        target.userData.dropDisabled = picture.targets[index].userData.dropDisabled = solved.includes(id);
         setSign(target, byId[id].target, solved.includes(id) ? 'gold' : view.meaningTarget === id ? 'chosen' : 'dark');
       });
-      cards.forEach(card => {
+      cards.forEach((card, index) => {
         const id = card.userData.action.value;
         card.userData.disabled = solved.includes(id);
-        setSign(card, byId[id].concept, card.userData.disabled ? 'locked' : view.card === id ? 'chosen' : 'paper');
+        const displayed = view.immersive && card.userData.disabled;
+        if (!card.userData.carried) {
+          card.position.copy(displayed ? targets[ids.indexOf(id)].position : cardRest[index]);
+          if (displayed) {
+            card.position.y -= .43;
+            card.position.z += .026;
+          }
+          card.scale.setScalar(displayed ? .67 : 1);
+        }
+        setSign(card, byId[id].concept, displayed ? 'gold' : card.userData.disabled ? 'locked' : view.card === id ? 'chosen' : 'paper');
       });
       hint.userData.disabled = session.hymnOpen;
       setSign(hint, 'Υπόδειξη', hint.userData.disabled ? 'locked' : 'dark');
@@ -292,12 +308,14 @@ function buildHymn(group, texture, pickables) {
   const stop = sign(group, 'Διακοπή', .85, .31, -.1, .68, -1.94, { type: 'stop' });
   pickables.push(...rows, sequence, full, hint, seal, pause, stop);
   return {
+    carry: { sources: options, targets: [...faces.map(({ face }) => face), ...rows] },
     sync(session, view) {
       const { hymn, choices } = session.state;
       picture.sync(hymn, view.reduced);
       faces.forEach(({ face, marker, radius }, index) => {
         const locked = hymn.includes(ids[index]);
         const active = view.ring === ids[index];
+        face.userData.dropDisabled = rows[index].userData.dropDisabled = locked;
         face.material.color.set(locked ? 0xb38d50 : active ? 0x5274a5 : [0x273b60, 0x34496f, 0x223659][index]);
         const angle = Math.PI / 2 - ids.indexOf(choices[index]) * Math.PI * 2 / ids.length;
         marker.position.x = ringX + Math.cos(angle) * (radius - .088);
@@ -357,9 +375,23 @@ export async function buildBethlehem(scene) {
     group.visible = false;
     scene.add(group);
     ruins(group, key !== 'gate');
+    const desktopMarkers = new THREE.Group();
+    const immersiveMarkers = new THREE.Group();
+    const fixtures = new THREE.Group();
+    group.add(desktopMarkers, immersiveMarkers, fixtures);
     const actions = [];
-    markers(group, worlds[key].landings, actions);
-    const activity = build(group, texture, actions);
-    return [key, { group, actions, ...activity }];
+    markers(desktopMarkers, worlds[key].landings, actions);
+    markers(immersiveMarkers, worlds[key].xrLandings, actions);
+    const activity = build(fixtures, texture, actions);
+    return [key, {
+      group, actions, ...activity,
+      sync(session, view) {
+        desktopMarkers.visible = !view.immersive;
+        immersiveMarkers.visible = view.immersive;
+        fixtures.scale.setScalar(view.immersive ? .63 : 1);
+        fixtures.position.y = view.immersive ? (key === 'hymn' ? .24 : .05) : 0;
+        activity.sync(session, view);
+      }
+    }];
   }));
 }
