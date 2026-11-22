@@ -38,11 +38,12 @@ export class ManuscriptConnections {
     this.page = -1; this.active = null; this.signature = ''; this.lastInterpretation = ''; this.resetConfirm = false;
     for (const entry of this.content.entries) for (const word of entry.keywords) this.glyphs.set(word, glyph(word));
     this.layout = this.makePage(-1).layout;
-    if (content.entryPosition !== null) this.makeBook('entry', content.entryPosition || [0, 1.55, 5.75]);
+    const centralBook = content.centralPosition && this.makeBook('central', content.centralPosition);
+    if (!centralBook && content.entryPosition !== null) this.makeBook('entry', content.entryPosition || [0, 1.55, 5.75]);
     world.stations.forEach((station, index) => {
       const q = approaches[index]?.quizPosition || station.position;
       const offset = [[-1.1, .65], [.4, -1.4], [1.65, -.6]][index] || [0, 0];
-      const book = this.makeBook(station.id, content.bookPositions?.[station.id] || [q[0] + offset[0], 1.55, q[1] + offset[1]]);
+      const book = centralBook || this.makeBook(station.id, content.bookPositions?.[station.id] || [q[0] + offset[0], 1.55, q[1] + offset[1]]);
       this.makeWords(station); this.makeBeam(station, book);
     });
     this.interpretation = panel('', 3.4, .8, null, { dark: true, paragraph: true }); this.interpretation.visible = false; this.root.add(this.interpretation);
@@ -52,6 +53,7 @@ export class ManuscriptConnections {
   get revealing() { return Boolean(this.active); }
   get finalPage() { return this.content.readingPages.length; }
   entry(id) { return this.content.entries.find(entry => entry.stationId === id); }
+  bookFor(id) { return this.content.centralPosition ? this.books[0] : this.books.find(book => book.id === id); }
   get interpretationText() { return !this.reading && this.active && this.active.elapsed >= (this.active.reduced ? 0 : 800) ? this.entry(this.active.id).interpretation : ''; }
   makePage(page) {
     const content = this.content;
@@ -74,10 +76,11 @@ export class ManuscriptConnections {
     if (page < 0) {
       ctx.font = '19px system-ui'; ctx.fillStyle = '#7d5d31'; ctx.fillText(content.instruction, CW / 2, 149);
       content.entries.forEach((entry, index) => {
-        const rect = { x: 54, y: 180 + index * 197, w: 916, h: 175 }, selected = this.session.selected === entry.stationId || this.session.reviewId === entry.stationId, done = this.session.solved(entry.stationId);
+        const rowHeight = content.compactEntries ? 104 : 175;
+        const rect = { x: 54, y: 180 + index * (rowHeight + (content.compactEntries ? 14 : 22)), w: 916, h: rowHeight }, selected = this.session.selected === entry.stationId || this.session.reviewId === entry.stationId, done = this.session.solved(entry.stationId);
         ctx.fillStyle = selected ? '#f1cf83' : done ? '#d9dfb8' : '#f9edce'; ctx.strokeStyle = selected ? '#9a641d' : '#b18c4f'; ctx.lineWidth = selected ? 4 : 1.5;
         ctx.beginPath(); ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 12); ctx.fill(); ctx.stroke();
-        ctx.textAlign = 'left'; ctx.font = '16px system-ui'; ctx.fillStyle = '#806331'; ctx.fillText((done ? '✓ ' : '') + 'ΧΩΡΙΟ ' + (index + 1) + (entry.sourceLabel ? ' · ' + entry.sourceLabel.toLocaleUpperCase('el') : entry.note ? ' · ΠΡΟΣΩΠΙΚΗ ΕΦΑΡΜΟΓΗ' : ''), rect.x + 23, rect.y + 29);
+        ctx.textAlign = 'left'; ctx.font = '16px system-ui'; ctx.fillStyle = '#806331'; ctx.fillText((done ? '✓ ' : '') + (content.entryLabel || 'ΧΩΡΙΟ') + ' ' + (index + 1) + (entry.sourceLabel ? ' · ' + entry.sourceLabel.toLocaleUpperCase('el') : entry.note ? ' · ΠΡΟΣΩΠΙΚΗ ΕΦΑΡΜΟΓΗ' : ''), rect.x + 23, rect.y + 29);
         ctx.font = `28px ${FONT}`; ctx.fillStyle = done ? '#3c4c2b' : '#50381f';
         const anchors = []; const lines = wrapped(ctx, entry.text, rect.w - 48);
         for (const [lineIndex, line] of lines.entries()) {
@@ -148,7 +151,7 @@ export class ManuscriptConnections {
   }
   destination(station, index, cameraPosition, out = new THREE.Vector3()) {
     const angle = Math.atan2(cameraPosition.x - station.position[0], cameraPosition.z - station.position[1]);
-    const book = this.books.find(b => b.id === station.id).root.position;
+    const book = this.bookFor(station.id).root.position;
     const bookSide = (book.x - station.position[0]) * Math.cos(angle) - (book.z - station.position[1]) * Math.sin(angle);
     const side = (bookSide >= 0 ? -1 : 1) * .28;
     return out.set(station.position[0] + Math.cos(angle) * side + Math.sin(angle) * .8, this.content.labelHeights?.[index] ?? (index ? .43 : .84), station.position[1] - Math.sin(angle) * side + Math.cos(angle) * .8);
@@ -181,7 +184,7 @@ export class ManuscriptConnections {
   start(id, reduced = false, cameraPosition = null, bookId = null) {
     this.cancel(false); this.page = -1; this.signature = ''; this.sync();
     const station = this.world.stations.find(s => s.id === id);
-    const book = this.books.find(b => b.id === (bookId || id));
+    const book = this.bookFor(bookId || id);
     if (cameraPosition) book.root.lookAt(cameraPosition.x, book.root.position.y, cameraPosition.z);
     book.root.updateWorldMatrix(true, true);
     const words = this.words.get(id);
@@ -198,7 +201,7 @@ export class ManuscriptConnections {
     if (active && finish) this.onFinished?.(active.id);
   }
   viewPose(station, pose) {
-    const book = this.books.find(b => b.id === station.id); if (!book) return pose;
+    const book = this.bookFor(station.id); if (!book) return pose;
     const origin = new THREE.Vector2(...pose.landing);
     const bookDirection = new THREE.Vector2(book.root.position.x, book.root.position.z).sub(origin).normalize();
     const imageDirection = new THREE.Vector2(...station.position).sub(origin).normalize();
@@ -238,7 +241,10 @@ export class ManuscriptConnections {
         if (source) source.material.opacity = u < .08 ? 1 - u / .08 * .82 : u > .86 ? .18 + (u - .86) / .14 * .82 : .18;
       });
     }
-    if (this.active && this.active.elapsed >= (this.active.reduced ? 4000 : 5000)) this.cancel(true);
+    if (this.active) {
+      const duration = this.active.reduced ? (this.content.instantReduced ? 0 : 4000) : 5000;
+      if (this.active.elapsed >= duration) this.cancel(true);
+    }
   }
   dispose() {
     this.cancel(false);

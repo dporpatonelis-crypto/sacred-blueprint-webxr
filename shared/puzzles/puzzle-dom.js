@@ -1,4 +1,4 @@
-export function mountPuzzle(container, activity, { image, title = 'Παλαιά Διαθήκη', kicker = 'Δοκιμή · ξεχωριστή πρόοδος', solvedMessage = 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.', onReset = () => activity.restart(), onSolved = () => {}, explanations = [] } = {}) {
+export function mountPuzzle(container, activity, { image, title = 'Παλαιά Διαθήκη', kicker = 'Δοκιμή · ξεχωριστή πρόοδος', solvedMessage = 'Η εικόνα ολοκληρώθηκε · 4 / 4 έννοιες αποκαλύφθηκαν.', onReset = () => activity.restart(), onSolved = () => {}, explanations = [], allowAutoSolve = false, reducedMotion = () => false } = {}) {
   container.innerHTML = `<section class="sliding-puzzle" aria-label="Puzzle εικόνας ${title}">
     <p class="puzzle-kicker">${kicker}</p><h2>${title} · Puzzle εικόνας</h2>
     <p class="puzzle-instructions">Σύρε ένα διπλανό πλακίδιο προς το κενό με ποντίκι ή δάχτυλο, ή πάτησέ το. Με εστίαση στον πίνακα, τα βέλη μετακινούν το κενό.</p>
@@ -7,6 +7,14 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
     <p class="puzzle-status" role="status" aria-live="polite"></p><div class="puzzle-explanations" hidden></div></section>`;
   const root = container.firstElementChild, grid = root.querySelector('.puzzle-grid'), reference = root.querySelector('.puzzle-reference');
   const status = root.querySelector('.puzzle-status'), previewButton = root.querySelector('.puzzle-preview');
+  let autoButton = null;
+  if (allowAutoSolve) {
+    autoButton = document.createElement('button');
+    autoButton.type = 'button';
+    autoButton.className = 'puzzle-auto';
+    autoButton.textContent = 'Αυτόματη λύση';
+    root.querySelector('.puzzle-actions').insertBefore(autoButton, root.querySelector('.puzzle-moves'));
+  }
   const buttons = [], { rows, columns, size } = activity.puzzle;
   let preview = false, loaded = false, wasSolved = activity.puzzle.solved;
   let gesture = null, suppressClick = false;
@@ -42,7 +50,7 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
   const beginGesture = (event, tile, button) => {
     if (gesture || event.button !== 0 || event.isPrimary === false) return;
     suppressClick = false;
-    if (!loaded || preview || !activity.puzzle.canMove(tile)) return;
+    if (!loaded || preview || activity.autoSolving || !activity.puzzle.canMove(tile)) return;
     event.preventDefault();
     button.focus({ preventScroll: true });
     const puzzle = activity.puzzle, index = puzzle.tiles.indexOf(tile), blank = puzzle.blank;
@@ -75,18 +83,25 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
   const render = () => {
     cancelGesture();
     const puzzle = activity.puzzle;
+    if (activity.autoSolving) preview = false;
     root.dataset.solved = String(puzzle.solved); grid.dataset.tiles = JSON.stringify(puzzle.tiles);
     grid.dataset.blank = String(puzzle.blank); root.querySelector('.puzzle-moves').textContent = `Κινήσεις: ${puzzle.moves}`;
     for (let id = 0; id < size; id++) {
       const button = buttons[id], final = id === size - 1, position = final ? size - 1 : puzzle.tiles.indexOf(id);
       button.hidden = final && !puzzle.solved; place(button, position);
-      button.disabled = !loaded || preview || !puzzle.canMove(id);
-      button.classList.toggle('is-movable', loaded && !preview && puzzle.canMove(id));
+      button.disabled = !loaded || preview || activity.autoSolving || !puzzle.canMove(id);
+      button.classList.toggle('is-movable', !button.disabled);
     }
     const blank = root.querySelector('.puzzle-blank'); place(blank, puzzle.blank); blank.hidden = puzzle.solved;
     reference.hidden = !preview; previewButton.setAttribute('aria-pressed', String(preview)); previewButton.textContent = preview ? 'Επιστροφή στο puzzle' : 'Δες την εικόνα';
+    previewButton.disabled = activity.autoSolving;
+    if (autoButton) {
+      autoButton.hidden = puzzle.solved;
+      autoButton.disabled = !loaded;
+      autoButton.textContent = activity.autoSolving ? 'Διακοπή αυτόματης λύσης' : 'Αυτόματη λύση';
+    }
     explanationsNode.hidden = !puzzle.solved;
-    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? solvedMessage : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Άφησε το πλακίδιο και η κίνηση ολοκληρώνεται προς το κενό.';
+    status.textContent = !loaded ? 'Ετοιμάζεται η εικόνα…' : puzzle.solved ? solvedMessage : activity.autoSolving ? 'Παρακολούθησε τις κινήσεις προς το κενό.' : preview ? 'Εικόνα αναφοράς · το puzzle συνεχίζεται όταν επιστρέψεις.' : 'Άφησε το πλακίδιο και η κίνηση ολοκληρώνεται προς το κενό.';
     if (!activity.canStore) status.textContent += ' Η πρόοδος διατηρείται όσο μένει ανοιχτή η σελίδα.';
     if (puzzle.solved && !wasSolved) onSolved(); wasSolved = puzzle.solved;
   };
@@ -102,10 +117,15 @@ export function mountPuzzle(container, activity, { image, title = 'Παλαιά 
   grid.addEventListener('keydown', event => {
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     cancelGesture(); suppressClick = false;
-    event.preventDefault(); event.stopPropagation(); if (loaded && !preview) activity.puzzle.moveBlank(event.key);
+    event.preventDefault(); event.stopPropagation(); if (loaded && !preview && !activity.autoSolving) activity.puzzle.moveBlank(event.key);
   });
   root.addEventListener('keydown', () => { cancelGesture(); suppressClick = false; });
   root.addEventListener('pointerdown', event => event.stopPropagation());
+  autoButton?.addEventListener('click', () => {
+    preview = false;
+    if (activity.autoSolving) activity.cancelAutoSolve();
+    else activity.solveAutomatically({ immediate: reducedMotion() });
+  });
   previewButton.addEventListener('click', () => { preview = !preview; render(); });
   root.querySelector('.puzzle-restart').addEventListener('click', () => { preview = false; onReset(); render(); grid.focus({ preventScroll: true }); });
   const onVisibility = () => { if (document.hidden) cancelGesture(); };

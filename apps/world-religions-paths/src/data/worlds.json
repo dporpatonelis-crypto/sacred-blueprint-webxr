@@ -1,0 +1,178 @@
+{
+  "hub": {
+    "id": "hub",
+    "kind": "hub",
+    "spawn": [
+      0,
+      10
+    ],
+    "lookAt": [
+      0,
+      2.5,
+      -4
+    ],
+    "bounds": {
+      "minX": -16,
+      "maxX": 16,
+      "minZ": -17,
+      "maxZ": 15
+    },
+    "skybox": "media/sky/hub.webp",
+    "stations": []
+  },
+  "judaism": {
+    "id": "judaism",
+    "kind": "focus",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "lookAt": [
+      0,
+      2,
+      -2
+    ],
+    "bounds": {
+      "minX": -10,
+      "maxX": 10,
+      "minZ": -11,
+      "maxZ": 11
+    },
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 0,
+          "radius": 10
+        }
+      ],
+      "paths": []
+    },
+    "skybox": "media/sky/judaism.webp",
+    "stations": []
+  },
+  "islam": {
+    "id": "islam",
+    "kind": "focus",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "lookAt": [
+      0,
+      2,
+      -2
+    ],
+    "bounds": {
+      "minX": -10,
+      "maxX": 10,
+      "minZ": -11,
+      "maxZ": 11
+    },
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 0,
+          "radius": 10
+        }
+      ],
+      "paths": []
+    },
+    "skybox": "media/sky/islam.webp",
+    "stations": []
+  },
+  "hinduism": {
+    "id": "hinduism",
+    "kind": "focus",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "lookAt": [
+      0,
+      2,
+      -2
+    ],
+    "bounds": {
+      "minX": -10,
+      "maxX": 10,
+      "minZ": -11,
+      "maxZ": 11
+    },
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 0,
+          "radius": 10
+        }
+      ],
+      "paths": []
+    },
+    "skybox": "media/sky/hinduism.webp",
+    "stations": []
+  },
+  "buddhism": {
+    "id": "buddhism",
+    "kind": "focus",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "lookAt": [
+      0,
+      2,
+      -2
+    ],
+    "bounds": {
+      "minX": -10,
+      "maxX": 10,
+      "minZ": -11,
+      "maxZ": 11
+    },
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 0,
+          "radius": 10
+        }
+      ],
+      "paths": []
+    },
+    "skybox": "media/sky/buddhism.webp",
+    "stations": []
+  },
+  "ancient_greek": {
+    "id": "ancient_greek",
+    "kind": "focus",
+    "spawn": [
+      0,
+      7.5
+    ],
+    "lookAt": [
+      0,
+      2,
+      -2
+    ],
+    "bounds": {
+      "minX": -10,
+      "maxX": 10,
+      "minZ": -11,
+      "maxZ": 11
+    },
+    "walkable": {
+      "circles": [
+        {
+          "x": 0,
+          "z": 0,
+          "radius": 10
+        }
+      ],
+      "paths": []
+    },
+    "skybox": "media/sky/ancient-greek.webp",
+    "stations": []
+  }
+}
