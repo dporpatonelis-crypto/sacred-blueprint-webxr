@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2029">
+  <title>Θρησκείες του κόσμου · WebXR</title>
+</head>
+<body>
+  <main class="stage" aria-label="Θρησκείες του κόσμου σε WebXR">
+    <canvas id="scene" tabindex="0" aria-label="Τρισδιάστατη περιήγηση"></canvas>
+
+    <div id="interface" class="interface">
+      <header class="topbar">
+        <div class="brand">
+          <p id="place">Πέντε διαδρομές μελέτης</p>
+          <h1>Θρησκείες του κόσμου</h1>
+        </div>
+        <nav aria-label="Εργαλεία μαθήματος">
+          <button id="hub" type="button" hidden>Στους πλανήτες</button>
+          <button id="overview" type="button">Συνολική εικόνα</button>
+          <button id="read" type="button">Κείμενα και πηγές</button>
+          <button id="vr" type="button" hidden>Είσοδος VR</button>
+          <button id="menu" type="button">Μενού</button>
+        </nav>
+      </header>
+
+      <section id="hub-controls" class="dock glass" aria-labelledby="dock-title">
+        <div class="dock-heading">
+          <h2 id="dock-title">Διάλεξε πλανήτη</h2>
+          <p id="controls-help">Πάτησε έναν πλανήτη για το παζλ του.</p>
+        </div>
+        <div id="planets" class="planets"></div>
+      </section>
+
+      <aside id="activity" class="activity glass" aria-labelledby="station-title" hidden>
+        <p class="overline" id="station-progress"></p>
+        <h2 id="station-title"></h2>
+        <p id="statement" class="statement"></p>
+        <p id="reflection" class="reflection"></p>
+        <div class="station-tools">
+          <button id="hint" type="button" class="quiet">Μικρή υπόδειξη</button>
+          <button id="book-focus" type="button" class="quiet">Στο χειρόγραφο</button>
+        </div>
+        <p id="hint-copy" class="hint" hidden></p>
+        <details id="choices">
+          <summary>Στόχευση δοχείου</summary>
+          <div id="answers" class="answers"></div>
+        </details>
+        <div id="review-list" class="review-list" hidden></div>
+      </aside>
+
+      <section id="interpretation" class="interpretation glass" aria-labelledby="interpretation-title" hidden>
+        <p id="interpretation-source" class="overline"></p>
+        <h2 id="interpretation-title" tabindex="-1"></h2>
+        <p id="interpretation-copy"></p>
+        <p id="interpretation-question" class="reflection"></p>
+        <div class="dialog-actions">
+          <button id="continue" class="primary" type="button">Συνέχεια</button>
+        </div>
+      </section>
+
+      <div id="water-controls" class="water-controls" hidden>
+        <span id="aim-label" class="aim-label">Στόχευσε ένα δοχείο</span>
+        <button id="water" type="button" class="water-button" aria-pressed="false">
+          <span class="drop" aria-hidden="true"></span>
+          Κράτησε για νερό
+        </button>
+      </div>
+      <div id="reticle" class="reticle" hidden aria-hidden="true"></div>
+
+      <div id="touch-walk" class="touch-walk" aria-hidden="true" hidden>
+        <div class="touch-walk-pad"><div id="touch-walk-stick"></div></div>
+      </div>
+
+      <p id="feedback" class="feedback glass" role="status" aria-live="polite" hidden></p>
+      <p id="loading" class="loading glass" role="status">Ετοιμάζονται οι πλανήτες…</p>
+      <section id="error" class="error glass" hidden>
+        <h2>Η προβολή δεν άνοιξε</h2>
+        <p id="error-copy"></p>
+        <div class="dialog-actions">
+          <button id="retry" class="primary" type="button">Δοκίμασε ξανά</button>
+          <a class="button" href="https://dporpatonelis-crypto.github.io/digital-library-core/lessons/world-religions-paths.html">Άνοιγμα αρχικού μαθήματος</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="puzzle-dialog" aria-labelledby="puzzle-title">
+    <header class="modal-header">
+      <h2 id="puzzle-title">Παζλ εικόνας</h2>
+      <form method="dialog"><button class="close" aria-label="Κλείσιμο παζλ">×</button></form>
+    </header>
+    <div id="puzzle-mount"></div>
+    <div class="dialog-actions">
+      <button id="puzzle-world" type="button">Στο παζλ του κόσμου</button>
+      <button id="puzzle-enter" type="button" class="primary" disabled>Στον πλανήτη →</button>
+    </div>
+  </dialog>
+
+  <dialog id="reader" aria-labelledby="reader-title">
+    <header class="modal-header">
+      <h2 id="reader-title">Κείμενα και πηγές</h2>
+      <form method="dialog"><button class="close" aria-label="Κλείσιμο ανάγνωσης">×</button></form>
+    </header>
+    <div class="reader-selects">
+      <label>Παράδοση <select id="reader-religion"></select></label>
+      <label>Άξονας <select id="reader-axis"></select></label>
+    </div>
+    <div id="reader-copy" class="reader-copy"></div>
+  </dialog>
+
+  <dialog id="menu-dialog" aria-labelledby="menu-title">
+    <header class="modal-header">
+      <h2 id="menu-title">Μενού μαθήματος</h2>
+      <form method="dialog"><button class="close" aria-label="Κλείσιμο μενού">×</button></form>
+    </header>
+    <p id="input-help"></p>
+    <div class="menu-actions">
+      <button id="motion" type="button" aria-pressed="false">Μειωμένη κίνηση</button>
+      <button id="reset" type="button">Από την αρχή</button>
+      <a id="collection" class="button" href="../../" hidden>Στη συλλογή WebXR</a>
+      <a class="button" href="https://dporpatonelis-crypto.github.io/digital-library-core/lessons/world-religions-paths.html" target="_blank" rel="noopener noreferrer">Αρχικό HTML ↗</a>
+    </div>
+    <p id="save-note" class="muted"></p>
+  </dialog>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-title">
+    <header class="modal-header"><h2 id="reset-title">Από την αρχή;</h2></header>
+    <p>Επίλεξε ποια πρόοδος θα μηδενιστεί.</p>
+    <div class="dialog-actions">
+      <form method="dialog"><button>Ακύρωση</button></form>
+      <button id="reset-current" type="button">Αυτός ο πλανήτης</button>
+      <button id="reset-all" type="button">Και οι πέντε</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

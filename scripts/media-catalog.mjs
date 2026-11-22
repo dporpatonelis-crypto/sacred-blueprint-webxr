@@ -17,6 +17,7 @@ export async function validateWorldMedia(directory) {
   }
   const lesson=JSON.parse(await fs.readFile(path.join(directory,'src/data/source-lesson.json'),'utf8'));
   for(const group of lesson.groups||[])if(group.imageId&&lesson.images[group.imageId]?.src)required.add(lesson.images[group.imageId].src);
+  for (const religion of lesson.religions || []) for (const station of religion.scenes) required.add(station.imageSrc);
   for(const relative of required){
     if(typeof relative!=='string')throw new Error(`Invalid media path in ${directory}`);
     const file=path.resolve(root,relative);

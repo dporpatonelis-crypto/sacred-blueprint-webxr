@@ -47,6 +47,22 @@
       ],
       "connections": 10,
       "status": "published"
+    },
+    {
+      "id": "world-religions-paths",
+      "directory": "apps/world-religions-paths",
+      "title": "Θρησκείες του κόσμου",
+      "description": "Πέντε παζλ εισόδου ανοίγουν πέντε πλανήτες με δοχεία νερού, χειρόγραφα και 25 συνδέσεις.",
+      "preview": "previews/world-religions-paths.webp",
+      "topics": [
+        "Ιουδαϊσμός",
+        "Ισλάμ",
+        "Ινδουισμός",
+        "Βουδισμός",
+        "Αρχαία ελληνική θρησκεία"
+      ],
+      "connections": 25,
+      "status": "published"
     }
   ]
 }
