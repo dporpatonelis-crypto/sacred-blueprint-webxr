@@ -1,0 +1,12 @@
+{
+  "file": "media/audio/christos-gennatai-piano.mp3",
+  "label": "Χριστός γεννάται · Πιάνο",
+  "duration": 43.36,
+  "segments": {
+    "birth": [0, 5.64],
+    "welcome": [5.66, 13],
+    "uplift": [13.02, 19.76]
+  },
+  "sourceUrl": "https://www.ebooks.edu.gr/ebooks/v/pdf/8547/4990/10-0028-01_Mousiko-Anthologio_A-ST-Dimotikou_Vivlio-Ekpaideutikou/#page=121",
+  "sha256": "8c6a3e327dffb41cd2098d1881a84d712198ba6f2678a72baab66d235db2dfb0"
+}

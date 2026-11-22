@@ -1,0 +1,9 @@
+{
+  "image": "assets/meaning-v1.png", "width": 1672, "height": 941,
+  "origin": "top-left", "coordinateUnit": "percent",
+  "regions": [
+    {"id":"birth","bounds":[0,0,36.5,100],"slot":[22.5,72],"anchors":[[22,33],[24,44],[15,53]]},
+    {"id":"welcome","bounds":[36.5,0,63.8,100],"slot":[50,72],"anchors":[[50,18],[44.5,46],[57,44]]},
+    {"id":"uplift","bounds":[63.8,0,100,100],"slot":[78.5,72],"anchors":[[68.5,46],[77,46],[85,46]]}
+  ]
+}

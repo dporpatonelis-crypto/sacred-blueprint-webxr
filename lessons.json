@@ -63,6 +63,21 @@
       ],
       "connections": 25,
       "status": "published"
+    },
+    {
+      "id": "christos-gennatai",
+      "directory": "apps/christos-gennatai",
+      "title": "Χριστός γεννάται",
+      "description": "Συναρμολόγησε την εικόνα της Βηθλεέμ, σύνδεσε τα χειρόγραφα με τις σκηνές και βάλε στη σειρά τις τρεις φράσεις του ύμνου.",
+      "preview": "previews/christos-gennatai.webp",
+      "topics": [
+        "Χριστούγεννα",
+        "Παζλ εικόνας",
+        "Γρηγόριος Θεολόγος",
+        "Ύμνος"
+      ],
+      "connections": 6,
+      "status": "published"
     }
   ]
 }

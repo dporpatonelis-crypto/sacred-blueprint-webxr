@@ -1,0 +1,9 @@
+{
+  "image": "assets/hymn-v1.png", "width": 1672, "height": 941,
+  "origin": "top-left", "coordinateUnit": "percent",
+  "regions": [
+    {"id":"birth","bounds":[0,0,35.5,100],"slot":[20,92],"anchors":[[13,55],[16,64],[23,50],[12,19]]},
+    {"id":"welcome","bounds":[35.5,0,76.6,100],"slot":[55,92],"anchors":[[41.8,9.5],[47,64],[58,64],[67.5,74]]},
+    {"id":"uplift","bounds":[76.6,0,100,100],"slot":[88,92],"anchors":[[84.5,62],[86.8,69],[93,65]]}
+  ]
+}

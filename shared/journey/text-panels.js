@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-export function panelTexture(text, { dark = false, selected = false, solved = false, small = false, square = false, paragraph = false, aspect = 3 } = {}) {
+export function panelTexture(text, { dark = false, selected = false, solved = false, small = false, square = false, paragraph = false, aspect = 3, palette } = {}) {
   const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = square ? 768 : Math.round(768 / aspect);
   const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-  ctx.fillStyle = dark ? '#244d41' : solved ? '#d8debd' : '#f7e8c9';
+  ctx.fillStyle = palette?.background || (dark ? '#244d41' : solved ? '#d8debd' : '#f7e8c9');
   ctx.beginPath();
   if (square) ctx.arc(w / 2, h / 2, w / 2 - 12, 0, Math.PI * 2); else ctx.roundRect(6, 6, w - 12, h - 12, 32);
   ctx.fill();
-  ctx.strokeStyle = selected ? '#ffdf8c' : dark ? '#ccaf70' : '#c6a265'; ctx.lineWidth = selected ? 13 : 5; ctx.stroke();
-  ctx.fillStyle = dark ? '#f7edcf' : '#274237';
+  ctx.strokeStyle = selected ? '#ffdf8c' : palette?.border || (dark ? '#ccaf70' : '#c6a265'); ctx.lineWidth = selected ? 13 : 5; ctx.stroke();
+  ctx.fillStyle = palette?.text || (dark ? '#f7edcf' : '#274237');
   let fontSize = paragraph ? 34 : square ? 280 : Math.round(h * (small ? 0.30 : 0.27));
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const words = text.split(' '); let lines;
