@@ -5,7 +5,7 @@ export async function validateWorldMedia(directory) {
   const worlds=JSON.parse(await fs.readFile(path.join(directory,'src/data/worlds.json'),'utf8'));
   const manifest=JSON.parse(await fs.readFile(path.join(directory,'public/media/manifest.json'),'utf8'));
   const root=path.resolve(directory,'public');
-  const required=new Set();
+  const required=new Set(manifest.assets || []);
   for(const world of Object.values(worlds)){
     if(world.skybox)required.add(world.skybox);
     for(const station of world.stations){

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101d38">
+  <meta name="description" content="Συναρμολόγησε την εικόνα της Βηθλεέμ, σύνδεσε τα χειρόγραφα και βάλε στη σειρά τις φράσεις του ύμνου.">
+  <title>Χριστός γεννάται · WebXR</title>
+</head>
+<body>
+  <canvas id="scene" role="img" aria-label="Τρισδιάστατη περιήγηση στη νυχτερινή Βηθλεέμ"></canvas>
+  <div id="interface">
+    <header class="masthead">
+      <div class="identity"><p>Από τον λόγο στον ύμνο</p><h1>Χριστός γεννάται</h1></div>
+      <nav aria-label="Εργαλεία μαθήματος">
+        <button type="button" data-action="read">Κείμενα και πηγές</button>
+        <button type="button" data-action="menu">Μενού</button>
+        <button type="button" id="vr" class="primary" hidden>Είσοδος VR</button>
+      </nav>
+    </header>
+    <div class="messages">
+      <p id="loading" role="status">Ετοιμάζεται η Βηθλεέμ…</p>
+      <p id="scene-unavailable" hidden>Η τρισδιάστατη προβολή δεν είναι διαθέσιμη εδώ. Οι δραστηριότητες ανοίγουν από τα κουμπιά του μαθήματος.</p>
+      <p id="world-status" role="status" aria-live="polite" hidden></p>
+    </div>
+    <div id="touch-walk" aria-label="Μοχλός κίνησης" hidden>
+      <div class="touch-walk-pad"><span id="touch-walk-stick"></span></div>
+    </div>
+    <footer class="dock">
+      <div><p id="stage-label" class="eyebrow">Προς τη Βηθλεέμ</p><h2 id="stage-heading">Το παζλ της εισόδου</h2></div>
+      <div class="dock-actions">
+        <output id="stage-progress" aria-label="Πρόοδος δραστηριότητας"></output>
+        <button type="button" id="open-activity" data-action="activity" class="primary">Άνοιξε το παζλ</button>
+        <button type="button" id="next-stage" hidden></button>
+      </div>
+    </footer>
+  </div>
+
+  <dialog id="activity" class="sheet activity" aria-labelledby="activity-title">
+    <header class="sheet-heading">
+      <div><p class="eyebrow" id="activity-label"></p><h2 id="activity-title"></h2></div>
+      <button type="button" data-action="close" id="activity-close" aria-label="Κλείσιμο δραστηριότητας">Κλείσιμο</button>
+    </header>
+    <aside id="learning-feedback" class="feedback" role="status" aria-live="polite" hidden></aside>
+    <section id="gate-activity">
+      <p id="gate-instruction" class="instruction">Διάλεξε ένα κομμάτι και πάτησε μια υποδοχή ή σύρε το στη θέση του.</p>
+      <div id="gate-preview" class="reference-picture" hidden><img alt="Η πλήρης εικόνα της διαδρομής προς τη Βηθλεέμ"></div>
+      <div class="gate-layout">
+        <section aria-labelledby="board-label"><h3 id="board-label">Η εικόνα</h3><div id="gate-board" class="tile-grid" aria-labelledby="board-label"></div></section>
+        <section aria-labelledby="tray-label"><h3 id="tray-label">Τα κομμάτια</h3><div id="gate-tray" class="tile-grid" aria-labelledby="tray-label"></div></section>
+      </div>
+      <div class="activity-actions">
+        <output id="tile-progress" aria-label="Σωστά τοποθετημένα κομμάτια"></output>
+        <button type="button" data-action="preview" id="preview-button" aria-pressed="false">Δες την εικόνα</button>
+        <button type="button" data-action="shuffle" id="shuffle">Ανακάτεμα κομματιών</button>
+        <button type="button" data-action="auto" id="auto">Αυτόματη λύση</button>
+        <button type="button" data-action="travel" data-value="meaning" id="gate-enter" class="primary" disabled>Στη Βηθλεέμ →</button>
+      </div>
+    </section>
+    <section id="meaning-activity" hidden>
+      <p class="instruction">Σύνδεσε κάθε χειρόγραφο με τη σκηνή που ταιριάζει. Δούλεψε με όποια σειρά θέλεις.</p>
+      <div class="learning-layout">
+        <div><div class="lesson-picture" id="meaning-picture"></div><div class="scene-targets" id="meaning-targets"></div></div>
+        <section class="paper-bank" aria-labelledby="manuscripts-heading"><h3 id="manuscripts-heading">Χειρόγραφα</h3><div id="manuscripts" class="button-list"></div></section>
+      </div>
+      <div class="activity-actions">
+        <output id="meaning-progress" aria-label="Σωστές συνδέσεις χειρογράφων"></output>
+        <button type="button" data-action="hint" id="meaning-hint">Υπόδειξη</button>
+        <button type="button" data-action="travel" data-value="hymn" id="meaning-enter" class="primary" disabled>Συνέχισε στον ύμνο →</button>
+      </div>
+    </section>
+    <section id="hymn-activity" hidden>
+      <p class="instruction">Ο εξωτερικός δακτύλιος είναι η πρώτη θέση, ο μεσαίος η δεύτερη και ο εσωτερικός η τρίτη. Διάλεξε φράσεις και πάτησε τη σφραγίδα.</p>
+      <div class="learning-layout hymn-layout">
+        <div><div class="lesson-picture" id="hymn-picture"></div><div id="phrase-bank" class="phrase-bank" aria-label="Οι τρεις μουσικές φράσεις"></div></div>
+        <div class="ring-area"><div id="rings" class="rings" role="group" aria-label="Τρεις δακτύλιοι"></div><div id="hymn-positions" class="button-list" role="group" aria-label="Θέσεις των δακτυλίων"></div>
+          <div class="rotation"><button type="button" data-action="cycle" data-value="-1" aria-label="Προηγούμενη φράση">‹</button><button type="button" data-action="cycle" data-value="1" aria-label="Επόμενη φράση">›</button></div>
+        </div>
+      </div>
+      <div class="activity-actions">
+        <output id="hymn-progress" aria-label="Σωστές θέσεις ύμνου"></output>
+        <button type="button" data-action="hint" id="hymn-hint">Υπόδειξη</button>
+        <button type="button" data-action="check-hymn" id="check-hymn" class="primary">Σφραγίδα / Έλεγχος</button>
+      </div>
+      <section id="hymn-complete" class="finale" hidden>
+        <h3>Το κείμενο γίνεται κοινό ψάλσιμο</h3><p id="final-interpretation"></p><blockquote id="completed-hymn"></blockquote>
+        <div class="activity-actions">
+          <button type="button" data-action="listen" data-value="sequence" class="primary">Άκου τη σωστή ακολουθία</button>
+          <button type="button" data-action="listen" data-value="full">Ολόκληρος ο ειρμός</button>
+          <button type="button" data-action="read">Εργασία στα κείμενα</button>
+        </div>
+      </section>
+    </section>
+    <div id="audio-home">
+      <div id="audio-strip" class="audio-strip" hidden>
+        <div><strong id="audio-title"></strong><p id="audio-state" role="status"></p></div>
+        <progress id="audio-progress" aria-label="Πρόοδος ακρόασης" max="1" value="0"></progress>
+        <button type="button" id="audio-pause" data-action="pause">Παύση</button>
+        <button type="button" data-action="stop">Διακοπή</button>
+      </div>
+    </div>
+  </dialog>
+  <div id="world-audio" aria-label="Χειριστήρια ακρόασης"></div>
+
+  <dialog id="reader" class="sheet reader" aria-labelledby="reader-title">
+    <header class="sheet-heading">
+      <div><p class="eyebrow">Κείμενα και πηγές</p><h2 id="reader-title">Από τον λόγο στον ύμνο</h2></div>
+      <button type="button" data-action="close" aria-label="Κλείσιμο κειμένων">Κλείσιμο</button>
+    </header>
+    <div id="source-texts" class="source-texts"></div>
+    <details id="evidence" hidden>
+      <summary>Προαιρετική εργασία στα κείμενα <span id="evidence-count"></span></summary>
+      <p>Σύνδεσε κάθε νόημα με το απόσπασμα που το τεκμηριώνει.</p>
+      <div id="evidence-choices" class="button-list"></div>
+      <button type="button" data-action="check-evidence">Έλεγχος τεκμηρίων</button>
+      <p id="evidence-status" role="status"></p>
+      <label class="reflection"><span id="reflection-label"></span><textarea id="reflection" rows="3" maxlength="3000"></textarea></label>
+    </details>
+  </dialog>
+
+  <dialog id="menu" class="sheet compact" aria-labelledby="menu-title">
+    <header class="sheet-heading"><h2 id="menu-title">Μενού</h2><button type="button" data-action="close" aria-label="Κλείσιμο μενού">Κλείσιμο</button></header>
+    <div class="button-list">
+      <button type="button" data-action="travel" data-value="gate">Παζλ εισόδου</button>
+      <button type="button" data-action="travel" data-value="meaning" id="menu-meaning">Ανακαλύπτω το νόημα</button>
+      <button type="button" data-action="travel" data-value="hymn" id="menu-hymn">Συνθέτω τον ύμνο</button>
+      <button type="button" data-action="reset-hymn" id="reset-hymn">Επαναφορά ύμνου</button>
+      <button type="button" data-action="confirm-reset">Επανεκκίνηση μαθήματος</button>
+      <a id="collection-link" hidden>Επιστροφή στη συλλογή WebXR ↗</a>
+    </div>
+    <p id="save-note" class="instruction" hidden>Η πρόοδος διατηρείται όσο μένει ανοιχτή η σελίδα.</p>
+  </dialog>
+  <dialog id="reset" class="sheet compact" aria-labelledby="reset-title">
+    <header class="sheet-heading"><h2 id="reset-title">Επανεκκίνηση μαθήματος;</h2></header>
+    <p>Η εικόνα θα ξαναμπεί στον πάγκο και οι δραστηριότητες θα ξεκινήσουν από την αρχή.</p>
+    <div class="activity-actions"><button type="button" data-action="close">Άκυρο</button><button type="button" data-action="reset-all" class="primary">Επανεκκίνηση</button></div>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
