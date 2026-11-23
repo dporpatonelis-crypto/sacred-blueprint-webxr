@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172f31">
+  <title>Ο Ιωάννης ο Βαπτιστής · Στον Ιορδάνη</title>
+</head>
+<body>
+  <main class="experience" aria-label="Ο Ιωάννης ο Βαπτιστής στον Ιορδάνη">
+    <canvas id="world" aria-label="Τρισδιάστατη όχθη του Ιορδάνη"></canvas>
+    <header class="topbar">
+      <div class="place">
+        <h1>Ο Ιωάννης ο Βαπτιστής</h1>
+        <p id="area">Η Βάπτιση στον Ιορδάνη</p>
+      </div>
+      <div class="tools">
+        <button id="vr" type="button" hidden>Είσοδος σε VR</button>
+        <button id="menu" type="button">Μενού</button>
+      </div>
+    </header>
+    <aside id="activity" class="activity">
+      <section id="gate">
+        <div class="level-head">
+          <h2>Η εικόνα της Βάπτισης</h2>
+          <output id="tiles-count" aria-label="Κομμάτια στη θέση τους">0 / 6</output>
+        </div>
+        <p id="gate-copy">Τοποθέτησε τα έξι κομμάτια στις υποδοχές.</p>
+        <div class="actions">
+          <button id="open-puzzle" class="primary" type="button">Άνοιγμα παζλ</button>
+          <button id="enter-river" class="primary" type="button" hidden>Στους σταθμούς</button>
+        </div>
+      </section>
+      <section id="river" hidden>
+        <div class="level-head">
+          <h2 id="station-title">Επίσκεψη στην Ελισάβετ</h2>
+          <output id="stations-count" aria-label="Ολοκληρωμένοι σταθμοί">0 / 4</output>
+        </div>
+        <p id="sentence"></p>
+        <fieldset id="water-choices">
+          <legend class="sr-only">Δοχείο προς γέμισμα</legend>
+          <div id="choices" class="choices"></div>
+        </fieldset>
+        <div id="water-controls" class="water-controls">
+          <button id="pour" class="primary" type="button" disabled>Κράτησε για να γεμίσει</button>
+          <progress id="water-level" max="1" value="0" aria-label="Στάθμη νερού"></progress>
+        </div>
+      </section>
+      <p id="notice" role="status" aria-live="polite"></p>
+    </aside>
+    <div id="touch-walk" class="touch-walk" aria-hidden="true">
+      <div class="touch-walk-pad"><span id="touch-walk-stick"></span></div>
+    </div>
+    <p id="loading" class="loading" role="status">Φορτώνεται ο Ιορδάνης…</p>
+  </main>
+
+  <dialog id="puzzle-dialog" aria-labelledby="puzzle-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="puzzle-title">Η εικόνα της Βάπτισης</h2>
+        <button type="button" data-close aria-label="Κλείσιμο παζλ">Κλείσιμο</button>
+      </div>
+      <p id="puzzle-copy">Διάλεξε ένα κομμάτι και μετά μία θέση.</p>
+      <div class="puzzle">
+        <div>
+          <h3>Υποδοχές</h3>
+          <div id="slots" class="pieces"></div>
+        </div>
+        <div>
+          <h3>Δίσκος</h3>
+          <div id="tray" class="pieces"></div>
+        </div>
+      </div>
+      <p id="puzzle-notice" role="status"></p>
+      <div class="actions">
+        <button id="puzzle-menu" type="button">Μενού</button>
+        <button id="puzzle-enter" class="primary" type="button" hidden>Στους σταθμούς</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="menu-dialog" aria-labelledby="menu-title">
+    <div class="dialog-inner">
+      <div class="dialog-head"><h2 id="menu-title">Μενού</h2><button type="button" data-close autofocus>Κλείσιμο</button></div>
+      <div id="menu-actions" class="menu-actions"></div>
+      <div id="menu-content"></div>
+    </div>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -28,7 +28,7 @@ function invisibleHit(rect, action) {
   mesh.userData.action = action; return mesh;
 }
 
-/** World-space manuscript, exact glyph origins, one beam and two words per station. */
+/** World-space manuscript, exact glyph origins and one beam per station. */
 export class ManuscriptConnections {
   constructor(scene, world, session, actors, approaches, onFinished, content) {
     this.content = content;
@@ -76,7 +76,7 @@ export class ManuscriptConnections {
     if (page < 0) {
       ctx.font = '19px system-ui'; ctx.fillStyle = '#7d5d31'; ctx.fillText(content.instruction, CW / 2, 149);
       content.entries.forEach((entry, index) => {
-        const rowHeight = content.compactEntries ? 104 : 175;
+        const rowHeight = content.entryRowHeight ?? (content.compactEntries ? 104 : 175);
         const rect = { x: 54, y: 180 + index * (rowHeight + (content.compactEntries ? 14 : 22)), w: 916, h: rowHeight }, selected = this.session.selected === entry.stationId || this.session.reviewId === entry.stationId, done = this.session.solved(entry.stationId);
         ctx.fillStyle = selected ? '#f1cf83' : done ? '#d9dfb8' : '#f9edce'; ctx.strokeStyle = selected ? '#9a641d' : '#b18c4f'; ctx.lineWidth = selected ? 4 : 1.5;
         ctx.beginPath(); ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 12); ctx.fill(); ctx.stroke();
@@ -95,15 +95,19 @@ export class ManuscriptConnections {
               const g = this.glyphs.get(keyword), factor = 28 / 64;
               const glyphRect = { x: start - g.pad * factor, y: baseline - (g.ascent + g.pad) * factor, w: g.width * factor, h: g.height * factor };
               anchors.push({ text: keyword, rect: glyphRect });
+              if (content.maskUnsolvedKeywords && !done) ctx.fillRect(start, baseline + 4, ctx.measureText(keyword).width, 2);
               if (after) ctx.fillText(after, start + ctx.measureText(keyword).width, baseline);
             }
             x += ctx.measureText(token).width;
           }
         }
-        layout.set(entry.stationId, anchors); hits.push({ rect, action: { type: 'word', id: entry.stationId } });
+        layout.set(entry.stationId, anchors);
+        if (!content.passiveEntries) hits.push({ rect, action: { type: 'word', id: entry.stationId } });
       });
-      button(content.readLabel, { x: 84, y: 801, w: this.session.complete ? 405 : 856, h: 65 }, { type: 'hymn-page', page: 0 });
-      if (this.session.complete) button('Τελικό ερώτημα', { x: 533, y: 801, w: 405, h: 65 }, { type: 'hymn-page', page: this.finalPage });
+      if (content.readLabel) {
+        button(content.readLabel, { x: 84, y: 801, w: this.session.complete ? 405 : 856, h: 65 }, { type: 'hymn-page', page: 0 });
+        if (this.session.complete) button('Τελικό ερώτημα', { x: 533, y: 801, w: 405, h: 65 }, { type: 'hymn-page', page: this.finalPage });
+      }
     } else {
       const reading = content.readingPages[page], final = page === this.finalPage;
       const text = final ? this.finalQuestion : reading.text;
@@ -153,8 +157,9 @@ export class ManuscriptConnections {
     const angle = Math.atan2(cameraPosition.x - station.position[0], cameraPosition.z - station.position[1]);
     const book = this.bookFor(station.id).root.position;
     const bookSide = (book.x - station.position[0]) * Math.cos(angle) - (book.z - station.position[1]) * Math.sin(angle);
-    const side = (bookSide >= 0 ? -1 : 1) * .28;
-    return out.set(station.position[0] + Math.cos(angle) * side + Math.sin(angle) * .8, this.content.labelHeights?.[index] ?? (index ? .43 : .84), station.position[1] - Math.sin(angle) * side + Math.cos(angle) * .8);
+    const side = (bookSide >= 0 ? -1 : 1) * (this.content.labelSide ?? .28);
+    const front = this.content.labelFront ?? .8;
+    return out.set(station.position[0] + Math.cos(angle) * side + Math.sin(angle) * front, this.content.labelHeights?.[index] ?? (index ? .43 : .84), station.position[1] - Math.sin(angle) * side + Math.cos(angle) * front);
   }
   makeBeam(station, book) {
     const start = book.root.position.clone(), end = new THREE.Vector3(station.position[0], station.height * .52, station.position[1] + .12);
@@ -175,7 +180,9 @@ export class ManuscriptConnections {
       book.hitMeshes.length = 0;
       for (const { rect, action } of page.hits) { const hit = invisibleHit(rect, { ...action, bookId: book.id }); book.root.add(hit); book.hitMeshes.push(hit); }
       for (const [id, sources] of book.sources) for (const source of sources) {
-        source.visible = !this.reading; source.material.color.setHex(this.session.solved(id) ? 0x3c4c2b : ink);
+        const solved = this.session.solved(id);
+        source.visible = !this.reading && (!this.content.maskUnsolvedKeywords || solved);
+        source.material.color.setHex(solved ? 0x3c4c2b : ink);
       }
     }
     this.pickables = this.books.flatMap(book => [book.surface, ...book.hitMeshes]);
@@ -217,14 +224,15 @@ export class ManuscriptConnections {
     if (this.interpretation.visible) this.interpretation.lookAt(cameraPosition.x, this.interpretation.position.y, cameraPosition.z);
     for (const station of this.world.stations) {
       const active = this.active?.id === station.id ? this.active : null, solved = this.session.solved(station.id), entry = this.entry(station.id), time = active?.elapsed ?? 0, instant = active?.reduced;
-      const arrival = instant ? 0 : 800;
+      const flight = this.content.flightMs ?? 4700;
+      const arrival = instant ? 0 : this.content.revealOnArrival ? flight + (entry.keywords.length - 1) * 300 : 800;
       this.actors.present(station.id, { elapsedMs: active && time >= arrival && !instant ? time - arrival : -1, reveal: active ? instant ? 1 : time < arrival ? .42 : .42 + .58 * ease((time - arrival) / 600) : solved ? 1 : this.session.current?.id === station.id ? .42 : .16 });
-      const beam = this.beams.get(station.id); beam.beam.visible = beam.halo.visible = solved;
-      beam.bead.visible = Boolean(active && !this.reading && !instant && time < 800); if (beam.bead.visible) beam.bead.position.copy(beam.curve.getPoint(clamp(time / 800)));
+      const beam = this.beams.get(station.id); beam.beam.visible = beam.halo.visible = solved && (!this.content.revealOnArrival || !active || time >= arrival);
+      beam.bead.visible = Boolean(active && !this.reading && !instant && !this.content.revealOnArrival && time < 800); if (beam.bead.visible) beam.bead.position.copy(beam.curve.getPoint(clamp(time / 800)));
       this.words.get(station.id).forEach((word, index) => {
         word.mesh.visible = solved && !(active && this.reading); if (!solved) return;
         word.mesh.material.depthTest = !active;
-        const u = active ? instant ? 1 : clamp((time - index * 300) / 4700) : 1, e = ease(u);
+        const u = active ? instant ? 1 : clamp((time - index * 300) / flight) : 1, e = ease(u);
         const end = this.destination(station, index, cameraPosition, word.curve.v3);
         if (active) {
           word.curve.v0.copy(word.start); const delta = end.clone().sub(word.start);
@@ -242,7 +250,8 @@ export class ManuscriptConnections {
       });
     }
     if (this.active) {
-      const duration = this.active.reduced ? (this.content.instantReduced ? 0 : 4000) : 5000;
+      const duration = this.active.reduced ? (this.content.instantReduced ? 0 : 4000) :
+        (this.content.flightMs ? this.content.flightMs + (this.entry(this.active.id).keywords.length - 1) * 300 : 5000);
       if (this.active.elapsed >= duration) this.cancel(true);
     }
   }

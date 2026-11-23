@@ -78,6 +78,16 @@
       ],
       "connections": 6,
       "status": "published"
+    },
+    {
+      "id": "john-baptist",
+      "directory": "apps/john-baptist",
+      "title": "Ο Ιωάννης ο Βαπτιστής",
+      "description": "Συναρμολόγησε τη Βάπτιση στον Ιορδάνη και στείλε τις λέξεις του χειρογράφου στις τέσσερις εικόνες της όχθης.",
+      "preview": "previews/john-baptist.webp",
+      "topics": ["Ιωάννης ο Βαπτιστής", "Ιορδάνης", "Βάπτιση", "Χειρόγραφο"],
+      "connections": 4,
+      "status": "draft"
     }
   ]
 }

@@ -1,0 +1,62 @@
+{
+  "title": "Ο Ιωάννης ο Βαπτιστής",
+  "baptism": {
+    "image": "media/illustrations/03-baptism.webp",
+    "caption": "Στον Ιορδάνη, ο Ιησούς βαπτίζεται από τον Ιωάννη.",
+    "alt": "Ο Ιωάννης βαπτίζει τον Ιησού μέσα στα νερά του Ιορδάνη."
+  },
+  "video": "https://dporpatonelis-crypto.github.io/interactive-books/Digital_Lessons/assets/new-testament-journeys/john-baptist-journey.mp4",
+  "credits": "https://github.com/dporpatonelis-crypto/interactive-books/blob/cdea382ad52937256c3544a597c9c1c5e3376d95/Digital_Lessons/sources/new-testament-journeys.json",
+  "stations": [
+    {
+      "id": "visitation",
+      "title": "Επίσκεψη στην Ελισάβετ",
+      "image": "media/illustrations/01-visitation.webp",
+      "before": "Στην κοιλιά της Ελισάβετ, ο Ιωάννης ",
+      "word": "σκιρτά",
+      "after": " μπροστά στην παρουσία του Χριστού.",
+      "hint": "Ποια λέξη δηλώνει τη γεμάτη χαρά κίνηση του παιδιού στην κοιλιά της Ελισάβετ;",
+      "reading": "Όταν η Μαρία χαιρετά την Ελισάβετ, το βρέφος σκιρτά στην κοιλιά της.",
+      "source": "Λουκάς 1,39–45",
+      "passage": "Luke 1:39-45"
+    },
+    {
+      "id": "wilderness",
+      "title": "Έρημος",
+      "image": "media/illustrations/02-wilderness.webp",
+      "before": "",
+      "word": "φωνή",
+      "after": " βοώντος εν τη ερήμω, ετοιμάσατε τας οδούς Κυρίου.",
+      "hint": "Ποια λέξη ονομάζει αυτό που ακούγεται στην έρημο;",
+      "reading": "Ο Ιωάννης καλεί τον λαό στην έρημο. Στο κατά Ματθαίον το χωρίο γράφει «φωνὴ βοῶντος ἐν τῇ ἐρήμῳ· ἑτοιμάσατε τὴν ὁδὸν κυρίου».",
+      "source": "Ματθαίος 3,1–3",
+      "passage": "Matthew 3:1-3"
+    },
+    {
+      "id": "lamb",
+      "title": "Αμνός του Θεού",
+      "image": "media/illustrations/04-lamb-of-god.webp",
+      "before": "Ο Ιωάννης ",
+      "word": "υποδεικνύει",
+      "after": " τον Χριστό ως Αμνό του Θεού.",
+      "hint": "Ποια λέξη δείχνει ότι ο Ιωάννης στρέφει την προσοχή των άλλων προς τον Χριστό;",
+      "reading": "Βλέποντας τον Ιησού να πλησιάζει, ο Ιωάννης τον ονομάζει «Αμνό του Θεού».",
+      "source": "Ιωάννης 1,29–34",
+      "passage": "John 1:29-34"
+    },
+    {
+      "id": "herod",
+      "title": "Έλεγχος του Ηρώδη",
+      "image": "media/illustrations/06-herod.webp",
+      "before": "Ο βασιλιάς Ηρώδης ",
+      "word": "ακούει",
+      "after": " τον ανώτερο από κάθε γέννημα γυναίκας να τον ελέγχει με παρρησία.",
+      "hint": "Τι κάνει ο Ηρώδης όταν ο Ιωάννης τού μιλά με παρρησία;",
+      "reading": "Ο Ηρώδης ακούει τον έλεγχο του Ιωάννη. Η φράση «ο ανώτερος από κάθε γέννημα γυναίκας» αποδίδει με νεότερα λόγια όσα είπε ο Χριστός για τον Ιωάννη.",
+      "source": "Μάρκος 6,17–20",
+      "passage": "Mark 6:17-20",
+      "relatedSource": "Ματθαίος 11,11",
+      "relatedPassage": "Matthew 11:11"
+    }
+  ]
+}
