@@ -214,7 +214,7 @@ function seeMeaning(target) {
     const result = session.matchMeaning(view.card, target);
     view.card = null;
     if (result === 'matched') {
-      guide(phrase.concept, phrase.explanation, 'good');
+      clearNotice();
     } else if (result === 'miss') {
       attempts.meaning[target] = (attempts.meaning[target] || 0) + 1;
       const text = attempts.meaning[target] === 2 ? hintFor('meaning', target) : phrase.question;
