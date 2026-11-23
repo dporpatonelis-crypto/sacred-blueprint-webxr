@@ -1,9 +1,8 @@
-import { lesson, TILES } from './session.js';
+import { TILES } from './session.js';
 
 export const el = id => document.getElementById(id);
 export const mediaUrl = path => import.meta.env.BASE_URL + path;
 const menu = el('menu-dialog'), puzzle = el('puzzle-dialog');
-const baptismImage = mediaUrl(lesson.baptism.image);
 
 function make(tag, content) {
   const node = document.createElement(tag);
@@ -15,8 +14,8 @@ function strongSentence(node, before, word, after) {
   node.replaceChildren(before, make('strong', word), after);
 }
 
-function markPiece(button, tile) {
-  button.style.backgroundImage = 'url("' + baptismImage + '")';
+function markPiece(button, tile, image) {
+  button.style.backgroundImage = 'url("' + image + '")';
   button.style.backgroundPosition = (tile % 3) * 50 + '% ' + Math.floor(tile / 3) * 100 + '%';
 }
 
@@ -31,6 +30,7 @@ function link(label, url) {
 export class LessonInterface {
   constructor(session, api) {
     this.session = session;
+    this.puzzleImage = mediaUrl(session.lesson.puzzle.image);
     this.api = api;
     this.dialogs = [menu, puzzle];
     this.aimButtons = new Map();
@@ -60,7 +60,7 @@ export class LessonInterface {
       button.className = 'piece';
       button.draggable = true;
       button.setAttribute('aria-label', 'Κομμάτι ' + (tile + 1));
-      markPiece(button, tile);
+      markPiece(button, tile, this.puzzleImage);
       button.addEventListener('click', () => api.select(tile));
       button.addEventListener('dragstart', event => {
         event.dataTransfer.setData('text/plain', String(tile));
@@ -123,7 +123,7 @@ export class LessonInterface {
   }
 
   render({ selected, assisting }) {
-    const session = this.session, gate = session.level === 'gate';
+    const session = this.session, lesson = session.lesson, gate = session.level === 'gate';
     el('gate').hidden = !gate;
     el('river').hidden = gate;
     if (gate) {
@@ -131,10 +131,15 @@ export class LessonInterface {
       el('tiles-count').textContent = session.placed.size + ' / 6';
       el('enter-river').hidden = el('puzzle-enter').hidden = !complete;
       el('open-puzzle').hidden = complete;
-      el('puzzle-copy').textContent = complete ? lesson.baptism.caption :
+      el('puzzle-copy').textContent = complete ? lesson.puzzle.caption :
         assisting ? 'Τα κομμάτια μπαίνουν ένα ένα στις θέσεις τους.' : 'Διάλεξε ένα κομμάτι και μετά μία θέση.';
-      if (complete) strongSentence(el('gate-copy'), 'Στον Ιορδάνη, ο Ιησούς ', 'βαπτίζεται', ' από τον Ιωάννη.');
-      else el('gate-copy').textContent = 'Τοποθέτησε τα έξι κομμάτια στις υποδοχές.';
+      const { caption, emphasis } = lesson.puzzle;
+      const start = emphasis ? caption.indexOf(emphasis) : -1;
+      if (complete && start >= 0) {
+        strongSentence(el('gate-copy'), caption.slice(0, start), emphasis, caption.slice(start + emphasis.length));
+      } else {
+        el('gate-copy').textContent = complete ? caption : 'Τοποθέτησε τα έξι κομμάτια στις υποδοχές.';
+      }
       if (this.trayOrder !== session.tileOrder) {
         this.trayOrder = session.tileOrder;
         el('tray').replaceChildren(...this.trayOrder.map(tile => this.tiles[tile]));
@@ -144,7 +149,7 @@ export class LessonInterface {
         const slot = this.slots[tile], piece = this.tiles[tile];
         slot.classList.toggle('placed', placed);
         slot.disabled = placed || assisting;
-        if (placed) markPiece(slot, tile);
+        if (placed) markPiece(slot, tile, this.puzzleImage);
         else slot.style.removeProperty('background-image');
         piece.classList.toggle('empty-piece', placed);
         piece.style.visibility = placed ? 'hidden' : '';
@@ -157,7 +162,7 @@ export class LessonInterface {
     const station = session.visibleStation;
     el('station-title').textContent = session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
       (lesson.stations.indexOf(station) + 1) + ' · ' + station.title;
-    el('stations-count').textContent = session.count + ' / 4';
+    el('stations-count').textContent = session.count + ' / ' + lesson.stations.length;
     const word = session.solved(station.id) ? station.word : '_______';
     strongSentence(el('sentence'), station.before, word, station.after);
     el('water-choices').hidden = session.complete;
@@ -203,13 +208,13 @@ export class LessonInterface {
   }
 
   showContent(section) {
-    const content = el('menu-content');
+    const content = el('menu-content'), lesson = this.session.lesson;
     content.replaceChildren();
     if (section === 'picture') {
       const image = make('img');
-      image.src = baptismImage;
-      image.alt = lesson.baptism.alt;
-      content.append(image, make('p', lesson.baptism.caption));
+      image.src = this.puzzleImage;
+      image.alt = lesson.puzzle.alt;
+      content.append(image, make('p', lesson.puzzle.caption));
     } else if (section === 'hint') {
       content.append(make('p', this.session.visibleStation.hint));
     } else if (section === 'controls') {
@@ -228,6 +233,9 @@ export class LessonInterface {
       }
       const credits = make('p');
       credits.append(link('Εικόνες και πηγές του αρχικού βίντεο', lesson.credits));
+      if (lesson.originalLesson) {
+        credits.append(document.createElement('br'), link('Αρχική δραστηριότητα στο Video Page', lesson.originalLesson));
+      }
       content.append(credits);
     } else if (section === 'video') {
       const video = make('video');
@@ -242,7 +250,7 @@ export class LessonInterface {
       const confirm = make('button', 'Μηδένισε την πρόοδο');
       confirm.type = 'button';
       confirm.onclick = () => { menu.close(); this.api.restart(); };
-      content.append(make('p', 'Θα ξεκινήσεις ξανά από τα έξι κομμάτια της Βάπτισης.'), confirm);
+      content.append(make('p', lesson.puzzle.restartText), confirm);
     }
   }
 }

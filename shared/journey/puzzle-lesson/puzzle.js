@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { panel } from '../../../shared/journey/text-panels.js';
+import { panel } from '../text-panels.js';
 import { TILES } from './session.js';
 
 const W = 1.48, H = W * 9 / 16;
@@ -38,7 +38,7 @@ const stone = material(0xa6895e);
 const edge = material(0x855735);
 const rim = material(0xe6b86b, .57);
 
-export class BaptismPuzzle {
+export class ImagePuzzle {
   constructor(root, image) {
     this.image = image;
     this.board = this.makeBench(root, -.88, 'Υποδοχές');

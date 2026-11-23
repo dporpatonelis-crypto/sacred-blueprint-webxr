@@ -1,0 +1,70 @@
+{
+  "id": "john-evangelist",
+  "title": "Ο Ιωάννης ο Θεολόγος",
+  "manuscriptTitle": "Το χειρόγραφο της Γαλιλαίας",
+  "manuscriptRowHeight": 153,
+  "fitStationImages": true,
+  "beamFromEdge": true,
+  "puzzle": {
+    "title": "Η εικόνα του Μυστικού Δείπνου",
+    "image": "media/illustrations/03-last-supper.webp",
+    "caption": "Στον Μυστικό Δείπνο, ο Ιωάννης βρίσκεται κοντά στον Χριστό.",
+    "alt": "Ο Ιωάννης δίπλα στον Χριστό, στο τραπέζι του Μυστικού Δείπνου.",
+    "restartText": "Θα ξεκινήσεις ξανά από τα έξι κομμάτια του Μυστικού Δείπνου."
+  },
+  "video": "https://dporpatonelis-crypto.github.io/interactive-books/Digital_Lessons/assets/new-testament-journeys/john-evangelist-journey.mp4",
+  "originalLesson": "https://dporpatonelis-crypto.github.io/Video_Page/lessons/new-testament/john-evangelist.html",
+  "credits": "https://github.com/dporpatonelis-crypto/interactive-books/blob/cdea382ad52937256c3544a597c9c1c5e3376d95/Digital_Lessons/sources/new-testament-journeys.json",
+  "stations": [
+    {
+      "id": "calling",
+      "title": "Κλήση",
+      "image": "media/illustrations/01-calling.webp",
+      "before": "Ο Ιωάννης, γιος του Ζεβεδαίου, ",
+      "word": "ακολουθεί",
+      "after": " τον Χριστό, αφήνοντας τα δίχτυα.",
+      "hint": "Τι κάνει ο Ιωάννης όταν ο Χριστός καλεί εκείνον και τον αδελφό του;",
+      "reading": "Ο Ιωάννης και ο Ιάκωβος αφήνουν τον πατέρα τους στο πλοιάριο και πηγαίνουν πίσω από τον Χριστό.",
+      "source": "Μάρκος 1,19–20",
+      "passage": "Mark 1:19-20"
+    },
+    {
+      "id": "transfiguration",
+      "title": "Μεταμόρφωση",
+      "image": "media/illustrations/02-transfiguration.webp",
+      "before": "Στη Μεταμόρφωση, το πρόσωπο του Χριστού ",
+      "word": "λάμπει",
+      "after": " μπροστά στον Ιωάννη, τον Πέτρο και τον Ιάκωβο.",
+      "hint": "Ποιο ρήμα ταιριάζει σε ένα πρόσωπο που φωτίζεται σαν τον ήλιο;",
+      "reading": "Στο όρος της Μεταμόρφωσης ο Ιωάννης, ο Πέτρος και ο Ιάκωβος βλέπουν το πρόσωπο του Χριστού να λάμπει σαν τον ήλιο.",
+      "source": "Ματθαίος 17,1–9",
+      "passage": "Matthew 17:1-9"
+    },
+    {
+      "id": "cross",
+      "title": "Σταυρός",
+      "image": "media/illustrations/05-cross.webp",
+      "before": "Κάτω από τον Σταυρό, ο Χριστός ",
+      "word": "εμπιστεύεται",
+      "after": " τη Θεοτόκο στον αγαπημένο μαθητή.",
+      "hint": "Με ποιο ρήμα περιγράφουμε ότι κάποιος αναθέτει σε έναν άνθρωπο τη φροντίδα ενός αγαπημένου προσώπου;",
+      "reading": "Από τον Σταυρό, ο Χριστός δίνει στον αγαπημένο μαθητή τη φροντίδα της μητέρας του. Η εκκλησιαστική παράδοση συνδέει τον αγαπημένο μαθητή με τον Ιωάννη.",
+      "source": "Ιωάννης 19,25–27",
+      "passage": "John 19:25-27"
+    },
+    {
+      "id": "tiberias",
+      "title": "Τιβεριάδα",
+      "image": "media/illustrations/07-tiberias.webp",
+      "before": "Η μαρτυρία του Ευαγγελίου ",
+      "word": "συνδέεται",
+      "after": " με το κενό μνήμα και την αναγνώριση του Χριστού στην Τιβεριάδα.",
+      "hint": "Ποιο ρήμα δηλώνει ότι η μαρτυρία σχετίζεται με τα δύο γεγονότα;",
+      "reading": "Ο μαθητής βλέπει τα οθόνια στο κενό μνήμα. Στη λίμνη της Τιβεριάδας αναγνωρίζει τον αναστημένο Χριστό και λέει στον Πέτρο ότι είναι ο Κύριος.",
+      "source": "Ιωάννης 21,1–14",
+      "passage": "John 21:1-14",
+      "relatedSource": "Ιωάννης 20,1–10",
+      "relatedPassage": "John 20:1-10"
+    }
+  ]
+}
