@@ -1,14 +1,5 @@
-import source from './data/source-lesson.json';
-
-export const lesson = {
-  ...source,
-  stations: source.stations.map(station => ({ ...station, prompt: station.before + '_______' + station.after }))
-};
-
 export const TILE_COUNT = 6;
 export const TILES = Array.from({ length: TILE_COUNT }, (_, index) => index);
-const stationIds = lesson.stations.map(station => station.id);
-const storageKey = 'john-baptist-webxr.v1';
 
 function shuffle(values) {
   const list = [...values];
@@ -26,39 +17,45 @@ function restoreOrder(order, values) {
 }
 
 export class LessonSession {
-  constructor() {
+  constructor(source) {
+    this.lesson = {
+      ...source,
+      stations: source.stations.map(station => ({ ...station, prompt: station.before + '_______' + station.after }))
+    };
+    this.stationIds = this.lesson.stations.map(station => station.id);
+    this.storageKey = source.id + '-webxr.v1';
     let saved;
-    try { saved = JSON.parse(localStorage.getItem(storageKey)); } catch {}
+    try { saved = JSON.parse(localStorage.getItem(this.storageKey)); } catch {}
     this.placed = new Set(Array.isArray(saved?.placed) ? saved.placed.filter(tile => TILES.includes(tile)) : []);
     this.tileOrder = restoreOrder(saved?.tileOrder, TILES);
-    this.choiceOrder = restoreOrder(saved?.choiceOrder, stationIds);
-    this.choices = this.choiceOrder.map(id => lesson.stations.find(station => station.id === id));
+    this.choiceOrder = restoreOrder(saved?.choiceOrder, this.stationIds);
+    this.choices = this.choiceOrder.map(id => this.lesson.stations.find(station => station.id === id));
     this.count = this.gateComplete && Number.isInteger(saved?.count)
-      ? Math.min(lesson.stations.length, Math.max(0, saved.count)) : 0;
+      ? Math.min(this.lesson.stations.length, Math.max(0, saved.count)) : 0;
     this.level = saved?.level === 'river' && this.gateComplete ? 'river' : 'gate';
     this.pending = null;
     this.save();
   }
 
   get gateComplete() { return this.placed.size === TILE_COUNT; }
-  get complete() { return this.count === lesson.stations.length && !this.pending; }
+  get complete() { return this.count === this.lesson.stations.length && !this.pending; }
   get sceneComplete() { return this.complete; }
   get selected() { return this.pending?.id || this.current?.id || null; }
   get localCount() { return this.count; }
   get busy() { return Boolean(this.pending); }
-  get current() { return this.pending ? null : lesson.stations[this.count] || null; }
+  get current() { return this.pending ? null : this.lesson.stations[this.count] || null; }
   get visibleStation() {
-    return this.pending || lesson.stations[Math.min(this.count, lesson.stations.length - 1)];
+    return this.pending || this.lesson.stations[Math.min(this.count, this.lesson.stations.length - 1)];
   }
 
   solved(id) {
-    const index = stationIds.indexOf(id);
+    const index = this.stationIds.indexOf(id);
     return index >= 0 && index < this.count;
   }
 
   save() {
     try {
-      localStorage.setItem(storageKey, JSON.stringify({
+      localStorage.setItem(this.storageKey, JSON.stringify({
         placed: [...this.placed], tileOrder: this.tileOrder, choiceOrder: this.choiceOrder,
         count: this.count, level: this.level
       }));

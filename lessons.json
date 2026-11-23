@@ -88,6 +88,16 @@
       "topics": ["Ιωάννης ο Βαπτιστής", "Ιορδάνης", "Βάπτιση", "Χειρόγραφο"],
       "connections": 4,
       "status": "published"
+    },
+    {
+      "id": "john-evangelist",
+      "directory": "apps/john-evangelist",
+      "title": "Ο Ιωάννης ο Θεολόγος",
+      "description": "Συναρμολόγησε τον Μυστικό Δείπνο και σύνδεσε τέσσερα ρήματα με τις εικόνες στην όχθη της Γαλιλαίας.",
+      "preview": "previews/john-evangelist.webp",
+      "topics": ["Ιωάννης ο Θεολόγος", "Μυστικός Δείπνος", "Γαλιλαία", "Τιβεριάδα"],
+      "connections": 4,
+      "status": "draft"
     }
   ]
 }

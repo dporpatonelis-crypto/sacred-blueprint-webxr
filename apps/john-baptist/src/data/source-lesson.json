@@ -1,9 +1,14 @@
 {
+  "id": "john-baptist",
   "title": "Ο Ιωάννης ο Βαπτιστής",
-  "baptism": {
+  "manuscriptTitle": "Το χειρόγραφο του Ιορδάνη",
+  "puzzle": {
+    "title": "Η εικόνα της Βάπτισης",
     "image": "media/illustrations/03-baptism.webp",
     "caption": "Στον Ιορδάνη, ο Ιησούς βαπτίζεται από τον Ιωάννη.",
-    "alt": "Ο Ιωάννης βαπτίζει τον Ιησού μέσα στα νερά του Ιορδάνη."
+    "alt": "Ο Ιωάννης βαπτίζει τον Ιησού μέσα στα νερά του Ιορδάνη.",
+    "emphasis": "βαπτίζεται",
+    "restartText": "Θα ξεκινήσεις ξανά από τα έξι κομμάτια της Βάπτισης."
   },
   "video": "https://dporpatonelis-crypto.github.io/interactive-books/Digital_Lessons/assets/new-testament-journeys/john-baptist-journey.mp4",
   "credits": "https://github.com/dporpatonelis-crypto/interactive-books/blob/cdea382ad52937256c3544a597c9c1c5e3376d95/Digital_Lessons/sources/new-testament-journeys.json",

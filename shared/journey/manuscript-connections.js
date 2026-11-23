@@ -163,6 +163,10 @@ export class ManuscriptConnections {
   }
   makeBeam(station, book) {
     const start = book.root.position.clone(), end = new THREE.Vector3(station.position[0], station.height * .52, station.position[1] + .12);
+    if (this.content.beamFromEdge) {
+      start.x += Math.sign(end.x - start.x) * (BW / 2 + .04);
+      start.y -= BH / 2 + .015;
+    }
     const delta = end.clone().sub(start), curve = new THREE.CubicBezierCurve3(start, start.clone().addScaledVector(delta, .33).add(new THREE.Vector3(0, .5, 0)), end.clone().addScaledVector(delta, -.2).add(new THREE.Vector3(0, .3, 0)), end);
     const beam = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, .018, 6, false), new THREE.MeshBasicMaterial({ color: 0xffd582, toneMapped: false }));
     const halo = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, .055, 6, false), new THREE.MeshBasicMaterial({ color: 0xffd582, transparent: true, opacity: .14, depthWrite: false, toneMapped: false }));
