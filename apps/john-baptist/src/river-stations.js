@@ -12,7 +12,7 @@ export const riverWorld = {
   id: 'jordan-stations',
   spawn: [0, 4.9],
   xrSpawn: [0, 3.1],
-  lookAt: [0, 1.65, -2.2],
+  lookAt: [0, .87, -.12],
   bounds: { minX: -6.8, maxX: 6.8, minZ: -5.8, maxZ: 9 },
   stations: lesson.stations.map((station, index) => ({
     ...station, position: places[index], height: 2.58
@@ -60,7 +60,7 @@ export function makeRiverStations(root, camera, session, images, answer, finish)
   const manuscript = new ManuscriptConnections(root, riverWorld, session, stories, vesselApproaches, finish, {
     heading: 'Ο ΙΩΑΝΝΗΣ Ο ΒΑΠΤΙΣΤΗΣ',
     title: 'Το χειρόγραφο του Ιορδάνη',
-    instruction: 'Γέμισε το δοχείο με τη λέξη που λείπει.',
+    instruction: '',
     entryLabel: 'Σταθμός',
     entries: lesson.stations.map(station => ({
       stationId: station.id, text: station.before + station.word + station.after,
@@ -80,17 +80,12 @@ export function makeRiverStations(root, camera, session, images, answer, finish)
     labelFront: .18
   });
   const water = new WaterQuiz(root, riverWorld, session, camera, answer, vesselApproaches);
-  const finishSign = panel('Οι τέσσερις συνδέσεις ολοκληρώθηκαν', 2.55, .31, null, { dark: true });
-  finishSign.position.set(0, .69, -2.22);
-  root.add(finishSign);
 
   return {
     water,
     manuscript,
     update(dt, head, reduced, paused) {
       for (const { group } of frames.values()) group.lookAt(head.x, group.position.y, head.z);
-      finishSign.visible = session.complete;
-      if (finishSign.visible) finishSign.lookAt(head.x, finishSign.position.y, head.z);
       manuscript.update(dt, head, reduced, paused);
     }
   };

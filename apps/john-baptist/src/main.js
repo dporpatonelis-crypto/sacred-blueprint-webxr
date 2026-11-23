@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { HandCarry } from '../../../shared/journey/hand-carry.js';
 import { Navigation } from '../../../shared/journey/navigation.js';
-import { panel, setText } from '../../../shared/journey/text-panels.js';
 import { XRMenu } from '../../../shared/journey/xr-menu.js';
 import worldMedia from './data/worlds.json';
 import { lesson, LessonSession, TILES } from './session.js';
@@ -10,6 +9,7 @@ import { makeLandscape } from './landscape.js';
 import { makeRiverStations, riverWorld } from './river-stations.js';
 import { el, LessonInterface, mediaUrl } from './interface.js';
 import './style.css';
+import '../../../shared/journey/compact-water-controls.css';
 
 const gateWorld = {
   spawn: [0, 2.75], xrSpawn: [0, 1.18], lookAt: [0, 1.18, -.47],
@@ -31,20 +31,21 @@ const camera = new THREE.PerspectiveCamera(64, 1, .04, 90);
 rig.add(camera);
 scene.add(rig, gateRoot, riverRoot);
 const canvas = el('world');
+const fireButton = el('fire-button'), reticle = el('reticle');
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const ray = new THREE.Raycaster();
 const point = new THREE.Vector2(), head = new THREE.Vector3(), rotation = new THREE.Matrix4();
 const waterDirection = new THREE.Vector3(), waterOrigin = new THREE.Vector3();
 const hands = [];
 
-let renderer, navigation, xrMenu, carry, gate, stations, terrain, virtualNotice;
-let selected = null, aimed = null, shot = null, desktopPose, showVideoAfterXR = false;
-let noticeUntil = 0, lastFrame = 0, assistAt = 0;
-let ready = false, reference = false, assisting = false;
+let renderer, navigation, xrMenu, carry, gate, stations, terrain;
+let selected = null, shot = null, desktopPose, showVideoAfterXR = false;
+let notice = '', lastFrame = 0, assistAt = 0;
+let ready = false, assisting = false;
 
 const ui = new LessonInterface(session, {
   select: selectTile, place: placeSelected, enter: enterRiver, shuffle: shuffleTiles,
-  aim: chooseVessel, assist, stopAssist, restart,
+  aim: aimAtVessel, assist, stopAssist, restart,
   dialogChanged: refreshInput,
   selectedTile: () => selected, assisting: () => assisting
 });
@@ -55,23 +56,22 @@ const water = () => stations?.water;
 const reduced = () => motion.matches;
 
 function refreshInput() {
-  if (ui.modal || xrMenu?.opened) stopPour();
-  if (navigation) navigation.enabled = ready && !ui.modal && !xrMenu?.opened;
+  const playing = ready && !ui.modal && !xrMenu?.opened;
+  if (!playing) stopPour();
+  if (navigation) navigation.enabled = playing;
+  ui.syncControls(playing && !inXR());
 }
 
 function render() {
-  gate?.sync(session, selected, reference);
+  gate?.sync(session, selected);
   water()?.sync(session);
-  ui.render({ selected, aimed, assisting });
+  ui.render({ selected, assisting });
   refreshInput();
 }
 
 function announce(message = '', kind = '') {
+  notice = message;
   ui.notify(message, kind);
-  noticeUntil = message ? performance.now() + 2350 : 0;
-  if (!virtualNotice) return;
-  virtualNotice.visible = Boolean(message);
-  if (message) setText(virtualNotice, message, { dark: true, paragraph: true });
 }
 
 function selectTile(tile, dragging = false) {
@@ -106,7 +106,6 @@ function placeSelected(slot) {
 function assist() {
   if (!atGate() || session.gateComplete || assisting) return;
   carry?.cancel();
-  reference = false;
   selected = null;
   assisting = true;
   assistAt = performance.now();
@@ -125,7 +124,6 @@ function shuffleTiles() {
   carry?.cancel();
   session.shuffleTiles();
   selected = null;
-  reference = false;
   announce();
   render();
 }
@@ -137,8 +135,7 @@ function switchLevel() {
   stopPour();
   stopAssist();
   carry.cancel();
-  selected = aimed = null;
-  reference = false;
+  selected = null;
   announce();
   gateRoot.visible = atGate();
   riverRoot.visible = !atGate();
@@ -160,9 +157,14 @@ function restart() {
   switchLevel();
 }
 
-function chooseVessel(id) {
-  aimed = id;
-  el('pour').disabled = !aimed || session.busy || session.solved(aimed);
+function aimAtVessel(id) {
+  const target = water()?.getTarget(id);
+  if (!target || session.busy || session.solved(id)) return;
+  target.y -= .20;
+  camera.lookAt(target);
+  ui.close();
+  refreshInput();
+  fireButton.focus({ preventScroll: true });
 }
 
 function answer(id) {
@@ -178,7 +180,6 @@ function answer(id) {
 
 function finishAnswer(id) {
   session.finish(id);
-  aimed = null;
   render();
 }
 
@@ -187,12 +188,21 @@ function canPour() {
 }
 
 function beginPour(input) {
-  if (!canPour() || shot) return;
+  if (!canPour() || shot) return false;
   announce();
   shot = input;
+  if (!input.controller) {
+    fireButton.classList.add('firing');
+    fireButton.setAttribute('aria-pressed', 'true');
+  }
+  return true;
 }
 
 function stopPour() {
+  if (shot && !shot.controller) {
+    fireButton.classList.remove('firing');
+    fireButton.setAttribute('aria-pressed', 'false');
+  }
   shot = null;
   water()?.fill.release();
 }
@@ -212,8 +222,10 @@ function addLanding(root, x, z) {
 }
 
 function screenRay(position) {
-  const rect = canvas.getBoundingClientRect();
-  point.set(2 * (position.x - rect.left) / rect.width - 1, 1 - 2 * (position.y - rect.top) / rect.height);
+  if (position) {
+    const rect = canvas.getBoundingClientRect();
+    point.set(2 * (position.x - rect.left) / rect.width - 1, 1 - 2 * (position.y - rect.top) / rect.height);
+  } else point.set(0, 0);
   camera.updateWorldMatrix(true, false);
   ray.setFromCamera(point, camera);
 }
@@ -237,7 +249,7 @@ function hitVessel() {
 function findAction() {
   const menuAction = hit(xrMenu.pickables);
   if (menuAction || xrMenu.opened) return menuAction;
-  if (atGate() && !inXR() && !assisting && !reference) {
+  if (atGate() && !inXR() && !assisting) {
     const action = hit(gate.pickables);
     if (action) return action;
   }
@@ -245,7 +257,7 @@ function findAction() {
     const action = hit([gate.enter]);
     if (action) return action;
   }
-  if (canPour()) {
+  if (inXR() && canPour()) {
     const id = hitVessel();
     if (id) return { type: 'vessel', id };
   }
@@ -263,8 +275,7 @@ function dispatch(action) {
       landing: action.position, position: atGate() ? [0, -.47] : [0, -2.98],
       lookHeight: atGate() ? .95 : 1.70
     });
-  } else if (action.type === 'vessel') chooseVessel(action.id);
-  else handleXRMenu(action);
+  } else handleXRMenu(action);
 }
 
 const menuItem = (label, type, index) => ({ label, action: { type, index } });
@@ -276,13 +287,22 @@ function showXRMenu() {
   const items = [
     menuItem('Κείμενα και πηγές', 'reading', 0), menuItem('Το αρχικό βίντεο', 'video')
   ];
+  let copy;
   if (atGate()) {
-    items.unshift(menuItem(reference ? 'Κρύψε την εικόνα' : 'Δες την εικόνα', 'reference'), menuItem('Ανακάτεμα', 'shuffle'));
-    if (!session.gateComplete) items.push(assisting ? menuItem('Σταμάτησε τη λύση', 'stop-assist') :
+    items.unshift(menuItem('Δες την εικόνα', 'reference'), menuItem('Ανακάτεμα', 'shuffle'));
+    if (session.gateComplete) items.unshift(menuItem('Στους σταθμούς', 'enter'));
+    else items.push(assisting ? menuItem('Σταμάτησε τη λύση', 'stop-assist') :
       menuItem('Αυτόματη λύση', 'assist'));
-  } else if (session.current) items.unshift(menuItem('Υπόδειξη', 'hint'));
+    copy = session.gateComplete ? lesson.baptism.caption :
+      'Παζλ ' + session.placed.size + ' / 6. Πιάσε με τη λαβή και άφησε στη φωτισμένη υποδοχή.';
+  } else {
+    if (session.current) items.unshift(menuItem('Υπόδειξη', 'hint'));
+    copy = session.complete ? 'Οι τέσσερις συνδέσεις ολοκληρώθηκαν.' :
+      'Συνδέσεις ' + session.count + ' / 4. Στόχευσε το δοχείο και κράτησε τη σκανδάλη.';
+  }
   items.push(menuItem('Από την αρχή', 'confirm-reset'), menuItem('Έξοδος VR', 'exit'), close);
-  xrMenu.show('Μενού', 'Αριστερός μοχλός για κίνηση, δεξιός για στροφή. Στόχευσε τους κύκλους στο έδαφος για τηλεμεταφορά.', items);
+  const guidance = notice || 'Αριστερός μοχλός για κίνηση, δεξιός για στροφή. Οι κύκλοι στο έδαφος είναι σημεία τηλεμεταφοράς.';
+  xrMenu.show('Μενού', copy + '  ' + guidance, items);
   refreshInput();
 }
 
@@ -297,6 +317,7 @@ function showXRReading(index) {
 function handleXRMenu(action) {
   switch (action.type) {
     case 'xr-menu': showXRMenu(); return;
+    case 'reference': xrMenu.show('Η εικόνα της Βάπτισης', '', [back, close], true, gate.image); return;
     case 'hint': xrMenu.show('Υπόδειξη', session.visibleStation.hint, [back, close], true); return;
     case 'reading': showXRReading(action.index); return;
     case 'confirm-reset':
@@ -309,7 +330,6 @@ function handleXRMenu(action) {
       showVideoAfterXR = true;
       renderer.xr.getSession()?.end();
       break;
-    case 'reference': reference = !reference; break;
     case 'shuffle': shuffleTiles(); break;
     case 'assist': assist(); break;
     case 'stop-assist': stopAssist(); break;
@@ -334,7 +354,7 @@ function connectControllers() {
     scene.add(cursor);
     hands.push({ controller, grip, line, cursor });
     controller.addEventListener('squeezestart', () => {
-      if (atGate() && ready && !xrMenu.opened && !reference && !assisting) {
+      if (atGate() && ready && !xrMenu.opened && !assisting) {
         if (carry.grab(controller, 'grip', grip.visible ? grip : controller, gate.tiles)) announce();
       }
     });
@@ -370,7 +390,6 @@ function connectControllers() {
   renderer.xr.addEventListener('sessionend', () => {
     carry.cancel();
     stopPour();
-    reference = false;
     xrMenu.enable(false);
     document.body.classList.remove('xr-active');
     rig.position.set(0, 0, 0);
@@ -388,30 +407,31 @@ function connectControllers() {
 }
 
 function bindPourControls() {
-  const pour = el('pour');
-  pour.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || !aimed) return;
+  fireButton.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !beginPour({ pointerId: event.pointerId })) return;
     event.preventDefault();
-    pour.setPointerCapture(event.pointerId);
-    beginPour({ pointerId: event.pointerId, field: true });
+    fireButton.setPointerCapture(event.pointerId);
   });
-  pour.addEventListener('keydown', event => {
+  fireButton.addEventListener('keydown', event => {
     if (event.code !== 'Space' && event.code !== 'Enter') return;
     event.preventDefault();
-    if (!event.repeat && aimed) beginPour({ field: true, key: event.code });
+    if (!event.repeat) beginPour({ key: event.code });
+  });
+  document.addEventListener('keydown', event => {
+    if (inXR() || event.code !== 'Space' || event.repeat ||
+        event.target.closest?.('button, input, select, textarea, a, [contenteditable]')) return;
+    if (beginPour({ key: event.code })) event.preventDefault();
   });
   document.addEventListener('keyup', event => { if (event.code === shot?.key) stopPour(); });
 
   canvas.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || inXR() || !canPour()) return;
-    screenRay({ x: event.clientX, y: event.clientY });
-    const id = hitVessel();
-    if (!id) return;
+    if (event.button !== 0 || event.pointerType === 'touch' || inXR() || shot || !canPour()) return;
+    const position = { x: event.clientX, y: event.clientY };
+    screenRay(position);
+    if (!hitVessel() || !beginPour({ pointerId: event.pointerId, position })) return;
     event.stopImmediatePropagation();
     event.preventDefault();
     canvas.setPointerCapture(event.pointerId);
-    chooseVessel(id);
-    beginPour({ pointerId: event.pointerId, position: { x: event.clientX, y: event.clientY } });
   }, true);
   canvas.addEventListener('pointermove', event => {
     if (shot?.pointerId === event.pointerId && shot.position) {
@@ -428,7 +448,7 @@ function bindPourControls() {
 
 function updateHands() {
   const play = inXR();
-  const handling = play && atGate() && ready && !xrMenu.opened && !reference && !assisting;
+  const handling = play && atGate() && ready && !xrMenu.opened && !assisting;
   if (carry.held && (!handling || !carry.held.pose.visible)) carry.cancel();
   carry.update(handling ? gate.slots : []);
   for (const { controller, grip, cursor, line } of hands) {
@@ -447,21 +467,22 @@ function updateHands() {
 function updateWater(time, dt, immersive) {
   const quiz = water();
   if (!quiz) return;
+  const permitted = canPour();
+  const active = Boolean(shot && permitted);
   let id = null;
-  const active = Boolean(shot && canPour());
   if (active && shot.controller) {
     controllerRay(shot.controller);
     id = hitVessel();
-  } else if (active && shot.position) {
-    screenRay(shot.position);
+  } else if (permitted && !immersive) {
+    screenRay(shot?.position);
     id = hitVessel();
-  } else if (active) id = aimed;
+  }
+  reticle.classList.toggle('hot', !immersive && Boolean(id) && !shot?.position);
   quiz.update(time, dt, session, head, reduced(), !atGate(), {
     id, active, xr: immersive, direction: waterDirection.copy(ray.ray.direction),
     origin: active && shot?.controller ? waterOrigin.copy(ray.ray.origin) : null
   });
   quiz.blaster.visible &&= active;
-  if (!atGate() && !immersive) el('water-level').value = quiz.fill.levels.get(aimed) || 0;
 }
 
 function frame(time) {
@@ -478,12 +499,10 @@ function frame(time) {
       assistAt = time + (reduced() ? 140 : 350);
       render();
     }
-    if (atGate()) gate.update(dt, head, reduced(), inXR());
+    if (atGate()) gate.update(dt, head, reduced());
     else stations.update(dt, head, reduced(), ui.modal || xrMenu.opened || document.hidden);
     updateHands();
     updateWater(time, dt, inXR());
-    if (noticeUntil && performance.now() >= noticeUntil) announce();
-    virtualNotice.visible = inXR() && noticeUntil > 0 && !xrMenu.opened;
     xrMenu.update(head);
   }
   renderer.render(scene, camera);
@@ -538,13 +557,6 @@ async function start() {
   xrMenu = new XRMenu(scene, camera, { hideToggleWhileOpen: true });
   xrMenu.toggle.position.set(.85, .76, -1.65);
   carry = new HandCarry(scene);
-  virtualNotice = panel('', 1.22, .21, null, { dark: true, paragraph: true });
-  virtualNotice.position.set(-.24, -.30, -1.65);
-  virtualNotice.material.depthTest = false;
-  virtualNotice.material.depthWrite = false;
-  virtualNotice.renderOrder = 1001;
-  virtualNotice.visible = false;
-  camera.add(virtualNotice);
   connectControllers();
   bindPourControls();
   window.addEventListener('resize', resize);
@@ -554,8 +566,8 @@ async function start() {
     worldMedia.jordan.skybox, lesson.baptism.image, ...lesson.stations.map(station => station.image)
   ].map(loadTexture));
   terrain = makeLandscape(scene, sky);
-  gate = new BaptismPuzzle(gateRoot, baptism, lesson.baptism.caption);
-  gate.sync(session, null, false, true);
+  gate = new BaptismPuzzle(gateRoot, baptism);
+  gate.sync(session, null, true);
   stations = makeRiverStations(riverRoot, camera, session, images, answer, finishAnswer);
   landings.gate = approach.gate.map(([x, z]) => addLanding(gateRoot, x, z));
   landings.river = approach.river.map(([x, z]) => addLanding(riverRoot, x, z));

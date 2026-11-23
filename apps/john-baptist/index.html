@@ -6,50 +6,16 @@
   <meta name="theme-color" content="#172f31">
   <title>Ο Ιωάννης ο Βαπτιστής · Στον Ιορδάνη</title>
 </head>
-<body>
+<body class="interface-collapsed">
   <main class="experience" aria-label="Ο Ιωάννης ο Βαπτιστής στον Ιορδάνη">
     <canvas id="world" aria-label="Τρισδιάστατη όχθη του Ιορδάνη"></canvas>
-    <header class="topbar">
-      <div class="place">
-        <h1>Ο Ιωάννης ο Βαπτιστής</h1>
-        <p id="area">Η Βάπτιση στον Ιορδάνη</p>
-      </div>
-      <div class="tools">
-        <button id="vr" type="button" hidden>Είσοδος σε VR</button>
-        <button id="menu" type="button">Μενού</button>
-      </div>
-    </header>
-    <aside id="activity" class="activity">
-      <section id="gate">
-        <div class="level-head">
-          <h2>Η εικόνα της Βάπτισης</h2>
-          <output id="tiles-count" aria-label="Κομμάτια στη θέση τους">0 / 6</output>
-        </div>
-        <p id="gate-copy">Τοποθέτησε τα έξι κομμάτια στις υποδοχές.</p>
-        <div class="actions">
-          <button id="open-puzzle" class="primary" type="button">Άνοιγμα παζλ</button>
-          <button id="enter-river" class="primary" type="button" hidden>Στους σταθμούς</button>
-        </div>
-      </section>
-      <section id="river" hidden>
-        <div class="level-head">
-          <h2 id="station-title">Επίσκεψη στην Ελισάβετ</h2>
-          <output id="stations-count" aria-label="Ολοκληρωμένοι σταθμοί">0 / 4</output>
-        </div>
-        <p id="sentence"></p>
-        <fieldset id="water-choices">
-          <legend class="sr-only">Δοχείο προς γέμισμα</legend>
-          <div id="choices" class="choices"></div>
-        </fieldset>
-        <div id="water-controls" class="water-controls">
-          <button id="pour" class="primary" type="button" disabled>Κράτησε για να γεμίσει</button>
-          <progress id="water-level" max="1" value="0" aria-label="Στάθμη νερού"></progress>
-        </div>
-      </section>
-      <p id="notice" role="status" aria-live="polite"></p>
-    </aside>
-    <div id="touch-walk" class="touch-walk" aria-hidden="true">
-      <div class="touch-walk-pad"><span id="touch-walk-stick"></span></div>
+    <button id="menu" class="menu-toggle" type="button" aria-haspopup="dialog" aria-controls="menu-dialog" aria-expanded="false">Μενού</button>
+    <span id="reticle" aria-hidden="true" hidden></span>
+    <button id="fire-button" type="button" aria-label="Κράτησε για να ρίξεις νερό στο στόχαστρο" aria-pressed="false" hidden>
+      <span aria-hidden="true">◉</span><span>Νερό</span>
+    </button>
+    <div id="touch-walk" class="touch-walk" role="group" aria-label="Χειριστήριο κίνησης αφής" hidden>
+      <div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span id="touch-walk-stick" aria-hidden="true"></span></div>
     </div>
     <p id="loading" class="loading" role="status">Φορτώνεται ο Ιορδάνης…</p>
   </main>
@@ -81,7 +47,34 @@
 
   <dialog id="menu-dialog" aria-labelledby="menu-title">
     <div class="dialog-inner">
-      <div class="dialog-head"><h2 id="menu-title">Μενού</h2><button type="button" data-close autofocus>Κλείσιμο</button></div>
+      <div class="dialog-head">
+        <h2 id="menu-title">Ο Ιωάννης ο Βαπτιστής</h2>
+        <button type="button" data-close autofocus>Κλείσιμο</button>
+      </div>
+      <section id="gate" class="menu-progress">
+        <div class="level-head">
+          <h3>Η εικόνα της Βάπτισης</h3>
+          <output id="tiles-count" aria-label="Κομμάτια στη θέση τους">0 / 6</output>
+        </div>
+        <p id="gate-copy">Τοποθέτησε τα έξι κομμάτια στις υποδοχές.</p>
+        <div class="actions">
+          <button id="open-puzzle" class="primary" type="button">Άνοιγμα παζλ</button>
+          <button id="enter-river" class="primary" type="button" hidden>Στους σταθμούς</button>
+        </div>
+      </section>
+      <section id="river" class="menu-progress" hidden>
+        <div class="level-head">
+          <h3 id="station-title">Επίσκεψη στην Ελισάβετ</h3>
+          <output id="stations-count" aria-label="Ολοκληρωμένοι σταθμοί">0 / 4</output>
+        </div>
+        <p id="sentence" aria-live="polite"></p>
+        <div id="water-choices">
+          <p>Στόχευσε ένα δοχείο</p>
+          <div id="choices" class="actions" role="group" aria-label="Στόχευση δοχείου"></div>
+        </div>
+      </section>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <button id="vr" class="primary" type="button" hidden>Είσοδος σε VR</button>
       <div id="menu-actions" class="menu-actions"></div>
       <div id="menu-content"></div>
     </div>

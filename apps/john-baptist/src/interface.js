@@ -33,7 +33,7 @@ export class LessonInterface {
     this.session = session;
     this.api = api;
     this.dialogs = [menu, puzzle];
-    this.choiceInputs = new Map();
+    this.aimButtons = new Map();
     this.slots = TILES.map(tile => {
       const button = make('button', String(tile + 1));
       button.type = 'button';
@@ -71,18 +71,17 @@ export class LessonInterface {
     });
     this.trayOrder = [];
     for (const station of session.choices) {
-      const label = make('label'), input = make('input');
-      input.type = 'radio';
-      input.name = 'word';
-      input.value = station.id;
-      input.addEventListener('change', () => api.aim(station.id));
-      label.append(input, make('span', station.word));
-      el('choices').append(label);
-      this.choiceInputs.set(station.id, input);
+      const button = make('button', station.word);
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Στόχευσε το δοχείο «' + station.word + '»');
+      button.onclick = () => api.aim(station.id);
+      el('choices').append(button);
+      this.aimButtons.set(station.id, button);
     }
     for (const dialog of this.dialogs) {
       dialog.addEventListener('close', () => {
         if (dialog === menu) el('menu-content').replaceChildren();
+        el('menu').setAttribute('aria-expanded', String(menu.open));
         api.dialogChanged();
       });
       dialog.querySelector('[data-close]').addEventListener('click', () => dialog.close());
@@ -98,6 +97,7 @@ export class LessonInterface {
   open(dialog) {
     this.close(dialog);
     if (!dialog.open) dialog.showModal();
+    el('menu').setAttribute('aria-expanded', String(menu.open));
     this.api.dialogChanged();
   }
 
@@ -114,11 +114,18 @@ export class LessonInterface {
     }
   }
 
-  render({ selected, aimed, assisting }) {
+  syncControls(playing) {
+    const useWater = playing && this.session.level === 'river' && !this.session.complete;
+    el('touch-walk').hidden = !playing;
+    el('fire-button').hidden = el('reticle').hidden = !useWater;
+    el('fire-button').disabled = this.session.busy;
+    document.body.classList.toggle('water-mode', useWater);
+  }
+
+  render({ selected, assisting }) {
     const session = this.session, gate = session.level === 'gate';
     el('gate').hidden = !gate;
     el('river').hidden = gate;
-    el('area').textContent = gate ? 'Η Βάπτιση στον Ιορδάνη' : 'Οι σταθμοί της όχθης';
     if (gate) {
       const complete = session.gateComplete;
       el('tiles-count').textContent = session.placed.size + ' / 6';
@@ -153,13 +160,10 @@ export class LessonInterface {
     el('stations-count').textContent = session.count + ' / 4';
     const word = session.solved(station.id) ? station.word : '_______';
     strongSentence(el('sentence'), station.before, word, station.after);
-    el('sentence').setAttribute('aria-live', 'polite');
-    el('water-choices').hidden = el('water-controls').hidden = session.complete;
-    for (const [id, input] of this.choiceInputs) {
-      input.checked = id === aimed;
-      input.disabled = session.busy || session.solved(id);
+    el('water-choices').hidden = session.complete;
+    for (const [id, button] of this.aimButtons) {
+      button.disabled = session.busy || session.solved(id);
     }
-    el('pour').disabled = !aimed || session.busy || session.solved(aimed);
   }
 
   showMenu(from = 'main') {
@@ -173,6 +177,7 @@ export class LessonInterface {
       actions.append(item);
     };
     if (this.session.level === 'gate') {
+      el('open-puzzle').textContent = from === 'puzzle' ? 'Πίσω στο παζλ' : 'Άνοιγμα παζλ';
       button('Δες την εικόνα', () => this.showContent('picture'));
       button('Ανακάτεμα', () => {
         this.api.shuffle();
@@ -185,10 +190,10 @@ export class LessonInterface {
         this.api.assist();
       });
     } else if (this.session.current) button('Υπόδειξη', () => this.showContent('hint'));
+    button('Χειρισμός', () => this.showContent('controls'));
     button('Κείμενα και πηγές', () => this.showContent('reading'));
     button('Το αρχικό βίντεο', () => this.showContent('video'));
     button('Από την αρχή', () => this.showContent('reset'));
-    if (from === 'puzzle') button('Πίσω στο παζλ', () => this.open(puzzle));
     this.open(menu);
   }
 
@@ -207,6 +212,12 @@ export class LessonInterface {
       content.append(image, make('p', lesson.baptism.caption));
     } else if (section === 'hint') {
       content.append(make('p', this.session.visibleStation.hint));
+    } else if (section === 'controls') {
+      content.append(
+        make('p', 'Σύρε στην εικόνα για να κοιτάξεις γύρω σου. Κινήσου με τον μοχλό αφής, τα βέλη ή τα πλήκτρα WASD.'),
+        make('p', 'Στο παζλ, διάλεξε ένα κομμάτι και μετά μία υποδοχή. Στους σταθμούς, φέρε το στόχαστρο πάνω στο δοχείο και κράτησε πατημένο το «Νερό» ή το διάστημα.'),
+        make('p', 'Στο VR, κινήσου με τον αριστερό μοχλό και στρίψε με τον δεξιό. Πιάσε τα κομμάτια με τη λαβή. Στόχευσε και κράτησε τη σκανδάλη για να ρίξεις νερό.')
+      );
     } else if (section === 'reading') {
       for (const station of lesson.stations) {
         const article = make('article');

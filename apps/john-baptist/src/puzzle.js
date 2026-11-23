@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { panel, setText } from '../../../shared/journey/text-panels.js';
+import { panel } from '../../../shared/journey/text-panels.js';
 import { TILES } from './session.js';
 
 const W = 1.48, H = W * 9 / 16;
@@ -39,7 +39,8 @@ const edge = material(0x855735);
 const rim = material(0xe6b86b, .57);
 
 export class BaptismPuzzle {
-  constructor(root, image, caption) {
+  constructor(root, image) {
+    this.image = image;
     this.board = this.makeBench(root, -.88, 'Υποδοχές');
     this.tray = this.makeBench(root, .88, 'Δίσκος');
     this.pickables = [];
@@ -61,19 +62,6 @@ export class BaptismPuzzle {
       this.slots.push(well);
       this.tiles.push(piece);
     }
-    this.reference = flat(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: image, toneMapped: false }));
-    this.reference.visible = false;
-    this.reference.position.z = .127;
-    this.board.add(this.reference);
-    this.progress = panel('0 / 6', .54, .22, null, { dark: true });
-    this.progress.position.set(0, 1.46, -.62);
-    root.add(this.progress);
-    this.instruction = panel('Πιάσε τη λαβή · άφησε στη φωτισμένη υποδοχή', 2.55, .29, null, { dark: true });
-    this.instruction.position.set(0, 1.85, -.66);
-    root.add(this.instruction);
-    this.caption = panel(caption, 2.72, .43, null, { dark: true, paragraph: true });
-    this.caption.position.set(0, 2.12, -.66);
-    root.add(this.caption);
     this.enter = panel('Στους σταθμούς →', 1.04, .29, { type: 'enter' }, { dark: true });
     this.enter.position.set(0, 1.62, -.66);
     root.add(this.enter);
@@ -97,20 +85,14 @@ export class BaptismPuzzle {
     return base;
   }
 
-  sync(session, selected, reference = false, immediate = false) {
-    this.reference.visible = reference;
-    this.enter.visible = this.caption.visible = session.gateComplete;
-    this.progress.position.y = session.gateComplete ? 1.28 : 1.46;
-    if (this.count !== session.placed.size) {
-      this.count = session.placed.size;
-      setText(this.progress, this.count + ' / 6', { dark: true });
-    }
+  sync(session, selected, immediate = false) {
+    this.enter.visible = session.gateComplete;
     for (const tile of TILES) {
       const piece = this.tiles[tile], slot = this.slots[tile], placed = session.placed.has(tile);
       if (piece.userData.carried) continue;
       const parent = placed ? this.board : this.tray;
       piece.userData.disabled = placed;
-      slot.userData.disabled = placed || reference;
+      slot.userData.disabled = placed;
       slot.material.emissive.setHex(selected !== null && !placed ? 0x324c3a : 0x000000);
       piece.material.color.setHex(tile === selected ? 0xffdeb0 : 0xffffff);
       const target = point(placed ? tile : session.tileOrder.indexOf(tile), placed ? .093 : .097);
@@ -123,14 +105,10 @@ export class BaptismPuzzle {
     }
   }
 
-  update(dt, head, reduced, immersive) {
-    const awayFromBench = Math.hypot(head.x, head.z + .47) > 1.48;
-    this.instruction.visible = immersive && this.count < TILES.length && awayFromBench;
+  update(dt, head, reduced) {
     for (const [piece, target] of this.poses) {
       if (!piece.userData.carried) piece.position.lerp(target, reduced ? 1 : 1 - Math.exp(-16 * dt));
     }
-    for (const sign of [this.progress, this.instruction, this.caption, this.enter]) {
-      sign.lookAt(head.x, sign.position.y, head.z);
-    }
+    if (this.enter.visible) this.enter.lookAt(head.x, this.enter.position.y, head.z);
   }
 }
