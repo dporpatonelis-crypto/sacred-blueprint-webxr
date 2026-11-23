@@ -44,7 +44,7 @@ export class XRMenu {
     if (image) {
       const width = 2.92;
       const illustration = new THREE.Mesh(new THREE.PlaneGeometry(width, width * image.image.height / image.image.width),
-        new THREE.MeshBasicMaterial({ map: image.clone(), toneMapped: false }));
+        new THREE.MeshBasicMaterial({ map: image.clone(), transparent: true, toneMapped: false }));
       illustration.position.y = .165;
       this.root.add(illustration);
     } else {
