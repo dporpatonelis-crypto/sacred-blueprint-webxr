@@ -35,14 +35,22 @@ export class XRMenu {
     this.root.traverse(o => { o.geometry?.dispose(); if(o.material) { o.material.map?.dispose(); o.material.dispose(); } });
     this.root.clear(); this.buttons = [];
   }
-  show(title, copy, items, reading = false) {
+  show(title, copy, items, reading = false, image = null) {
     const alreadyOpen = this.opened;
     this.clear();
     const background = panel('', 4.35, reading ? 3.1 : 3.5, null, {dark:true});
     background.position.set(0, -.05, -.035); this.root.add(background);
     const heading = panel(title, 4.05, .45, null, {dark:true}); heading.position.y = 1.25; this.root.add(heading);
-    const text = panel(copy, 4.05, reading ? 1.5 : .8, null, {dark:true,paragraph:true});
-    text.position.y = reading ? .22 : .57; this.root.add(text);
+    if (image) {
+      const width = 2.92;
+      const illustration = new THREE.Mesh(new THREE.PlaneGeometry(width, width * image.image.height / image.image.width),
+        new THREE.MeshBasicMaterial({ map: image.clone(), transparent: true, toneMapped: false }));
+      illustration.position.y = .165;
+      this.root.add(illustration);
+    } else {
+      const text = panel(copy, 4.05, reading ? 1.5 : .8, null, {dark:true,paragraph:true});
+      text.position.y = reading ? .22 : .57; this.root.add(text);
+    }
     items.forEach((item, index) => {
       const button = panel(item.label, 1.92, .38, item.action, {dark:true});
       button.position.set(index % 2 ? 1.02 : -1.02, (reading ? -.88 : -.08) - Math.floor(index / 2) * .46, .015);
