@@ -98,6 +98,16 @@
       "topics": ["Ιωάννης ο Θεολόγος", "Μυστικός Δείπνος", "Γαλιλαία", "Τιβεριάδα"],
       "connections": 4,
       "status": "published"
+    },
+    {
+      "id": "athens-greek-culture",
+      "directory": "apps/athens-greek-culture",
+      "title": "Αθήνα και ελληνικός πολιτισμός",
+      "description": "Συναρμολόγησε τη σύνθεση της Αθήνας και σύνδεσε έξι μορφές με τη δημοκρατία, τη φιλοσοφία, την επιστήμη και τον ελληνιστικό κόσμο.",
+      "preview": "previews/athens-greek-culture.jpg",
+      "topics": ["Αρχαία Αθήνα", "Περικλής", "Σωκράτης", "Πλάτων", "Αριστοτέλης", "Μέγας Αλέξανδρος", "Πλωτίνος"],
+      "connections": 6,
+      "status": "published"
     }
   ]
 }

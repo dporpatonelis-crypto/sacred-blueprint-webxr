@@ -3,22 +3,29 @@ import { ManuscriptConnections } from '../manuscript-connections.js';
 import { WaterQuiz } from '../water-quiz.js';
 import { panel } from '../text-panels.js';
 
-const places = [[-4.13, -2.68], [-2.70, -4.73], [2.70, -4.73], [4.13, -2.68]];
+const defaultPlaces = [[-4.13, -2.68], [-2.70, -4.73], [2.70, -4.73], [4.13, -2.68]];
 const imageRadius = .90;
 const imageHeight = 2.18;
 
 export function stationWorld(lesson) {
+  const positions = lesson.stations.map((station, index) =>
+    station.position || defaultPlaces[index] || [Math.cos(index / lesson.stations.length * Math.PI * 2) * 4.2,
+      Math.sin(index / lesson.stations.length * Math.PI * 2) * 4.2 - 2.4]);
   return {
     id: lesson.id + '-stations',
     spawn: [0, 4.9], xrSpawn: [0, 3.1], lookAt: [0, .87, -.12],
-    bounds: { minX: -6.8, maxX: 6.8, minZ: -5.8, maxZ: 9 },
+    bounds: {
+      minX: Math.min(-6.8, ...positions.map(([x]) => x - 1.2)),
+      maxX: Math.max(6.8, ...positions.map(([x]) => x + 1.2)),
+      minZ: Math.min(-5.8, ...positions.map(([, z]) => z - 1.8)),
+      maxZ: 9
+    },
+    promptHeight: lesson.promptHeight,
     stations: lesson.stations.map((station, index) => ({
-      ...station, position: places[index], height: 2.58
+      ...station, position: positions[index], height: 2.58
     }))
   };
 }
-
-const vesselApproaches = places.map(() => ({ quizPosition: [0, -.12] }));
 
 function illustrationTexture(source, fit) {
   const { image } = source;
@@ -89,6 +96,7 @@ function makeFrame(scene, station, index, source, fit) {
 
 export function makeStations(root, camera, world, session, images, answer, finish) {
   const { lesson } = session;
+  const approaches = world.stations.map(() => ({ quizPosition: [0, -.12] }));
   const frames = new Map(world.stations.map((station, i) =>
     [station.id, makeFrame(root, station, i, images[i], lesson.fitStationImages)]));
   const muted = new THREE.Color(0xb0aaa1), bright = new THREE.Color(0xffffff);
@@ -101,19 +109,22 @@ export function makeStations(root, camera, world, session, images, answer, finis
     }
   };
 
-  const manuscript = new ManuscriptConnections(root, world, session, stories, vesselApproaches, finish, {
+  const manuscript = new ManuscriptConnections(root, world, session, stories, approaches, finish, {
     heading: lesson.title.toLocaleUpperCase('el'),
     title: lesson.manuscriptTitle,
     instruction: '',
     entryLabel: 'Σταθμός',
     entries: lesson.stations.map(station => ({
-      stationId: station.id, text: station.before + station.word + station.after,
+      stationId: station.id, text: station.manuscriptText || station.before + station.word + station.after,
       keywords: [station.word], sourceLabel: station.title, interpretation: ''
     })),
     readingPages: [],
     centralPosition: [0, 2.07, -2.98],
     compactEntries: true,
     entryRowHeight: lesson.manuscriptRowHeight ?? 130,
+    entryFontSize: lesson.manuscriptEntryFontSize,
+    entryBaseline: lesson.manuscriptEntryBaseline,
+    entryLineHeight: lesson.manuscriptEntryLineHeight,
     maskUnsolvedKeywords: true,
     passiveEntries: true,
     flightMs: 1850,
@@ -124,7 +135,7 @@ export function makeStations(root, camera, world, session, images, answer, finis
     labelSide: 0,
     labelFront: .18
   });
-  const water = new WaterQuiz(root, world, session, camera, answer, vesselApproaches);
+  const water = new WaterQuiz(root, world, session, camera, answer, approaches);
 
   return {
     water,
