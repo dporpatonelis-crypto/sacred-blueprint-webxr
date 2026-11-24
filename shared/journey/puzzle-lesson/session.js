@@ -20,7 +20,10 @@ export class LessonSession {
   constructor(source) {
     this.lesson = {
       ...source,
-      stations: source.stations.map(station => ({ ...station, prompt: station.before + '_______' + station.after }))
+      stations: source.stations.map(station => ({
+        ...station,
+        prompt: station.prompt ?? station.before + '_______' + station.after
+      }))
     };
     this.stationIds = this.lesson.stations.map(station => station.id);
     this.storageKey = source.id + '-webxr.v1';

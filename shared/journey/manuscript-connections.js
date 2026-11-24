@@ -7,9 +7,20 @@ const ease = value => { const t = clamp(value); return t * t * (3 - 2 * t); };
 const ink = 0x50381f, gold = 0xffde96;
 
 function texture(canvas) { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
-function wrapped(ctx, text, width) {
+function wrapped(ctx, text, width, keepTogether = []) {
   const lines = []; let line = '';
-  for (const token of text.split(/\s+/u)) {
+  const words = text.split(/\s+/u), tokens = [];
+  for (let index = 0; index < words.length; index++) {
+    const phrase = keepTogether.find(value => {
+      const parts = value.split(/\s+/u);
+      return words.slice(index, index + parts.length).join(' ') === value;
+    });
+    if (phrase) {
+      tokens.push(phrase);
+      index += phrase.split(/\s+/u).length - 1;
+    } else tokens.push(words[index]);
+  }
+  for (const token of tokens) {
     const next = line ? line + ' ' + token : token;
     if (line && ctx.measureText(next).width > width) { lines.push(line); line = token; } else line = next;
   }
@@ -81,25 +92,26 @@ export class ManuscriptConnections {
         ctx.fillStyle = selected ? '#f1cf83' : done ? '#d9dfb8' : '#f9edce'; ctx.strokeStyle = selected ? '#9a641d' : '#b18c4f'; ctx.lineWidth = selected ? 4 : 1.5;
         ctx.beginPath(); ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 12); ctx.fill(); ctx.stroke();
         ctx.textAlign = 'left'; ctx.font = '16px system-ui'; ctx.fillStyle = '#806331'; ctx.fillText((done ? '✓ ' : '') + (content.entryLabel || 'ΧΩΡΙΟ') + ' ' + (index + 1) + (entry.sourceLabel ? ' · ' + entry.sourceLabel.toLocaleUpperCase('el') : entry.note ? ' · ΠΡΟΣΩΠΙΚΗ ΕΦΑΡΜΟΓΗ' : ''), rect.x + 23, rect.y + 29);
-        ctx.font = `28px ${FONT}`; ctx.fillStyle = done ? '#3c4c2b' : '#50381f';
-        const anchors = []; const lines = wrapped(ctx, entry.text, rect.w - 48);
+        ctx.font = `${content.entryFontSize ?? 28}px ${FONT}`; ctx.fillStyle = done ? '#3c4c2b' : '#50381f';
+        const anchors = []; const lines = wrapped(ctx, entry.text, rect.w - 48, entry.keywords);
         for (const [lineIndex, line] of lines.entries()) {
-          const baseline = rect.y + 73 + lineIndex * 37; let x = rect.x + 24;
-          for (const [tokenIndex, token] of line.split(' ').entries()) {
-            if (tokenIndex) x += ctx.measureText(' ').width;
-            const keyword = entry.keywords.find(word => token.includes(word));
-            if (!keyword) ctx.fillText(token, x, baseline);
-            else {
-              const at = token.indexOf(keyword), before = token.slice(0, at), after = token.slice(at + keyword.length), start = x + ctx.measureText(before).width;
-              if (before) ctx.fillText(before, x, baseline);
-              const g = this.glyphs.get(keyword), factor = 28 / 64;
-              const glyphRect = { x: start - g.pad * factor, y: baseline - (g.ascent + g.pad) * factor, w: g.width * factor, h: g.height * factor };
-              anchors.push({ text: keyword, rect: glyphRect });
-              if (content.maskUnsolvedKeywords && !done) ctx.fillRect(start, baseline + 4, ctx.measureText(keyword).width, 2);
-              if (after) ctx.fillText(after, start + ctx.measureText(keyword).width, baseline);
-            }
-            x += ctx.measureText(token).width;
+          const baseline = rect.y + (content.entryBaseline ?? 73) + lineIndex * (content.entryLineHeight ?? 37);
+          let x = rect.x + 24, cursor = 0;
+          const matches = entry.keywords.map(keyword => ({ keyword, at: line.indexOf(keyword) }))
+            .filter(match => match.at >= 0).sort((a, b) => a.at - b.at);
+          for (const { keyword, at } of matches) {
+            const before = line.slice(cursor, at);
+            if (before) ctx.fillText(before, x, baseline);
+            const start = x + ctx.measureText(before).width;
+            const g = this.glyphs.get(keyword), factor = (content.entryFontSize ?? 28) / 64;
+            const glyphRect = { x: start - g.pad * factor, y: baseline - (g.ascent + g.pad) * factor, w: g.width * factor, h: g.height * factor };
+            anchors.push({ text: keyword, rect: glyphRect });
+            if (content.maskUnsolvedKeywords && !done) ctx.fillRect(start, baseline + 4, ctx.measureText(keyword).width, 2);
+            x = start + ctx.measureText(keyword).width;
+            cursor = at + keyword.length;
           }
+          const after = line.slice(cursor);
+          if (after) ctx.fillText(after, x, baseline);
         }
         layout.set(entry.stationId, anchors);
         if (!content.passiveEntries) hits.push({ rect, action: { type: 'word', id: entry.stationId } });

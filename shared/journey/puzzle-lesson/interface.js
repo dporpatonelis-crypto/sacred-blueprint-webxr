@@ -163,8 +163,15 @@ export class LessonInterface {
     el('station-title').textContent = session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
       (lesson.stations.indexOf(station) + 1) + ' · ' + station.title;
     el('stations-count').textContent = session.count + ' / ' + lesson.stations.length;
-    const word = session.solved(station.id) ? station.word : '_______';
-    strongSentence(el('sentence'), station.before, word, station.after);
+    if (station.question) {
+      el('sentence').replaceChildren(
+        make('span', station.question + ' '),
+        make('strong', session.solved(station.id) ? station.word : '…')
+      );
+    } else {
+      const word = session.solved(station.id) ? station.word : '_______';
+      strongSentence(el('sentence'), station.before, word, station.after);
+    }
     el('water-choices').hidden = session.complete;
     for (const [id, button] of this.aimButtons) {
       button.disabled = session.busy || session.solved(id);
@@ -197,7 +204,7 @@ export class LessonInterface {
     } else if (this.session.current) button('Υπόδειξη', () => this.showContent('hint'));
     button('Χειρισμός', () => this.showContent('controls'));
     button('Κείμενα και πηγές', () => this.showContent('reading'));
-    button('Το αρχικό βίντεο', () => this.showContent('video'));
+    if (this.session.lesson.video) button('Το αρχικό βίντεο', () => this.showContent('video'));
     button('Από την αρχή', () => this.showContent('reset'));
     this.open(menu);
   }
@@ -224,19 +231,34 @@ export class LessonInterface {
         make('p', 'Στο VR, κινήσου με τον αριστερό μοχλό και στρίψε με τον δεξιό. Πιάσε τα κομμάτια με τη λαβή. Στόχευσε και κράτησε τη σκανδάλη για να ρίξεις νερό.')
       );
     } else if (section === 'reading') {
+      if (lesson.historicalCaveat) content.append(make('p', lesson.historicalCaveat));
       for (const station of lesson.stations) {
         const article = make('article');
-        const passage = (label, text) => link(label, 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(text) + '&version=SBLGNT');
-        article.append(make('h3', station.title), make('p', station.reading), passage(station.source, station.passage));
-        if (station.relatedSource) article.append(' · ', passage(station.relatedSource, station.relatedPassage));
+        article.append(make('h3', station.title));
+        if (station.question) {
+          for (const text of [station.historicalContext, station.question, station.reading,
+            station.explanation, station.hint, station.source]) {
+            if (text) article.append(make('p', text));
+          }
+          for (const reference of station.references || []) {
+            const citation = make('p');
+            citation.append(link(reference.title, reference.url));
+            article.append(citation);
+          }
+        } else {
+          const passage = (label, text) => link(label, 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(text) + '&version=SBLGNT');
+          article.append(make('p', station.reading), passage(station.source, station.passage));
+          if (station.relatedSource) article.append(' · ', passage(station.relatedSource, station.relatedPassage));
+        }
         content.append(article);
       }
       const credits = make('p');
-      credits.append(link('Εικόνες και πηγές του αρχικού βίντεο', lesson.credits));
+      if (lesson.credits) credits.append(link(lesson.creditsLabel || 'Εικόνες και πηγές', lesson.credits));
       if (lesson.originalLesson) {
-        credits.append(document.createElement('br'), link('Αρχική δραστηριότητα στο Video Page', lesson.originalLesson));
+        if (credits.childNodes.length) credits.append(document.createElement('br'));
+        credits.append(link(lesson.originalLabel || 'Αρχική δραστηριότητα', lesson.originalLesson));
       }
-      content.append(credits);
+      if (credits.childNodes.length) content.append(credits);
     } else if (section === 'video') {
       const video = make('video');
       video.controls = true;

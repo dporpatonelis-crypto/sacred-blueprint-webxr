@@ -289,9 +289,8 @@ export function startPuzzleLesson(source, {
 
   function showXRMenu() {
     if (carry.held) carry.cancel();
-    const items = [
-      menuItem('Κείμενα και πηγές', 'reading', 0), menuItem('Το αρχικό βίντεο', 'video')
-    ];
+    const items = [menuItem('Κείμενα και πηγές', 'reading', 0)];
+    if (lesson.video) items.push(menuItem('Το αρχικό βίντεο', 'video'));
     let copy;
     if (atGate()) {
       items.unshift(menuItem('Δες την εικόνα', 'reference'), menuItem('Ανακάτεμα', 'shuffle'));
@@ -302,8 +301,8 @@ export function startPuzzleLesson(source, {
         'Παζλ ' + session.placed.size + ' / 6. Πιάσε με τη λαβή και άφησε στη φωτισμένη υποδοχή.';
     } else {
       if (session.current) items.unshift(menuItem('Υπόδειξη', 'hint'));
-      copy = session.complete ? 'Οι τέσσερις συνδέσεις ολοκληρώθηκαν.' :
-        'Συνδέσεις ' + session.count + ' / 4. Στόχευσε το δοχείο και κράτησε τη σκανδάλη.';
+      copy = session.complete ? 'Οι ' + lesson.stations.length + ' συνδέσεις ολοκληρώθηκαν.' :
+        'Συνδέσεις ' + session.count + ' / ' + lesson.stations.length + '. Στόχευσε το δοχείο και κράτησε τη σκανδάλη.';
     }
     items.push(menuItem('Από την αρχή', 'confirm-reset'), menuItem('Έξοδος VR', 'exit'), close);
     const guidance = notice || 'Αριστερός μοχλός για κίνηση, δεξιός για στροφή. Οι κύκλοι στο έδαφος είναι σημεία τηλεμεταφοράς.';
@@ -315,8 +314,10 @@ export function startPuzzleLesson(source, {
     const station = lesson.stations[index], controls = [back, close];
     if (index > 0) controls.unshift(menuItem('← Προηγούμενο', 'reading', index - 1));
     if (index < lesson.stations.length - 1) controls.unshift(menuItem('Επόμενο →', 'reading', index + 1));
-    const source = station.relatedSource ? station.source + ' · ' + station.relatedSource : station.source;
-    xrMenu.show(station.title, station.reading + '  ' + source, controls, true);
+    const references = station.references?.map(reference => reference.title).join(' · ');
+    const text = [station.historicalContext, station.question, station.reading, station.explanation, station.source, references]
+      .filter(Boolean).join('  ');
+    xrMenu.show(station.title, text, controls, true);
   }
 
   function handleXRMenu(action) {
