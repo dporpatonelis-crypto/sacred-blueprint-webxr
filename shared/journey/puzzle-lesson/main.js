@@ -50,7 +50,7 @@ export function startPuzzleLesson(source, {
 
   const ui = new LessonInterface(session, {
     select: selectTile, place: placeSelected, enter: enterRiver, shuffle: shuffleTiles,
-    aim: aimAtVessel, assist, stopAssist, restart,
+    aim: aimAtVessel, assist, stopAssist, restart, review: reviewStation, resumeReview,
     dialogChanged: refreshInput,
     selectedTile: () => selected, assisting: () => assisting
   });
@@ -188,8 +188,33 @@ export function startPuzzleLesson(source, {
     render();
   }
 
+  function reviewStation(id) {
+    if (!session.review(id)) return false;
+    stopPour();
+    water()?.fill.reset();
+    stations?.manuscript.cancel(false);
+    stations?.manuscript.start(id, reduced(), head);
+    ui.close();
+    xrMenu?.close();
+    announce('Επανεξέταση: η λέξη ταξιδεύει ξανά στην εικόνα.');
+    render();
+    return true;
+  }
+
+  function resumeReview() {
+    if (!session.reviewId) return false;
+    stations?.manuscript.cancel(false);
+    session.resume();
+    water()?.fill.reset();
+    ui.close();
+    xrMenu?.close();
+    announce();
+    render();
+    return true;
+  }
+
   function canPour() {
-    return ready && !atGate() && !session.busy && !session.complete && !ui.modal && !xrMenu.opened && !document.hidden;
+    return ready && !atGate() && !session.busy && !session.complete && !session.reviewId && !ui.modal && !xrMenu.opened && !document.hidden;
   }
 
   function beginPour(input) {
@@ -300,7 +325,11 @@ export function startPuzzleLesson(source, {
       copy = session.gateComplete ? lesson.puzzle.caption :
         'Παζλ ' + session.placed.size + ' / 6. Πιάσε με τη λαβή και άφησε στη φωτισμένη υποδοχή.';
     } else {
-      if (session.current) items.unshift(menuItem('Υπόδειξη', 'hint'));
+      if (session.current && !session.reviewId && !session.complete) items.unshift(menuItem('Υπόδειξη', 'hint'));
+      for (const [index, station] of lesson.stations.entries()) {
+        if (session.solved(station.id) && !session.busy) items.push(menuItem('Επανεξέταση · ' + station.title, 'review-station', index));
+      }
+      if (session.reviewId) items.unshift(menuItem('Συνέχεια στη διαδρομή', 'resume-review'));
       copy = session.complete ? 'Οι ' + lesson.stations.length + ' συνδέσεις ολοκληρώθηκαν.' :
         'Συνδέσεις ' + session.count + ' / ' + lesson.stations.length + '. Στόχευσε το δοχείο και κράτησε τη σκανδάλη.';
     }
@@ -315,7 +344,10 @@ export function startPuzzleLesson(source, {
     if (index > 0) controls.unshift(menuItem('← Προηγούμενο', 'reading', index - 1));
     if (index < lesson.stations.length - 1) controls.unshift(menuItem('Επόμενο →', 'reading', index + 1));
     const references = station.references?.map(reference => reference.title).join(' · ');
-    const text = [station.historicalContext, station.question, station.reading, station.explanation, station.source, references]
+    const phrase = station.before !== undefined ? station.before + station.word + station.after : '';
+    const text = [lesson.hymn?.text, lesson.hymn?.attribution, phrase, station.meaning,
+      station.historicalContext, station.question, station.reading, station.explanation,
+      station.hint, station.source, references]
       .filter(Boolean).join('  ');
     xrMenu.show(station.title, text, controls, true);
   }
@@ -326,6 +358,14 @@ export function startPuzzleLesson(source, {
       case 'reference': xrMenu.show(lesson.puzzle.title, '', [back, close], true, gate.image); return;
       case 'hint': xrMenu.show('Υπόδειξη', session.visibleStation.hint, [back, close], true); return;
       case 'reading': showXRReading(action.index); return;
+      case 'review-station':
+        reviewStation(lesson.stations[action.index]?.id);
+        render();
+        return;
+      case 'resume-review':
+        resumeReview();
+        render();
+        return;
       case 'confirm-reset':
         xrMenu.show('Από την αρχή;', lesson.puzzle.restartText,
           [back, menuItem('Μηδένισε την πρόοδο', 'restart')], true); return;

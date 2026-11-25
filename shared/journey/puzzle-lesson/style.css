@@ -128,7 +128,7 @@ dialog::backdrop { background: #0e2528b5; }
 .dialog-head h2 { font-size: clamp(1.25rem, 4vw, 1.85rem); }
 .puzzle { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(.6rem, 3vw, 1.3rem); margin: .75rem 0; }
 .puzzle h3 { font-size: 1.08rem; margin-bottom: .35rem; color: var(--gold); }
-.pieces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, 1fr); gap: 3px; aspect-ratio: 16 / 9; }
+.pieces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, 1fr); gap: 3px; aspect-ratio: var(--puzzle-aspect, 16 / 9); }
 .piece, .slot, .empty-piece { width: 100%; min-height: 0; padding: 0; border-radius: .15rem; }
 .slot { background: #2c514f; color: #e4d6b3; font-variant-numeric: tabular-nums; }
 .piece, .slot.placed { background-size: 300% 200%; background-repeat: no-repeat; background-color: #344d45; }
@@ -143,6 +143,7 @@ dialog::backdrop { background: #0e2528b5; }
 #menu-content p + p, #menu-content article + article, #menu-content .actions { margin-top: .65rem; }
 #menu-content img, #menu-content video { display: block; width: 100%; border-radius: .4rem; margin-bottom: .45rem; }
 #menu-content article h3 { color: var(--gold); }
+#menu-content .hymn-text { white-space: pre-line; font-family: Georgia, 'Times New Roman', serif; line-height: 1.8; }
 .xr-active .menu-toggle, .xr-active #touch-walk, .xr-active #fire-button, .xr-active #reticle { display: none !important; }
 
 @media (any-pointer: coarse) {

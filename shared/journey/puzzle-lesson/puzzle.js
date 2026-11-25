@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { panel } from '../text-panels.js';
 import { TILES } from './session.js';
 
-const W = 1.48, H = W * 9 / 16;
-const tileWidth = W / 3, tileHeight = H / 2;
+const W = 1.48;
 
 function material(color, roughness = .8) {
   return new THREE.MeshStandardMaterial({ color, roughness });
@@ -22,7 +21,7 @@ function flat(g, surface, action) {
   return mesh;
 }
 
-function point(index, z) {
+function point(index, z, tileWidth, tileHeight) {
   return new THREE.Vector3((index % 3 - 1) * tileWidth, (.5 - Math.floor(index / 3)) * tileHeight, z);
 }
 
@@ -41,6 +40,9 @@ const rim = material(0xe6b86b, .57);
 export class ImagePuzzle {
   constructor(root, image) {
     this.image = image;
+    const aspect = image.image.width / image.image.height || 16 / 9;
+    const H = W / aspect, tileWidth = W / 3, tileHeight = H / 2;
+    this.size = { W, H, tileWidth, tileHeight };
     this.board = this.makeBench(root, -.88, 'Υποδοχές');
     this.tray = this.makeBench(root, .88, 'Δίσκος');
     this.pickables = [];
@@ -50,12 +52,12 @@ export class ImagePuzzle {
     const plane = new THREE.PlaneGeometry(tileWidth - .014, tileHeight - .014);
     for (const tile of TILES) {
       const well = flat(plane, new THREE.MeshStandardMaterial({ color: 0x416767, roughness: 1 }), { type: 'slot', tile });
-      well.position.copy(point(tile, .075));
+      well.position.copy(point(tile, .075, tileWidth, tileHeight));
       this.board.add(well);
       const piece = flat(plane, new THREE.MeshBasicMaterial({
         map: pieceTexture(image, tile), side: THREE.DoubleSide, toneMapped: false
       }), { type: 'tile', tile });
-      piece.position.copy(point(tile, .092));
+      piece.position.copy(point(tile, .092, tileWidth, tileHeight));
       box(piece, tileWidth - .017, tileHeight - .016, .041, edge, 0, 0, -.023);
       this.tray.add(piece);
       this.pickables.push(well, piece);
@@ -69,6 +71,7 @@ export class ImagePuzzle {
   }
 
   makeBench(parent, x, title) {
+    const { W, H } = this.size;
     const base = new THREE.Group();
     base.position.set(x, .94, -.47);
     base.rotation.x = THREE.MathUtils.degToRad(-90 + 25);
@@ -87,6 +90,7 @@ export class ImagePuzzle {
 
   sync(session, selected, immediate = false) {
     this.enter.visible = session.gateComplete;
+    const { tileWidth, tileHeight } = this.size;
     for (const tile of TILES) {
       const piece = this.tiles[tile], slot = this.slots[tile], placed = session.placed.has(tile);
       if (piece.userData.carried) continue;
@@ -95,7 +99,7 @@ export class ImagePuzzle {
       slot.userData.disabled = placed;
       slot.material.emissive.setHex(selected !== null && !placed ? 0x324c3a : 0x000000);
       piece.material.color.setHex(tile === selected ? 0xffdeb0 : 0xffffff);
-      const target = point(placed ? tile : session.tileOrder.indexOf(tile), placed ? .093 : .097);
+      const target = point(placed ? tile : session.tileOrder.indexOf(tile), placed ? .093 : .097, tileWidth, tileHeight);
       if (piece.parent !== parent) {
         parent.add(piece);
         piece.position.copy(target);
