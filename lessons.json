@@ -108,6 +108,16 @@
       "topics": ["Αρχαία Αθήνα", "Περικλής", "Σωκράτης", "Πλάτων", "Αριστοτέλης", "Μέγας Αλέξανδρος", "Πλωτίνος"],
       "connections": 6,
       "status": "published"
+    },
+    {
+      "id": "saint-athanasius-journey",
+      "directory": "apps/saint-athanasius-journey",
+      "title": "Μέγας Αθανάσιος",
+      "description": "Συναρμολόγησε την εικόνα του βίου του και σύνδεσε έξι λέξεις του απολυτικίου με τις σκηνές της Αλεξάνδρειας.",
+      "preview": "previews/saint-athanasius-journey.webp",
+      "topics": ["Μέγας Αθανάσιος", "Απολυτίκιο", "Ομοούσιος", "Αλεξάνδρεια"],
+      "connections": 6,
+      "status": "published"
     }
   ]
 }

@@ -1,0 +1,33 @@
+{
+  "lessonSource": "Περιεχόμενο και ενσωματωμένες εικόνες από το saint-athanasius-journey-preview.html που δόθηκε στη συνομιλία.",
+  "sourceImages": [
+    {
+      "file": "source/biography-board.png",
+      "use": "Κεντρική εικόνα του βίου, κομμένη σε έξι κομμάτια για το παζλ εισόδου.",
+      "dimensions": "1536×1024"
+    },
+    {
+      "file": "source/apolytikion-board.png",
+      "use": "Πηγή των έξι κυκλικών εικόνων των σταθμών.",
+      "dimensions": "1536×1024"
+    },
+    {
+      "file": "source/alexandria-panorama.png",
+      "use": "ImageGen skybox 2:1 και εικόνα προεπισκόπησης.",
+      "dimensions": "1774×887",
+      "reference": "Πανόραμα Αλεξάνδρειας 4ου–5ου αιώνα από το MindPalaceVR, ως εικαστική αναφορά."
+    }
+  ],
+  "stationCrops": {
+    "source": "source/apolytikion-board.png",
+    "rectangles": {
+      "pillar": [44, 481, 511, 358],
+      "support": [15, 131, 400, 354],
+      "hierarch": [524, 16, 592, 231],
+      "consubstantial": [1152, 46, 367, 416],
+      "arius": [1103, 506, 411, 339],
+      "prayer": [463, 731, 600, 279]
+    },
+    "rectangleOrder": "x, y, width, height"
+  }
+}

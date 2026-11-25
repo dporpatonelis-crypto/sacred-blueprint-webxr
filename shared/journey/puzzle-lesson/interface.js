@@ -31,6 +31,7 @@ export class LessonInterface {
   constructor(session, api) {
     this.session = session;
     this.puzzleImage = mediaUrl(session.lesson.puzzle.image);
+    if (session.lesson.puzzle.aspect) puzzle.style.setProperty('--puzzle-aspect', String(session.lesson.puzzle.aspect));
     this.api = api;
     this.dialogs = [menu, puzzle];
     this.aimButtons = new Map();
@@ -115,7 +116,7 @@ export class LessonInterface {
   }
 
   syncControls(playing) {
-    const useWater = playing && this.session.level === 'river' && !this.session.complete;
+    const useWater = playing && this.session.level === 'river' && !this.session.complete && !this.session.reviewId;
     el('touch-walk').hidden = !playing;
     el('fire-button').hidden = el('reticle').hidden = !useWater;
     el('fire-button').disabled = this.session.busy;
@@ -161,7 +162,7 @@ export class LessonInterface {
 
     const station = session.visibleStation;
     el('station-title').textContent = session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
-      (lesson.stations.indexOf(station) + 1) + ' · ' + station.title;
+      (session.reviewId ? 'Επανεξέταση · ' : '') + (lesson.stations.indexOf(station) + 1) + ' · ' + station.title;
     el('stations-count').textContent = session.count + ' / ' + lesson.stations.length;
     if (station.question) {
       el('sentence').replaceChildren(
@@ -172,7 +173,7 @@ export class LessonInterface {
       const word = session.solved(station.id) ? station.word : '_______';
       strongSentence(el('sentence'), station.before, word, station.after);
     }
-    el('water-choices').hidden = session.complete;
+    el('water-choices').hidden = session.complete || Boolean(session.reviewId);
     for (const [id, button] of this.aimButtons) {
       button.disabled = session.busy || session.solved(id);
     }
@@ -201,7 +202,19 @@ export class LessonInterface {
         this.open(puzzle);
         this.api.assist();
       });
-    } else if (this.session.current) button('Υπόδειξη', () => this.showContent('hint'));
+    } else {
+      if (this.session.current && !this.session.reviewId && !this.session.complete) button('Υπόδειξη', () => this.showContent('hint'));
+      for (const station of this.session.lesson.stations.filter(item => this.session.solved(item.id) && !this.session.busy)) {
+        button('Επανεξέταση · ' + station.title, () => {
+          this.api.review(station.id);
+          menu.close();
+        });
+      }
+      if (this.session.reviewId) button('Συνέχεια στη διαδρομή', () => {
+        this.api.resumeReview();
+        menu.close();
+      });
+    }
     button('Χειρισμός', () => this.showContent('controls'));
     button('Κείμενα και πηγές', () => this.showContent('reading'));
     if (this.session.lesson.video) button('Το αρχικό βίντεο', () => this.showContent('video'));
@@ -232,10 +245,29 @@ export class LessonInterface {
       );
     } else if (section === 'reading') {
       if (lesson.historicalCaveat) content.append(make('p', lesson.historicalCaveat));
+      if (lesson.hymn) {
+        const heading = make('h3', lesson.hymn.title || 'Το απολυτίκιο');
+        const text = make('p', lesson.hymn.text);
+        text.className = 'hymn-text';
+        content.append(heading, text, make('p', lesson.hymn.attribution));
+        if (lesson.hymn.note) content.append(make('p', lesson.hymn.note));
+        if (lesson.hymn.sourceUrl) {
+          const citation = make('p');
+          citation.append(link(lesson.hymn.sourceLabel || 'Λειτουργική πηγή', lesson.hymn.sourceUrl));
+          content.append(citation);
+        }
+      }
       for (const station of lesson.stations) {
         const article = make('article');
         article.append(make('h3', station.title));
-        if (station.question) {
+        if (lesson.hymn) {
+          const phrase = make('p');
+          strongSentence(phrase, station.before, station.word, station.after);
+          article.append(phrase);
+          for (const text of [station.meaning, station.explanation, station.hint]) {
+            if (text) article.append(make('p', text));
+          }
+        } else if (station.question) {
           for (const text of [station.historicalContext, station.question, station.reading,
             station.explanation, station.hint, station.source]) {
             if (text) article.append(make('p', text));

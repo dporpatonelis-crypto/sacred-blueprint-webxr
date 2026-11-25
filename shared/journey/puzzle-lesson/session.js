@@ -37,18 +37,23 @@ export class LessonSession {
       ? Math.min(this.lesson.stations.length, Math.max(0, saved.count)) : 0;
     this.level = saved?.level === 'river' && this.gateComplete ? 'river' : 'gate';
     this.pending = null;
+    this.reviewId = null;
     this.save();
   }
 
   get gateComplete() { return this.placed.size === TILE_COUNT; }
-  get complete() { return this.count === this.lesson.stations.length && !this.pending; }
+  get complete() { return this.count === this.lesson.stations.length && !this.pending && !this.reviewId; }
   get sceneComplete() { return this.complete; }
-  get selected() { return this.pending?.id || this.current?.id || null; }
+  get selected() { return this.pending?.id || this.reviewId || this.current?.id || null; }
   get localCount() { return this.count; }
   get busy() { return Boolean(this.pending); }
-  get current() { return this.pending ? null : this.lesson.stations[this.count] || null; }
+  get current() {
+    if (this.pending) return null;
+    if (this.reviewId) return this.lesson.stations.find(station => station.id === this.reviewId) || null;
+    return this.lesson.stations[this.count] || null;
+  }
   get visibleStation() {
-    return this.pending || this.lesson.stations[Math.min(this.count, this.lesson.stations.length - 1)];
+    return this.pending || this.current || this.lesson.stations[Math.min(this.count, this.lesson.stations.length - 1)];
   }
 
   solved(id) {
@@ -87,7 +92,7 @@ export class LessonSession {
   }
 
   answer(id) {
-    if (this.current?.id !== id) return false;
+    if (this.reviewId || this.current?.id !== id) return false;
     this.pending = this.current;
     this.count++;
     this.save();
@@ -96,11 +101,25 @@ export class LessonSession {
 
   finish(id) {
     if (this.pending?.id === id) this.pending = null;
+    if (this.reviewId === id) this.reviewId = null;
+  }
+
+  review(id) {
+    if (!this.solved(id) || this.pending || this.level !== 'river') return false;
+    this.reviewId = id;
+    return true;
+  }
+
+  resume() {
+    if (!this.reviewId) return false;
+    this.reviewId = null;
+    return true;
   }
 
   restart() {
     this.level = 'gate';
     this.pending = null;
+    this.reviewId = null;
     this.shuffleTiles();
   }
 }
