@@ -6,7 +6,7 @@
   "manuscriptRowHeight": 104,
   "manuscriptEntryFontSize": 27,
   "fitStationImages": true,
-  "maskUnsolvedKeywords": false,
+  "maskUnsolvedKeywords": true,
   "beamFromEdge": true,
   "puzzle": {
     "title": "Ο βίος του Γρηγορίου του Θεολόγου",

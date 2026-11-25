@@ -8,7 +8,7 @@
   "manuscriptEntryBaseline": 58,
   "manuscriptEntryLineHeight": 22,
   "fitStationImages": true,
-  "maskUnsolvedKeywords": false,
+  "maskUnsolvedKeywords": true,
   "beamFromEdge": true,
   "historicalCaveat": "Η νησίδα είναι διδακτικό σκηνικό. Οι έξι εικόνες ερμηνεύουν τις παρομοιώσεις της ομιλίας.",
   "puzzle": {
