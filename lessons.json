@@ -118,6 +118,16 @@
       "topics": ["Μέγας Αθανάσιος", "Απολυτίκιο", "Ομοούσιος", "Αλεξάνδρεια"],
       "connections": 6,
       "status": "published"
+    },
+    {
+      "id": "saint-gregory-theologian-journey",
+      "directory": "apps/saint-gregory-theologian-journey",
+      "title": "Άγιος Γρηγόριος ο Θεολόγος",
+      "description": "Συναρμολόγησε την εικόνα του βίου του και σύνδεσε έξι λέξεις του Λόγου ΛΑ΄ με θεολογικές εικόνες στην Κωνσταντινούπολη.",
+      "preview": "previews/saint-gregory-theologian-journey.webp",
+      "topics": ["Γρηγόριος ο Θεολόγος", "Κωνσταντινούπολη", "Λόγος ΛΑ΄", "Θεολογία", "Πατέρας", "Υιός", "Άγιο Πνεύμα"],
+      "connections": 6,
+      "status": "published"
     }
   ]
 }

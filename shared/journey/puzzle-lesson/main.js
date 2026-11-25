@@ -344,8 +344,11 @@ export function startPuzzleLesson(source, {
     if (index > 0) controls.unshift(menuItem('← Προηγούμενο', 'reading', index - 1));
     if (index < lesson.stations.length - 1) controls.unshift(menuItem('Επόμενο →', 'reading', index + 1));
     const references = station.references?.map(reference => reference.title).join(' · ');
-    const phrase = station.before !== undefined ? station.before + station.word + station.after : '';
-    const text = [lesson.hymn?.text, lesson.hymn?.attribution, phrase, station.meaning,
+    const phrase = station.manuscriptText || (station.before !== undefined ? station.before + station.word + station.after : '');
+    const source = lesson.manuscript || lesson.hymn;
+    const sourceText = lesson.manuscript ? (index === 0 ? [source.text, source.attribution] : []) :
+      [source?.text, source?.attribution];
+    const text = [...sourceText, phrase, station.meaning, station.visualQuestion,
       station.historicalContext, station.question, station.reading, station.explanation,
       station.hint, station.source, references]
       .filter(Boolean).join('  ');

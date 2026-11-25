@@ -1,0 +1,64 @@
+{
+  "lessonSource": "Περιεχόμενο και ενσωματωμένες εικόνες από το saint-gregory-theologian-journey-preview.html που δόθηκε στη συνομιλία.",
+  "sourceImages": [
+    {
+      "file": "source/biography-board.png",
+      "use": "Κεντρική εικόνα του βίου, κομμένη σε έξι κομμάτια για το παζλ εισόδου.",
+      "dimensions": "1536×1024"
+    },
+    {
+      "file": "source/theology-board.png",
+      "use": "Πηγή των έξι κυκλικών εικόνων των θεολογικών σταθμών.",
+      "dimensions": "1536×1024"
+    },
+    {
+      "file": "source/constantinople-panorama-v2.png",
+      "use": "ImageGen equirectangular skybox 2:1 και εικόνα προεπισκόπησης.",
+      "dimensions": "1774×887",
+      "reference": "Εικαστική ανασύνθεση της Κωνσταντινούπολης του 4ου αιώνα με πόλη και Βόσπορο στον μακρινό ορίζοντα."
+    }
+  ],
+  "stationCrops": {
+    "source": "source/theology-board.png",
+    "rectangles": {
+      "additions": [
+        15,
+        573,
+        415,
+        440
+      ],
+      "father": [
+        15,
+        154,
+        445,
+        410
+      ],
+      "son": [
+        415,
+        10,
+        707,
+        256
+      ],
+      "spirit-divinity": [
+        1091,
+        92,
+        430,
+        471
+      ],
+      "spirit-church": [
+        1044,
+        553,
+        476,
+        461
+      ],
+      "capacity": [
+        430,
+        768,
+        630,
+        246
+      ]
+    },
+    "rectangleOrder": "x, y, width, height"
+  },
+  "historicalArtDirection": "Σκηνικό εμπνευσμένο από την Κωνσταντινούπολη περίπου 379–381. Δεν απεικονίζεται ο μεταγενέστερος ναός της Αγίας Σοφίας."
+}
