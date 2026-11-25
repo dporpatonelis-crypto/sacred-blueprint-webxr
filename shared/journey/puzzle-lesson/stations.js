@@ -7,7 +7,7 @@ const defaultPlaces = [[-4.13, -2.68], [-2.70, -4.73], [2.70, -4.73], [4.13, -2.
 const imageRadius = .90;
 const imageHeight = 2.18;
 
-export function stationWorld(lesson) {
+export function stationWorld(lesson, walkable = null) {
   const positions = lesson.stations.map((station, index) =>
     station.position || defaultPlaces[index] || [Math.cos(index / lesson.stations.length * Math.PI * 2) * 4.2,
       Math.sin(index / lesson.stations.length * Math.PI * 2) * 4.2 - 2.4]);
@@ -20,6 +20,7 @@ export function stationWorld(lesson) {
       minZ: Math.min(-5.8, ...positions.map(([, z]) => z - 1.8)),
       maxZ: 9
     },
+    ...(walkable ? { walkable } : {}),
     promptHeight: lesson.promptHeight,
     stations: lesson.stations.map((station, index) => ({
       ...station, position: positions[index], height: 2.58

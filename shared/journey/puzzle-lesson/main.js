@@ -23,11 +23,13 @@ const approach = {
 export function startPuzzleLesson(source, {
   skybox, makeLandscape, loadError,
   readingLanding = [0, -1.64],
-  xrMenuPosition = [.85, .76, -1.65]
+  xrMenuPosition = [.85, .76, -1.65],
+  walkable = null
 }) {
   const session = new LessonSession(source);
   const { lesson } = session;
-  const riverWorld = stationWorld(lesson);
+  const riverWorld = stationWorld(lesson, walkable);
+  const puzzleWorld = walkable ? { ...gateWorld, bounds: riverWorld.bounds, walkable } : gateWorld;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xd0b392);
   const gateRoot = new THREE.Group(), riverRoot = new THREE.Group();
@@ -144,7 +146,7 @@ export function startPuzzleLesson(source, {
     announce();
     gateRoot.visible = atGate();
     riverRoot.visible = !atGate();
-    navigation.world = atGate() ? gateWorld : riverWorld;
+    navigation.world = atGate() ? puzzleWorld : riverWorld;
     navigation.obstacles = atGate() ? gateObstacles : riverObstacles;
     if (inXR()) navigation.landXR(navigation.world.xrSpawn);
     else navigation.spawn();
@@ -593,7 +595,7 @@ export function startPuzzleLesson(source, {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.xr.enabled = true;
     renderer.xr.setReferenceSpaceType('local-floor');
-    navigation = new Navigation(camera, renderer, gateWorld, gateObstacles, {
+    navigation = new Navigation(camera, renderer, puzzleWorld, gateObstacles, {
       xrSingleStick: true,
       pick(position) {
         if (!position || !ready) return;
