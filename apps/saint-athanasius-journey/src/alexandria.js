@@ -1,12 +1,15 @@
 import * as THREE from 'three';
 import { panorama } from '../../../shared/journey/panorama.js';
 
+const PLATFORM_RADIUS = 16.9;
+const WATER_RADIUS = 18.5;
+
 function randomGenerator(seed) {
   return () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
 }
 
 function makePaving(scene) {
-  const earth = new THREE.Mesh(new THREE.CircleGeometry(72, 64),
+  const earth = new THREE.Mesh(new THREE.CircleGeometry(PLATFORM_RADIUS, 64),
     new THREE.MeshStandardMaterial({ color: 0xb3a184, roughness: 1, flatShading: true }));
   earth.rotation.x = -Math.PI / 2;
   earth.position.y = -.19;
@@ -87,10 +90,10 @@ function makeHarbor(scene) {
   coping.position.set(0, .38, -12.2);
   scene.add(coping);
 
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(160, 90),
+  const sea = new THREE.Mesh(new THREE.RingGeometry(PLATFORM_RADIUS - .08, WATER_RADIUS, 128),
     new THREE.MeshStandardMaterial({ color: 0x397f86, roughness: .34, metalness: .08, side: THREE.DoubleSide }));
   sea.rotation.x = -Math.PI / 2;
-  sea.position.set(0, -.08, -57.3);
+  sea.position.y = -.245;
   scene.add(sea);
 
   const bollardMaterial = new THREE.MeshStandardMaterial({ color: 0x776449, roughness: 1 });
