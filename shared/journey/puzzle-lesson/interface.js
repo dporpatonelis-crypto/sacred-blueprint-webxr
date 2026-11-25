@@ -264,6 +264,19 @@ export class LessonInterface {
           content.append(citation);
         }
       }
+      for (const section of lesson.readingSections || []) {
+        const article = make('article');
+        article.append(make('h3', section.title));
+        if (section.note) article.append(make('p', section.note));
+        for (const paragraph of section.paragraphs || []) article.append(make('p', paragraph));
+        if (section.attribution) article.append(make('p', section.attribution));
+        for (const source of section.sources || []) {
+          const citation = make('p');
+          citation.append(link(source.title, source.url));
+          article.append(citation);
+        }
+        content.append(article);
+      }
       for (const station of lesson.stations) {
         const article = make('article');
         article.append(make('h3', station.title));

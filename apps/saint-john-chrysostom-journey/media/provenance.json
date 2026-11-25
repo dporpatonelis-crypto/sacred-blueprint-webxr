@@ -1,0 +1,21 @@
+{
+  "lessonSource": "Ιωάννης ο Χρυσόστομος · Ο λόγος που γίνεται πράξη · τοπικό HTML που δόθηκε στη συνομιλία.",
+  "sourceImages": [
+    {
+      "file": "source/biography-board-v1.png",
+      "use": "Παζλ εισόδου 3 × 2 και εικόνα προεπισκόπησης.",
+      "source": "Ενσωματωμένη εικόνα art-bio στο saint-john-chrysostom-journey-preview.html."
+    },
+    {
+      "file": "source/theology-board-v1.png",
+      "use": "Μητρική εικόνα για τις έξι κυκλικές εικόνες σταθμών.",
+      "source": "Ενσωματωμένη εικόνα art-theology στο saint-john-chrysostom-journey-preview.html."
+    },
+    {
+      "file": "source/constantinople-islet-panorama-v1.png",
+      "use": "Equirectangular skybox 2:1.",
+      "generation": "Built-in ImageGen; prompt in media/prompts/constantinople-from-islet.md."
+    }
+  ],
+  "historicalArtDirection": "Διδακτική εικαστική σύνθεση της Κωνσταντινούπολης γύρω στο 398. Η νησίδα είναι φανταστικός χώρος δραστηριότητας, όχι ισχυρισμός για συγκεκριμένο ιστορικό τόπο."
+}

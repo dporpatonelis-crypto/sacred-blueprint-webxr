@@ -128,6 +128,16 @@
       "topics": ["Γρηγόριος ο Θεολόγος", "Κωνσταντινούπολη", "Λόγος ΛΑ΄", "Θεολογία", "Πατέρας", "Υιός", "Άγιο Πνεύμα"],
       "connections": 6,
       "status": "published"
+    },
+    {
+      "id": "saint-john-chrysostom-journey",
+      "directory": "apps/saint-john-chrysostom-journey",
+      "title": "Άγιος Ιωάννης ο Χρυσόστομος",
+      "description": "Συναρμολόγησε την εικόνα του βίου και μετέφερε έξι λέξεις της Η΄ Ομιλίας στις εικόνες πάνω σε νησίδα του Βοσπόρου.",
+      "preview": "previews/saint-john-chrysostom-journey.webp",
+      "topics": ["Ιωάννης ο Χρυσόστομος", "Η΄ Ομιλία περί μετανοίας", "Κωνσταντινούπολη", "Βόσπορος", "Κιβωτός και παράδεισος"],
+      "connections": 6,
+      "status": "published"
     }
   ]
 }
