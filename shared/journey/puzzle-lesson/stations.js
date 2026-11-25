@@ -125,7 +125,7 @@ export function makeStations(root, camera, world, session, images, answer, finis
     entryFontSize: lesson.manuscriptEntryFontSize,
     entryBaseline: lesson.manuscriptEntryBaseline,
     entryLineHeight: lesson.manuscriptEntryLineHeight,
-    maskUnsolvedKeywords: true,
+    maskUnsolvedKeywords: lesson.maskUnsolvedKeywords ?? true,
     passiveEntries: true,
     flightMs: 1850,
     revealOnArrival: true,

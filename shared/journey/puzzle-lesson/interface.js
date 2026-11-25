@@ -14,6 +14,12 @@ function strongSentence(node, before, word, after) {
   node.replaceChildren(before, make('strong', word), after);
 }
 
+function strongKeyword(node, text, word) {
+  const at = word ? text.indexOf(word) : -1;
+  if (at < 0) node.textContent = text;
+  else node.replaceChildren(text.slice(0, at), make('strong', word), text.slice(at + word.length));
+}
+
 function markPiece(button, tile, image) {
   button.style.backgroundImage = 'url("' + image + '")';
   button.style.backgroundPosition = (tile % 3) * 50 + '% ' + Math.floor(tile / 3) * 100 + '%';
@@ -245,26 +251,28 @@ export class LessonInterface {
       );
     } else if (section === 'reading') {
       if (lesson.historicalCaveat) content.append(make('p', lesson.historicalCaveat));
-      if (lesson.hymn) {
-        const heading = make('h3', lesson.hymn.title || 'Το απολυτίκιο');
-        const text = make('p', lesson.hymn.text);
+      const sourceText = lesson.manuscript || lesson.hymn;
+      if (sourceText) {
+        const heading = make('h3', sourceText.title || 'Το κείμενο');
+        const text = make('p', sourceText.text);
         text.className = 'hymn-text';
-        content.append(heading, text, make('p', lesson.hymn.attribution));
-        if (lesson.hymn.note) content.append(make('p', lesson.hymn.note));
-        if (lesson.hymn.sourceUrl) {
+        content.append(heading, text, make('p', sourceText.attribution));
+        if (sourceText.note) content.append(make('p', sourceText.note));
+        if (sourceText.sourceUrl) {
           const citation = make('p');
-          citation.append(link(lesson.hymn.sourceLabel || 'Λειτουργική πηγή', lesson.hymn.sourceUrl));
+          citation.append(link(sourceText.sourceLabel || 'Πηγή κειμένου', sourceText.sourceUrl));
           content.append(citation);
         }
       }
       for (const station of lesson.stations) {
         const article = make('article');
         article.append(make('h3', station.title));
-        if (lesson.hymn) {
+        if (lesson.manuscript || lesson.hymn) {
           const phrase = make('p');
-          strongSentence(phrase, station.before, station.word, station.after);
+          if (station.manuscriptText) strongKeyword(phrase, station.manuscriptText, station.word);
+          else strongSentence(phrase, station.before, station.word, station.after);
           article.append(phrase);
-          for (const text of [station.meaning, station.explanation, station.hint]) {
+          for (const text of [station.meaning, station.visualQuestion, station.explanation, station.hint]) {
             if (text) article.append(make('p', text));
           }
         } else if (station.question) {
