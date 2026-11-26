@@ -148,6 +148,16 @@
       "topics": ["Μέγας Βασίλειος", "Καισάρεια", "Βασιλειάδα", "Λόγος 43", "Απολυτίκιο"],
       "connections": 14,
       "status": "published"
+    },
+    {
+      "id": "pentecost-journey",
+      "directory": "apps/pentecost-journey",
+      "title": "Πεντηκοστή · Στο Υπερώο των Ιεροσολύμων",
+      "description": "Συναρμολόγησε την εικόνα της Πεντηκοστής, σύνδεσε έξι σύμβολα με τον ύμνο και τοποθέτησε τις φράσεις του σε δύο γύρους.",
+      "preview": "previews/pentecost-journey.webp",
+      "topics": ["Πεντηκοστή", "Ύμνος", "Πρώτη κοινότητα", "Ιεροσόλυμα"],
+      "connections": 6,
+      "status": "draft"
     }
   ]
 }

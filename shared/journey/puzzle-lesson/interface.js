@@ -166,10 +166,13 @@ export class LessonInterface {
     const station = session.visibleStation;
     const phase = session.activePhase;
     const phaseIndex = phase.stations.findIndex(item => item.id === station?.id) + 1;
-    el('station-title').textContent = session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
+    const finalActivity = session.complete ? this.api.finalActivityStatus?.() : null;
+    el('station-title').textContent = finalActivity ? 'Σύνθεση ύμνου · ' + finalActivity.title : session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
       (session.reviewId ? 'Επανεξέταση · ' : '') + phase.title + ' · ' + phaseIndex + ' · ' + station.title;
-    el('stations-count').textContent = session.phaseCount + ' / ' + phase.stations.length;
-    if (station.question) {
+    el('stations-count').textContent = finalActivity?.progress || (session.phaseCount + ' / ' + phase.stations.length);
+    if (finalActivity) {
+      el('sentence').textContent = finalActivity.instruction;
+    } else if (station.question) {
       el('sentence').replaceChildren(
         make('span', station.question + ' '),
         make('strong', session.solved(station.id) ? station.word : '…')
@@ -243,6 +246,13 @@ export class LessonInterface {
         this.api.resumeReview();
         menu.close();
       });
+      if (this.session.complete && this.api.openFinalActivity) {
+        const status = this.api.finalActivityStatus?.();
+        button(status?.complete ? 'Δες τον ολοκληρωμένο ύμνο' : 'Συνέχεια στη σύνθεση του ύμνου', () => {
+          menu.close();
+          this.api.openFinalActivity();
+        });
+      }
     }
     button('Χειρισμός', () => this.showContent('controls'));
     button('Κείμενα και πηγές', () => this.showContent('reading'));
