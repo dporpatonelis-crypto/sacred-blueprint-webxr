@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172f31">
+  <meta name="description" content="Μια διαδραστική διαδρομή στην Πεντηκοστή, τα σύμβολα της πρώτης κοινότητας και τον ύμνο της." />
+  <title>Πεντηκοστή · Στο Υπερώο των Ιεροσολύμων</title>
+</head>
+<body class="interface-collapsed">
+  <main class="experience" aria-label="Η Πεντηκοστή στο Υπερώο των Ιεροσολύμων">
+    <canvas id="world" aria-label="Τρισδιάστατος χώρος της Πεντηκοστής στα Ιεροσόλυμα"></canvas>
+    <button id="menu" class="menu-toggle" type="button" aria-haspopup="dialog" aria-controls="menu-dialog" aria-expanded="false">Μενού</button>
+    <span id="reticle" aria-hidden="true" hidden></span>
+    <button id="fire-button" type="button" aria-label="Κράτησε για να ρίξεις νερό στο στόχαστρο" aria-pressed="false" hidden>
+      <span aria-hidden="true">◉</span><span>Νερό</span>
+    </button>
+    <div id="touch-walk" class="touch-walk" role="group" aria-label="Χειριστήριο κίνησης αφής" hidden>
+      <div class="touch-walk-pad"><span class="touch-walk-ring" aria-hidden="true"></span><span id="touch-walk-stick" aria-hidden="true"></span></div>
+    </div>
+    <p id="loading" class="loading" role="status">Φορτώνεται το Υπερώο…</p>
+  </main>
+
+  <dialog id="puzzle-dialog" aria-labelledby="puzzle-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="puzzle-title">Η Πεντηκοστή</h2>
+        <button type="button" data-close aria-label="Κλείσιμο παζλ">Κλείσιμο</button>
+      </div>
+      <p id="puzzle-copy">Διάλεξε ένα κομμάτι και μετά μία θέση.</p>
+      <div class="puzzle">
+        <div><h3>Υποδοχές</h3><div id="slots" class="pieces"></div></div>
+        <div><h3>Δίσκος</h3><div id="tray" class="pieces"></div></div>
+      </div>
+      <p id="puzzle-notice" role="status"></p>
+      <div class="actions">
+        <button id="puzzle-menu" type="button">Μενού</button>
+        <button id="puzzle-enter" class="primary" type="button" hidden>Στο Υπερώο</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="menu-dialog" aria-labelledby="menu-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="menu-title">Πεντηκοστή</h2>
+        <button type="button" data-close autofocus>Κλείσιμο</button>
+      </div>
+      <section id="gate" class="menu-progress">
+        <div class="level-head"><h3>Η εικόνα του Υπερώου</h3><output id="tiles-count" aria-label="Κομμάτια στη θέση τους">0 / 6</output></div>
+        <p id="gate-copy">Τοποθέτησε τα έξι κομμάτια στις υποδοχές.</p>
+        <div class="actions">
+          <button id="open-puzzle" class="primary" type="button">Άνοιγμα παζλ</button>
+          <button id="enter-river" class="primary" type="button" hidden>Στο Υπερώο</button>
+        </div>
+      </section>
+      <section id="river" class="menu-progress" hidden>
+        <div class="level-head"><h3 id="station-title">Τα σύμβολα της κοινότητας</h3><output id="stations-count" aria-label="Ολοκληρωμένοι σταθμοί">0 / 6</output></div>
+        <p id="sentence" aria-live="polite"></p>
+        <div id="water-choices"><p>Στόχευσε το δοχείο με τη λέξη που λείπει και κράτησε το νερό.</p><div id="choices" class="actions" role="group" aria-label="Στόχευση δοχείου"></div></div>
+      </section>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <button id="vr" class="primary" type="button" hidden>Είσοδος σε VR</button>
+      <div id="menu-actions" class="menu-actions"></div>
+      <div id="menu-content"></div>
+    </div>
+  </dialog>
+
+  <dialog id="hymn-dialog" aria-labelledby="hymn-dialog-title">
+    <div class="dialog-inner hymn-dialog-inner">
+      <div class="dialog-head">
+        <div><p class="hymn-kicker">Η ΣΥΝΘΕΣΗ ΤΟΥ ΥΜΝΟΥ</p><h2 id="hymn-dialog-title">Οι δωρεές του Πνεύματος</h2></div>
+        <button id="hymn-close" type="button" aria-label="Κλείσιμο σύνθεσης">Κλείσιμο</button>
+      </div>
+      <p id="hymn-instruction" class="hymn-instruction">Μετέφερε τις φράσεις στις τρεις θέσεις του χειρογράφου.</p>
+      <div class="hymn-round-layout">
+        <section class="hymn-drop-column" aria-label="Θέσεις χειρογράφου"><h3>Χειρόγραφο <output id="hymn-progress">0 / 3</output></h3><div id="hymn-slots" class="hymn-slots"></div></section>
+        <section class="hymn-piece-column" aria-label="Φράσεις προς τοποθέτηση"><h3>Φράσεις</h3><div id="hymn-pieces" class="hymn-pieces"></div></section>
+      </div>
+      <p id="hymn-notice" role="status" aria-live="polite"></p>
+      <section id="hymn-finished" class="hymn-finished" hidden>
+        <h3>Ο ύμνος συντέθηκε</h3>
+        <p id="hymn-full-text"></p>
+      </section>
+      <div class="actions"><button id="hymn-hint" type="button">Υπόδειξη</button><button id="hymn-reset" type="button">Νέος γύρος</button></div>
+    </div>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

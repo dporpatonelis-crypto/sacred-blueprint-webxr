@@ -24,7 +24,8 @@ export function startPuzzleLesson(source, {
   skybox, makeLandscape, loadError,
   readingLanding = [0, -1.64],
   xrMenuPosition = [.85, .76, -1.65],
-  walkable = null
+  walkable = null,
+  makeFinalActivity = null
 }) {
   const session = new LessonSession(source);
   const { lesson } = session;
@@ -45,7 +46,7 @@ export function startPuzzleLesson(source, {
   const waterDirection = new THREE.Vector3(), waterOrigin = new THREE.Vector3();
   const hands = [];
 
-  let renderer, navigation, xrMenu, carry, gate, stations, terrain;
+  let renderer, navigation, xrMenu, carry, gate, stations, terrain, finalActivity;
   let selected = null, shot = null, desktopPose, showVideoAfterXR = false;
   let notice = '', lastFrame = 0, assistAt = 0;
   let ready = false, assisting = false;
@@ -54,16 +55,19 @@ export function startPuzzleLesson(source, {
     select: selectTile, place: placeSelected, enter: enterRiver, shuffle: shuffleTiles,
     aim: aimAtVessel, assist, stopAssist, restart, review: reviewStation, resumeReview,
     dialogChanged: refreshInput,
+    openFinalActivity: () => finalActivity?.openDialog(),
+    finalActivityStatus: () => finalActivity?.menuStatus,
     selectedTile: () => selected, assisting: () => assisting
   });
 
   const inXR = () => Boolean(renderer?.xr.isPresenting);
   const atGate = () => session.level === 'gate';
+  const inFinalActivity = () => Boolean(finalActivity && session.complete);
   const water = () => stations?.water;
   const reduced = () => motion.matches;
 
   function refreshInput() {
-    const playing = ready && !ui.modal && !xrMenu?.opened;
+    const playing = ready && !ui.modal && !finalActivity?.dialogOpen && !xrMenu?.opened;
     if (!playing) stopPour();
     if (navigation) navigation.enabled = playing;
     ui.syncControls(playing && !inXR());
@@ -73,6 +77,8 @@ export function startPuzzleLesson(source, {
     gate?.sync(session, selected);
     stations?.setPhase(session.activePhase.id);
     water()?.sync(session);
+    finalActivity?.activate(session.complete, inXR());
+    finalActivity?.sync();
     ui.render({ selected, assisting });
     refreshInput();
   }
@@ -146,7 +152,8 @@ export function startPuzzleLesson(source, {
     selected = null;
     announce();
     gateRoot.visible = atGate();
-    riverRoot.visible = !atGate();
+    riverRoot.visible = !atGate() && !inFinalActivity();
+    if (finalActivity) finalActivity.root.visible = inFinalActivity();
     navigation.world = atGate() ? puzzleWorld : riverWorld;
     navigation.obstacles = atGate() ? gateObstacles : riverObstacles;
     if (inXR()) navigation.landXR(navigation.world.xrSpawn);
@@ -161,6 +168,7 @@ export function startPuzzleLesson(source, {
   function restart() {
     stations?.manuscripts.forEach(manuscript => manuscript.cancel(false));
     water()?.fill.reset();
+    finalActivity?.reset();
     session.restart();
     switchLevel();
   }
@@ -189,7 +197,8 @@ export function startPuzzleLesson(source, {
 
   function finishAnswer(id) {
     session.finish(id);
-    render();
+    if (session.complete && finalActivity) switchLevel();
+    else render();
   }
 
   function reviewStation(id) {
@@ -215,7 +224,8 @@ export function startPuzzleLesson(source, {
     ui.close();
     xrMenu?.close();
     announce();
-    render();
+    if (session.complete && finalActivity) switchLevel();
+    else render();
     return true;
   }
 
@@ -285,6 +295,10 @@ export function startPuzzleLesson(source, {
   function findAction() {
     const menuAction = hit(xrMenu.pickables);
     if (menuAction || xrMenu.opened) return menuAction;
+    if (inFinalActivity()) {
+      const action = hit(finalActivity.pickables);
+      if (action) return action;
+    }
     if (atGate() && !inXR() && !assisting) {
       const action = hit(gate.pickables);
       if (action) return action;
@@ -304,6 +318,8 @@ export function startPuzzleLesson(source, {
     if (!action) return;
     if (action.type === 'tile') selectTile(action.tile);
     else if (action.type === 'slot') placeSelected(action.tile);
+    else if (action.type === 'phrase-piece') finalActivity?.select(action.id);
+    else if (action.type === 'phrase-slot') finalActivity?.placeSelected(action.slot);
     else if (action.type === 'enter') enterRiver();
     else if (action.type === 'land') {
       if (inXR()) navigation.landXR(action.position);
@@ -323,7 +339,12 @@ export function startPuzzleLesson(source, {
     const items = [menuItem('Κείμενα και πηγές', 'reading', 0)];
     if (lesson.video) items.push(menuItem('Το αρχικό βίντεο', 'video'));
     let copy;
-    if (atGate()) {
+    if (inFinalActivity()) {
+      if (!finalActivity.complete) items.unshift(menuItem('Υπόδειξη φράσης', 'final-hint'));
+      items.unshift(menuItem(finalActivity.complete ? 'Επανεκκίνηση σύνθεσης' : 'Άνοιγμα χειρογράφου', 'final-open'));
+      if (!finalActivity.complete) items.push(menuItem('Ανακάτεμα γύρου', 'final-reset-round'));
+      copy = finalActivity.statusText + ' Πιάσε κάθε φράση με τη λαβή και άφησέ την στη σωστή θέση.';
+    } else if (atGate()) {
       items.unshift(menuItem('Δες την εικόνα', 'reference'), menuItem('Ανακάτεμα', 'shuffle'));
       if (session.gateComplete) items.unshift(menuItem('Στους σταθμούς', 'enter'));
       else items.push(assisting ? menuItem('Σταμάτησε τη λύση', 'stop-assist') :
@@ -400,6 +421,8 @@ export function startPuzzleLesson(source, {
       case 'xr-menu': showXRMenu(); return;
       case 'reference': xrMenu.show(lesson.puzzle.title, '', [back, close], true, gate.image); return;
       case 'hint': xrMenu.show('Υπόδειξη', session.visibleStation.hint, [back, close], true); return;
+      case 'final-hint': xrMenu.show('Υπόδειξη σύνθεσης', finalActivity.hint(), [back, close], true); return;
+      case 'final-reset-round': finalActivity.resetRound(); showXRMenu(); return;
       case 'reading': showXRReading(action.index); return;
       case 'review-station':
         reviewStation(lesson.stations[action.index]?.id);
@@ -423,6 +446,7 @@ export function startPuzzleLesson(source, {
       case 'assist': assist(); break;
       case 'stop-assist': stopAssist(); break;
       case 'restart': restart(); break;
+      case 'final-open': finalActivity?.openDialog(); break;
       case 'exit': renderer.xr.getSession()?.end(); break;
     }
     render();
@@ -445,11 +469,16 @@ export function startPuzzleLesson(source, {
       controller.addEventListener('squeezestart', () => {
         if (atGate() && ready && !xrMenu.opened && !assisting) {
           if (carry.grab(controller, 'grip', grip.visible ? grip : controller, gate.tiles)) announce();
+        } else if (inFinalActivity() && ready && !xrMenu.opened) {
+          carry.grab(controller, 'grip', grip.visible ? grip : controller, finalActivity.sources);
         }
       });
       controller.addEventListener('squeezeend', () => {
-        const placement = carry.release(controller, 'grip', gate?.slots || []);
-        if (placement?.target) placeTile(placement.action.tile, placement.target.tile);
+        const targets = inFinalActivity() ? finalActivity.targets : (gate?.slots || []);
+        const placement = carry.release(controller, 'grip', targets);
+        if (placement?.target?.type === 'phrase-slot') {
+          finalActivity.place(placement.action.id, placement.target.slot);
+        } else if (placement?.target) placeTile(placement.action.tile, placement.target.tile);
         else if (placement) announce('Άφησε το κομμάτι στη φωτισμένη υποδοχή.', 'wrong');
       });
       controller.addEventListener('selectstart', () => {
@@ -466,6 +495,7 @@ export function startPuzzleLesson(source, {
     renderer.xr.addEventListener('sessionstart', () => {
       desktopPose = { level: session.level, position: camera.position.clone(), rotation: camera.quaternion.clone() };
       ui.close();
+      finalActivity?.closeDialog();
       stopPour();
       selected = null;
       document.body.classList.add('xr-active');
@@ -492,6 +522,7 @@ export function startPuzzleLesson(source, {
         ui.showVideo();
       }
       render();
+      if (inFinalActivity() && !finalActivity.complete) finalActivity.openDialog();
     });
   }
 
@@ -537,13 +568,16 @@ export function startPuzzleLesson(source, {
 
   function updateHands() {
     const play = inXR();
-    const handling = play && atGate() && ready && !xrMenu.opened && !assisting;
+    const handling = play && ready && !xrMenu.opened && !finalActivity?.dialogOpen &&
+      ((atGate() && !assisting) || inFinalActivity());
+    const sources = atGate() ? gate?.tiles || [] : (inFinalActivity() ? finalActivity.sources : []);
+    const targets = atGate() ? gate?.slots || [] : (inFinalActivity() ? finalActivity.targets : []);
     if (carry.held && (!handling || !carry.held.pose.visible)) carry.cancel();
-    carry.update(handling ? gate.slots : []);
+    carry.update(handling ? targets : []);
     for (const { controller, grip, cursor, line } of hands) {
       const pose = grip.visible ? grip : controller;
       const holding = carry.held?.owner === controller;
-      const near = handling && Boolean(carry.near(pose, gate.tiles));
+      const near = handling && Boolean(carry.near(pose, sources));
       line.visible = play && !holding && !near;
       cursor.visible = handling && pose.visible && (holding || near);
       if (cursor.visible) {
@@ -589,7 +623,8 @@ export function startPuzzleLesson(source, {
         render();
       }
       if (atGate()) gate.update(dt, head, reduced());
-      else stations.update(dt, head, reduced(), ui.modal || xrMenu.opened || document.hidden);
+      else if (inFinalActivity()) finalActivity.update(dt);
+      else stations.update(dt, head, reduced(), ui.modal || finalActivity?.dialogOpen || xrMenu.opened || document.hidden);
       updateHands();
       updateWater(time, dt, inXR());
       xrMenu.update(head);
@@ -658,6 +693,16 @@ export function startPuzzleLesson(source, {
     gate = new ImagePuzzle(gateRoot, picture, session);
     gate.sync(session, null, true);
     stations = makeStations(riverRoot, camera, riverWorld, session, images, answer, finishAnswer);
+    if (makeFinalActivity) {
+      finalActivity = makeFinalActivity({
+        scene, lesson, session, isImmersive: inXR, refreshInput,
+        onChange(kind) {
+          if (kind === 'wrong') announce('Η φράση δεν συνεχίζει ακόμη το χειρόγραφο. Δοκίμασε άλλη θέση.', 'wrong');
+          else announce();
+          render();
+        }
+      });
+    }
     landings.gate = approach.gate.map(([x, z]) => addLanding(gateRoot, x, z));
     landings.river = [...approach.river, readingLanding].map(([x, z]) => addLanding(riverRoot, x, z));
     ready = true;
