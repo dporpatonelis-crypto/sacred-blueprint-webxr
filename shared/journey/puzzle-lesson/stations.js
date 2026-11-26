@@ -7,23 +7,36 @@ const defaultPlaces = [[-4.13, -2.68], [-2.70, -4.73], [2.70, -4.73], [4.13, -2.
 const imageRadius = .90;
 const imageHeight = 2.18;
 
+function phasePlaces(count) {
+  if (count === 4) return defaultPlaces;
+  const radius = count > 6 ? 5.0 : 4.55;
+  const centerZ = -2.2;
+  return Array.from({ length: count }, (_, index) => {
+    const angle = THREE.MathUtils.degToRad(-70 + index * 140 / Math.max(1, count - 1));
+    return [Math.sin(angle) * radius, centerZ - Math.cos(angle) * radius];
+  });
+}
+
 export function stationWorld(lesson, walkable = null) {
-  const positions = lesson.stations.map((station, index) =>
-    station.position || defaultPlaces[index] || [Math.cos(index / lesson.stations.length * Math.PI * 2) * 4.2,
-      Math.sin(index / lesson.stations.length * Math.PI * 2) * 4.2 - 2.4]);
+  const positions = new Map();
+  for (const phase of lesson.phases) {
+    const places = phasePlaces(phase.stations.length);
+    phase.stations.forEach((station, index) => positions.set(station.id, station.position || places[index]));
+  }
+  const placed = lesson.stations.map(station => positions.get(station.id));
   return {
     id: lesson.id + '-stations',
     spawn: [0, 4.9], xrSpawn: [0, 3.1], lookAt: [0, .87, -.12],
     bounds: {
-      minX: Math.min(-6.8, ...positions.map(([x]) => x - 1.2)),
-      maxX: Math.max(6.8, ...positions.map(([x]) => x + 1.2)),
-      minZ: Math.min(-5.8, ...positions.map(([, z]) => z - 1.8)),
+      minX: Math.min(-6.8, ...placed.map(([x]) => x - 1.2)),
+      maxX: Math.max(6.8, ...placed.map(([x]) => x + 1.2)),
+      minZ: Math.min(-5.8, ...placed.map(([, z]) => z - 1.8)),
       maxZ: 9
     },
     ...(walkable ? { walkable } : {}),
     promptHeight: lesson.promptHeight,
-    stations: lesson.stations.map((station, index) => ({
-      ...station, position: positions[index], height: 2.58
+    stations: lesson.stations.map(station => ({
+      ...station, position: positions.get(station.id), height: 2.58
     }))
   };
 }
@@ -98,52 +111,76 @@ function makeFrame(scene, station, index, source, fit) {
 export function makeStations(root, camera, world, session, images, answer, finish) {
   const { lesson } = session;
   const approaches = world.stations.map(() => ({ quizPosition: [0, -.12] }));
-  const frames = new Map(world.stations.map((station, i) =>
-    [station.id, makeFrame(root, station, i, images[i], lesson.fitStationImages)]));
   const muted = new THREE.Color(0xb0aaa1), bright = new THREE.Color(0xffffff);
   const bronze = new THREE.Color(0xb6854a), gold = new THREE.Color(0xffd986);
-  const stories = {
-    present(id, { reveal }) {
-      const { art, rim } = frames.get(id);
-      art.material.color.copy(muted).lerp(bright, reveal);
-      rim.material.color.copy(bronze).lerp(gold, reveal);
-    }
-  };
-
-  const manuscript = new ManuscriptConnections(root, world, session, stories, approaches, finish, {
-    heading: lesson.title.toLocaleUpperCase('el'),
-    title: lesson.manuscriptTitle,
-    instruction: '',
-    entryLabel: 'Σταθμός',
-    entries: lesson.stations.map(station => ({
-      stationId: station.id, text: station.manuscriptText || station.before + station.word + station.after,
-      keywords: [station.word], sourceLabel: station.title, interpretation: ''
-    })),
-    readingPages: [],
-    centralPosition: [0, 2.07, -2.98],
-    compactEntries: true,
-    entryRowHeight: lesson.manuscriptRowHeight ?? 130,
-    entryFontSize: lesson.manuscriptEntryFontSize,
-    entryBaseline: lesson.manuscriptEntryBaseline,
-    entryLineHeight: lesson.manuscriptEntryLineHeight,
-    maskUnsolvedKeywords: lesson.maskUnsolvedKeywords ?? true,
-    passiveEntries: true,
-    flightMs: 1850,
-    revealOnArrival: true,
-    instantReduced: true,
-    beamFromEdge: lesson.beamFromEdge,
-    labelHeights: [1.02],
-    labelSide: 0,
-    labelFront: .18
-  });
+  const frames = new Map(), manuscripts = new Map(), phaseRoots = new Map();
+  for (const [phaseIndex, phase] of lesson.phases.entries()) {
+    const phaseRoot = new THREE.Group();
+    root.add(phaseRoot);
+    phaseRoots.set(phase.id, phaseRoot);
+    const phaseStations = phase.stations.map(station => world.stations.find(item => item.id === station.id));
+    const phaseWorld = { ...world, id: world.id + '-' + phase.id, stations: phaseStations };
+    const phaseFrames = new Map();
+    phaseStations.forEach((station, index) => {
+      const imageIndex = lesson.stations.findIndex(item => item.id === station.id);
+      const frame = makeFrame(phaseRoot, station, index, images[imageIndex], lesson.fitStationImages);
+      frames.set(station.id, frame);
+      phaseFrames.set(station.id, frame);
+    });
+    const stories = {
+      present(id, { reveal }) {
+        const { art, rim } = phaseFrames.get(id);
+        art.material.color.copy(muted).lerp(bright, reveal);
+        rim.material.color.copy(bronze).lerp(gold, reveal);
+      }
+    };
+    const phaseApproaches = phaseStations.map(() => ({ quizPosition: [0, -.12] }));
+    const manuscript = new ManuscriptConnections(root, phaseWorld, session, stories, phaseApproaches, finish, {
+      heading: (phase.manuscriptHeading || phase.title).toLocaleUpperCase('el'),
+      title: phase.manuscriptTitle || lesson.manuscriptTitle || phase.title,
+      instruction: '',
+      entryLabel: 'Σταθμός',
+      entries: phase.stations.map(station => ({
+        stationId: station.id, text: station.manuscriptText || station.before + station.word + station.after,
+        keywords: [station.word], sourceLabel: station.title, interpretation: ''
+      })),
+      readingPages: [],
+      centralPosition: [0, 2.07, -2.98],
+      compactEntries: true,
+      entryRowHeight: phase.entryRowHeight ?? lesson.manuscriptRowHeight ?? 130,
+      entryFontSize: phase.entryFontSize ?? lesson.manuscriptEntryFontSize,
+      entryBaseline: phase.entryBaseline ?? lesson.manuscriptEntryBaseline,
+      entryLineHeight: phase.entryLineHeight ?? lesson.manuscriptEntryLineHeight,
+      maskUnsolvedKeywords: lesson.maskUnsolvedKeywords ?? true,
+      passiveEntries: true,
+      flightMs: 1850,
+      revealOnArrival: true,
+      instantReduced: true,
+      beamFromEdge: lesson.beamFromEdge,
+      labelHeights: [1.02],
+      labelSide: 0,
+      labelFront: .18
+    });
+    manuscripts.set(phase.id, manuscript);
+    phaseRoots.set(phase.id + ':manuscript', manuscript.root);
+  }
   const water = new WaterQuiz(root, world, session, camera, answer, approaches);
 
   return {
     water,
-    manuscript,
+    manuscripts,
+    setPhase(id) {
+      for (const phase of lesson.phases) {
+        phaseRoots.get(phase.id).visible = phase.id === id;
+        phaseRoots.get(phase.id + ':manuscript').visible = phase.id === id;
+      }
+    },
     update(dt, head, reduced, paused) {
-      for (const { group } of frames.values()) group.lookAt(head.x, group.position.y, head.z);
-      manuscript.update(dt, head, reduced, paused);
+      for (const phase of lesson.phases) {
+        if (phase.id !== session.activePhase.id) continue;
+        for (const station of phase.stations) frames.get(station.id).group.lookAt(head.x, frames.get(station.id).group.position.y, head.z);
+        manuscripts.get(phase.id).update(dt, head, reduced, paused);
+      }
     }
   };
 }

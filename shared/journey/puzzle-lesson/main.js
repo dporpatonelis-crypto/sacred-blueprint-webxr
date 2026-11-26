@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { HandCarry } from '../hand-carry.js';
 import { Navigation } from '../navigation.js';
 import { XRMenu } from '../xr-menu.js';
-import { LessonSession, TILES } from './session.js';
+import { LessonSession } from './session.js';
 import { ImagePuzzle } from './puzzle.js';
 import { makeStations, stationWorld } from './stations.js';
 import { el, LessonInterface, mediaUrl } from './interface.js';
@@ -71,6 +71,7 @@ export function startPuzzleLesson(source, {
 
   function render() {
     gate?.sync(session, selected);
+    stations?.setPhase(session.activePhase.id);
     water()?.sync(session);
     ui.render({ selected, assisting });
     refreshInput();
@@ -158,7 +159,7 @@ export function startPuzzleLesson(source, {
   }
 
   function restart() {
-    stations?.manuscript.cancel(false);
+    stations?.manuscripts.forEach(manuscript => manuscript.cancel(false));
     water()?.fill.reset();
     session.restart();
     switchLevel();
@@ -181,7 +182,8 @@ export function startPuzzleLesson(source, {
       return;
     }
     announce();
-    stations.manuscript.start(id, reduced(), head);
+    const station = session.pending;
+    stations.manuscripts.get(station.phaseId).start(station.id, reduced(), head);
     render();
   }
 
@@ -194,8 +196,9 @@ export function startPuzzleLesson(source, {
     if (!session.review(id)) return false;
     stopPour();
     water()?.fill.reset();
-    stations?.manuscript.cancel(false);
-    stations?.manuscript.start(id, reduced(), head);
+    stations?.manuscripts.forEach(manuscript => manuscript.cancel(false));
+    stations?.setPhase(session.activePhase.id);
+    stations?.manuscripts.get(session.activePhase.id)?.start(id, reduced(), head);
     ui.close();
     xrMenu?.close();
     announce('Επανεξέταση: η λέξη ταξιδεύει ξανά στην εικόνα.');
@@ -205,8 +208,9 @@ export function startPuzzleLesson(source, {
 
   function resumeReview() {
     if (!session.reviewId) return false;
-    stations?.manuscript.cancel(false);
+    stations?.manuscripts.forEach(manuscript => manuscript.cancel(false));
     session.resume();
+    stations?.setPhase(session.activePhase.id);
     water()?.fill.reset();
     ui.close();
     xrMenu?.close();
@@ -325,15 +329,16 @@ export function startPuzzleLesson(source, {
       else items.push(assisting ? menuItem('Σταμάτησε τη λύση', 'stop-assist') :
         menuItem('Αυτόματη λύση', 'assist'));
       copy = session.gateComplete ? lesson.puzzle.caption :
-        'Παζλ ' + session.placed.size + ' / 6. Πιάσε με τη λαβή και άφησε στη φωτισμένη υποδοχή.';
+        'Παζλ ' + session.placed.size + ' / ' + session.tileCount + '. Πιάσε με τη λαβή και άφησε στη φωτισμένη υποδοχή.';
     } else {
       if (session.current && !session.reviewId && !session.complete) items.unshift(menuItem('Υπόδειξη', 'hint'));
       for (const [index, station] of lesson.stations.entries()) {
         if (session.solved(station.id) && !session.busy) items.push(menuItem('Επανεξέταση · ' + station.title, 'review-station', index));
       }
       if (session.reviewId) items.unshift(menuItem('Συνέχεια στη διαδρομή', 'resume-review'));
+      const phase = session.activePhase;
       copy = session.complete ? 'Οι ' + lesson.stations.length + ' συνδέσεις ολοκληρώθηκαν.' :
-        'Συνδέσεις ' + session.count + ' / ' + lesson.stations.length + '. Στόχευσε το δοχείο και κράτησε τη σκανδάλη.';
+        phase.title + ' · ' + session.phaseCount + ' / ' + phase.stations.length + '. Στόχευσε το σωστό δοχείο και κράτησε τη σκανδάλη.';
     }
     items.push(menuItem('Από την αρχή', 'confirm-reset'), menuItem('Έξοδος VR', 'exit'), close);
     const guidance = notice || 'Αριστερός μοχλός για κίνηση, δεξιός για στροφή. Οι κύκλοι στο έδαφος είναι σημεία τηλεμεταφοράς.';
@@ -342,6 +347,39 @@ export function startPuzzleLesson(source, {
   }
 
   function showXRReading(index) {
+    if (lesson.readingSections?.length) {
+      const pages = [];
+      const addText = (title, value) => {
+        for (const paragraph of String(value || '').split(/\n+/u).map(part => part.trim()).filter(Boolean)) {
+          let chunk = '';
+          for (const word of paragraph.split(/\s+/u)) {
+            const next = chunk ? chunk + ' ' + word : word;
+            if (chunk && next.length > 250) {
+              pages.push({ title, text: chunk });
+              chunk = word;
+            } else chunk = next;
+          }
+          if (chunk) pages.push({ title, text: chunk });
+        }
+      };
+      for (const section of lesson.readingSections) {
+        addText(section.title, section.text);
+        for (const item of section.items || []) addText(item.title, item.text);
+      }
+      for (const phase of lesson.phases) for (const station of phase.stations) {
+        const phrase = station.manuscriptText || (station.before !== undefined ? station.before + station.word + station.after : '');
+        addText(phase.title + ' · ' + station.title,
+          [phrase, station.meaning, station.explanation, station.hint, station.source].filter(Boolean).join('\n'));
+      }
+      for (const source of lesson.sources || []) addText('Πηγές', [source.title, source.url].filter(Boolean).join('\n'));
+      const pageIndex = Math.max(0, Math.min(pages.length - 1, index));
+      const page = pages[pageIndex];
+      const controls = [back, close];
+      if (pageIndex > 0) controls.unshift(menuItem('← Προηγούμενο', 'reading', pageIndex - 1));
+      if (pageIndex < pages.length - 1) controls.unshift(menuItem('Επόμενο →', 'reading', pageIndex + 1));
+      xrMenu.show(page.title, page.text + `  (${pageIndex + 1} / ${pages.length})`, controls, true);
+      return;
+    }
     const station = lesson.stations[index], controls = [back, close];
     if (index > 0) controls.unshift(menuItem('← Προηγούμενο', 'reading', index - 1));
     if (index < lesson.stations.length - 1) controls.unshift(menuItem('Επόμενο →', 'reading', index + 1));
@@ -544,7 +582,7 @@ export function startPuzzleLesson(source, {
     terrain?.(dt, reduced());
     if (ready) {
       if (assisting && time >= assistAt && !xrMenu.opened) {
-        const tile = TILES.find(number => !session.placed.has(number));
+        const tile = session.tiles.find(number => !session.placed.has(number));
         if (tile !== undefined) session.place(tile, tile);
         assisting = !session.gateComplete;
         assistAt = time + (reduced() ? 140 : 350);
@@ -617,7 +655,7 @@ export function startPuzzleLesson(source, {
       skybox, lesson.puzzle.image, ...lesson.stations.map(station => station.image)
     ].map(loadTexture));
     terrain = makeLandscape(scene, sky);
-    gate = new ImagePuzzle(gateRoot, picture);
+    gate = new ImagePuzzle(gateRoot, picture, session);
     gate.sync(session, null, true);
     stations = makeStations(riverRoot, camera, riverWorld, session, images, answer, finishAnswer);
     landings.gate = approach.gate.map(([x, z]) => addLanding(gateRoot, x, z));

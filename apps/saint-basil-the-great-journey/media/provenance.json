@@ -1,0 +1,47 @@
+{
+  "lessonSource": "Περιεχόμενο και ενσωματωμένες εικόνες από το megas-vasileios.html που δόθηκε στη συνομιλία.",
+  "sourceImages": [
+    {
+      "file": "source/life-v1.png",
+      "use": "Η πλήρης κεντρική εικόνα του βίου για το παζλ 4×2.",
+      "dimensions": "1672×941"
+    },
+    {
+      "file": "source/biblical-board-v2.png",
+      "use": "Πηγή οκτώ εικόνων των βιβλικών προτύπων.",
+      "dimensions": "1671×941"
+    },
+    {
+      "file": "source/hymn-v1.png",
+      "use": "Πηγή των έξι εικονογραφήσεων του απολυτικίου.",
+      "dimensions": "1536×1024"
+    },
+    {
+      "file": "source/caesarea-panorama-v1.png",
+      "use": "ImageGen skybox 2:1 για την Καισάρεια.",
+      "dimensions": "1774×887",
+      "generationPrompt": "prompts/caesarea-panorama.md"
+    }
+  ],
+  "stationCrops": {
+    "biblicalSource": "source/biblical-board-v2.png",
+    "hymnSource": "source/hymn-v1.png",
+    "rectangles": {
+      "biblical-adam": [0, 0, 418, 470],
+      "biblical-noah": [418, 0, 419, 470],
+      "biblical-abraham": [837, 0, 417, 470],
+      "biblical-jacob": [1254, 0, 417, 470],
+      "biblical-john-baptist": [0, 470, 418, 471],
+      "biblical-moses": [418, 470, 419, 471],
+      "biblical-paul": [837, 470, 417, 471],
+      "biblical-john-evangelist": [1254, 470, 417, 471],
+      "hymn-whole-earth": [0, 0, 512, 504],
+      "hymn-dogma": [512, 0, 512, 504],
+      "hymn-nature": [1024, 0, 512, 504],
+      "hymn-conduct": [0, 504, 512, 520],
+      "hymn-priesthood": [512, 504, 512, 520],
+      "hymn-intercession": [1024, 504, 512, 520]
+    },
+    "rectangleOrder": "x, y, width, height"
+  }
+}

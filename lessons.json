@@ -138,6 +138,16 @@
       "topics": ["Ιωάννης ο Χρυσόστομος", "Η΄ Ομιλία περί μετανοίας", "Κωνσταντινούπολη", "Βόσπορος", "Κιβωτός και παράδεισος"],
       "connections": 6,
       "status": "published"
+    },
+    {
+      "id": "saint-basil-the-great-journey",
+      "directory": "apps/saint-basil-the-great-journey",
+      "title": "Μέγας Βασίλειος",
+      "description": "Συναρμολόγησε οκτώ κομμάτια από τον βίο του και ακολούθησε τη σειρά των βιβλικών προσώπων και του απολυτικίου στην Καισάρεια.",
+      "preview": "previews/saint-basil-the-great-journey.jpg",
+      "topics": ["Μέγας Βασίλειος", "Καισάρεια", "Βασιλειάδα", "Λόγος 43", "Απολυτίκιο"],
+      "connections": 14,
+      "status": "published"
     }
   ]
 }
