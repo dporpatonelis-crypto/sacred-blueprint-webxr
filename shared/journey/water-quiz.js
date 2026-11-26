@@ -12,8 +12,8 @@ export class WaterQuiz {
     this.vessels = new Map(); this.pickables = []; this.lastQuestion = null; this.wrongUntil = new Map();
     const stone = new THREE.MeshStandardMaterial({ color: 0xa57743, roughness: .8 });
     const gold = new THREE.MeshStandardMaterial({ color: 0xe8c57c, roughness: .45, metalness: .3 });
-    session.choices.forEach((choice, i) => {
-      const group = new THREE.Group(); group.position.x = (i - (session.choices.length - 1) / 2) * 1.4; this.root.add(group);
+    session.allChoices.forEach(choice => {
+      const group = new THREE.Group(); this.root.add(group);
       const mesh = (geometry, material, y) => { const m = new THREE.Mesh(geometry, material); m.position.y = y; group.add(m); return m; };
       mesh(new THREE.CylinderGeometry(.2,.26,.4,16),stone,-.2);
       mesh(new THREE.CylinderGeometry(.45, .5, .13, 24), stone, .065);
@@ -21,11 +21,11 @@ export class WaterQuiz {
       const rim = mesh(new THREE.TorusGeometry(.37, .055, 8, 28), gold.clone(), .995); rim.rotation.x = Math.PI / 2;
       const liquidMaterial = new THREE.MeshStandardMaterial({ color: 0x39bfd0, transparent: true, opacity: .88, roughness: .19, metalness: .12 });
       const liquid = mesh(new THREE.CylinderGeometry(.335, .305, 1, 24), liquidMaterial, .14); liquid.scale.y = .001;
-      const label = panel(choice.word, 1.33, .49, null, { dark: true }); label.position.set(0, 1.42, 0); group.add(label);
-      const number = panel(String(i + 1), .25, .25, null, { dark: true, square: true }); number.position.set(0, .52, .381); group.add(number);
+      const label = panel(choice.word, 1.6, .49, null, { dark: true }); label.position.set(0, 1.42, 0); group.add(label);
+      const number = panel('', .25, .25, null, { dark: true, square: true }); number.position.set(0, .52, .381); group.add(number);
       const hit = mesh(new THREE.CylinderGeometry(.47, .47, 1.1, 16), new THREE.MeshBasicMaterial({ visible: false }), .55);
       hit.userData.action = { type: 'vessel', id: choice.id }; this.pickables.push(hit);
-      this.vessels.set(choice.id, { group, liquid, label, hit, rim, fill: 0 });
+      this.vessels.set(choice.id, { group, liquid, label, number, hit, rim, fill: 0 });
     });
     this.question = panel('', 4.9, world.promptHeight || .64, null, { dark: true }); this.question.position.set(0, world.promptHeight ? 2.85 : 2.35, -.08); this.root.add(this.question);
     this.instruction = panel('Κράτησε τη βολή · γέμισε την απάντηση', 3.7, .38, null, { dark: true, small: true });
@@ -48,10 +48,25 @@ export class WaterQuiz {
     this.sync(session);
   }
   sync(session) {
-    session.choices.forEach((choice,index)=> {
-      this.vessels.get(choice.id).group.position.x=(index-(session.choices.length-1)/2)*1.4;
+    const choices = session.choices;
+    for (const vessel of this.vessels.values()) { vessel.group.visible = false; vessel.hit.visible = false; }
+    choices.forEach((choice, index) => {
+      const vessel = this.vessels.get(choice.id);
+      if (!vessel) return;
+      if (choices.length > 4) {
+        const spread = choices.length >= 8 ? 80 : 75;
+        const angle = THREE.MathUtils.degToRad(-spread + index * spread * 2 / (choices.length - 1));
+        const radius = 4.6;
+        vessel.group.position.set(Math.sin(angle) * radius, 0, -Math.cos(angle) * radius);
+      } else {
+        vessel.group.position.set((index - (choices.length - 1) / 2) * 1.36, 0, 0);
+      }
+      vessel.group.visible = true;
+      vessel.hit.visible = true;
+      setText(vessel.label, choice.word, { dark: true });
+      setText(vessel.number, String(index + 1), { dark: true });
     });
-    if (!session.busy) this.fill.setQuestion(session.current?.id || null, session.choices.map(s => s.id));
+    if (!session.busy) this.fill.setQuestion(session.current?.answerId || session.current?.id || null, choices.map(s => s.id));
     if (!session.busy && this.lastQuestion !== session.visibleStation.id) {
       const station = this.world.stations.find(s=>s.id===session.visibleStation.id);
       const approach = this.approaches[this.world.stations.indexOf(station)];

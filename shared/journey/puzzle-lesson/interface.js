@@ -1,5 +1,3 @@
-import { TILES } from './session.js';
-
 export const el = id => document.getElementById(id);
 export const mediaUrl = path => import.meta.env.BASE_URL + path;
 const menu = el('menu-dialog'), puzzle = el('puzzle-dialog');
@@ -20,9 +18,11 @@ function strongKeyword(node, text, word) {
   else node.replaceChildren(text.slice(0, at), make('strong', word), text.slice(at + word.length));
 }
 
-function markPiece(button, tile, image) {
+function markPiece(button, tile, image, grid) {
   button.style.backgroundImage = 'url("' + image + '")';
-  button.style.backgroundPosition = (tile % 3) * 50 + '% ' + Math.floor(tile / 3) * 100 + '%';
+  button.style.backgroundSize = grid.columns * 100 + '% ' + grid.rows * 100 + '%';
+  button.style.backgroundPosition = (grid.columns > 1 ? tile % grid.columns / (grid.columns - 1) * 100 : 0) + '% ' +
+    (grid.rows > 1 ? Math.floor(tile / grid.columns) / (grid.rows - 1) * 100 : 0) + '%';
 }
 
 function link(label, url) {
@@ -39,9 +39,13 @@ export class LessonInterface {
     this.puzzleImage = mediaUrl(session.lesson.puzzle.image);
     if (session.lesson.puzzle.aspect) puzzle.style.setProperty('--puzzle-aspect', String(session.lesson.puzzle.aspect));
     this.api = api;
+    this.grid = session.grid;
     this.dialogs = [menu, puzzle];
     this.aimButtons = new Map();
-    this.slots = TILES.map(tile => {
+    this.choiceSignature = '';
+    puzzle.style.setProperty('--puzzle-cols', String(this.grid.columns));
+    puzzle.style.setProperty('--puzzle-rows', String(this.grid.rows));
+    this.slots = session.tiles.map(tile => {
       const button = make('button', String(tile + 1));
       button.type = 'button';
       button.className = 'slot';
@@ -61,13 +65,13 @@ export class LessonInterface {
       el('slots').append(button);
       return button;
     });
-    this.tiles = TILES.map(tile => {
+    this.tiles = session.tiles.map(tile => {
       const button = make('button');
       button.type = 'button';
       button.className = 'piece';
       button.draggable = true;
       button.setAttribute('aria-label', 'Κομμάτι ' + (tile + 1));
-      markPiece(button, tile, this.puzzleImage);
+      markPiece(button, tile, this.puzzleImage, this.grid);
       button.addEventListener('click', () => api.select(tile));
       button.addEventListener('dragstart', event => {
         event.dataTransfer.setData('text/plain', String(tile));
@@ -77,14 +81,6 @@ export class LessonInterface {
       return button;
     });
     this.trayOrder = [];
-    for (const station of session.choices) {
-      const button = make('button', station.word);
-      button.type = 'button';
-      button.setAttribute('aria-label', 'Στόχευσε το δοχείο «' + station.word + '»');
-      button.onclick = () => api.aim(station.id);
-      el('choices').append(button);
-      this.aimButtons.set(station.id, button);
-    }
     for (const dialog of this.dialogs) {
       dialog.addEventListener('close', () => {
         if (dialog === menu) el('menu-content').replaceChildren();
@@ -131,11 +127,12 @@ export class LessonInterface {
 
   render({ selected, assisting }) {
     const session = this.session, lesson = session.lesson, gate = session.level === 'gate';
+    this.syncChoices();
     el('gate').hidden = !gate;
     el('river').hidden = gate;
     if (gate) {
       const complete = session.gateComplete;
-      el('tiles-count').textContent = session.placed.size + ' / 6';
+      el('tiles-count').textContent = session.placed.size + ' / ' + session.tileCount;
       el('enter-river').hidden = el('puzzle-enter').hidden = !complete;
       el('open-puzzle').hidden = complete;
       el('puzzle-copy').textContent = complete ? lesson.puzzle.caption :
@@ -145,18 +142,18 @@ export class LessonInterface {
       if (complete && start >= 0) {
         strongSentence(el('gate-copy'), caption.slice(0, start), emphasis, caption.slice(start + emphasis.length));
       } else {
-        el('gate-copy').textContent = complete ? caption : 'Τοποθέτησε τα έξι κομμάτια στις υποδοχές.';
+        el('gate-copy').textContent = complete ? caption : 'Τοποθέτησε όλα τα κομμάτια στις υποδοχές.';
       }
       if (this.trayOrder !== session.tileOrder) {
         this.trayOrder = session.tileOrder;
         el('tray').replaceChildren(...this.trayOrder.map(tile => this.tiles[tile]));
       }
-      for (const tile of TILES) {
+      for (const tile of session.tiles) {
         const placed = session.placed.has(tile);
         const slot = this.slots[tile], piece = this.tiles[tile];
         slot.classList.toggle('placed', placed);
         slot.disabled = placed || assisting;
-        if (placed) markPiece(slot, tile, this.puzzleImage);
+        if (placed) markPiece(slot, tile, this.puzzleImage, this.grid);
         else slot.style.removeProperty('background-image');
         piece.classList.toggle('empty-piece', placed);
         piece.style.visibility = placed ? 'hidden' : '';
@@ -167,9 +164,11 @@ export class LessonInterface {
     }
 
     const station = session.visibleStation;
+    const phase = session.activePhase;
+    const phaseIndex = phase.stations.findIndex(item => item.id === station?.id) + 1;
     el('station-title').textContent = session.complete ? 'Η διαδρομή ολοκληρώθηκε' :
-      (session.reviewId ? 'Επανεξέταση · ' : '') + (lesson.stations.indexOf(station) + 1) + ' · ' + station.title;
-    el('stations-count').textContent = session.count + ' / ' + lesson.stations.length;
+      (session.reviewId ? 'Επανεξέταση · ' : '') + phase.title + ' · ' + phaseIndex + ' · ' + station.title;
+    el('stations-count').textContent = session.phaseCount + ' / ' + phase.stations.length;
     if (station.question) {
       el('sentence').replaceChildren(
         make('span', station.question + ' '),
@@ -182,6 +181,24 @@ export class LessonInterface {
     el('water-choices').hidden = session.complete || Boolean(session.reviewId);
     for (const [id, button] of this.aimButtons) {
       button.disabled = session.busy || session.solved(id);
+    }
+  }
+
+  syncChoices() {
+    const session = this.session;
+    const signature = session.activePhase.id + ':' + session.choices.map(choice => choice.id).join(',');
+    if (signature === this.choiceSignature) return;
+    this.choiceSignature = signature;
+    this.aimButtons.clear();
+    const choices = el('choices');
+    choices.replaceChildren();
+    for (const choice of session.choices) {
+      const button = make('button', choice.word);
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Στόχευσε το δοχείο «' + choice.word + '»');
+      button.onclick = () => this.api.aim(choice.id);
+      choices.append(button);
+      this.aimButtons.set(choice.id, button);
     }
   }
 
@@ -210,11 +227,17 @@ export class LessonInterface {
       });
     } else {
       if (this.session.current && !this.session.reviewId && !this.session.complete) button('Υπόδειξη', () => this.showContent('hint'));
-      for (const station of this.session.lesson.stations.filter(item => this.session.solved(item.id) && !this.session.busy)) {
-        button('Επανεξέταση · ' + station.title, () => {
-          this.api.review(station.id);
-          menu.close();
-        });
+      for (const phase of this.session.lesson.phases) {
+        const solved = phase.stations.filter(item => this.session.solved(item.id) && !this.session.busy);
+        if (solved.length) {
+          content.append(make('h3', phase.title));
+          for (const station of solved) {
+            button('Επανεξέταση · ' + station.title, () => {
+              this.api.review(station.id);
+              menu.close();
+            });
+          }
+        }
       }
       if (this.session.reviewId) button('Συνέχεια στη διαδρομή', () => {
         this.api.resumeReview();
@@ -251,7 +274,31 @@ export class LessonInterface {
       );
     } else if (section === 'reading') {
       if (lesson.historicalCaveat) content.append(make('p', lesson.historicalCaveat));
-      const sourceText = lesson.manuscript || lesson.hymn;
+      for (const section of lesson.readingSections || []) {
+        const article = make('article');
+        article.append(make('h3', section.title));
+        if (section.text) {
+          const text = make('p', section.text);
+          if (section.className) text.className = section.className;
+          article.append(text);
+        }
+        if (section.note) article.append(make('p', section.note));
+        for (const paragraph of section.paragraphs || []) article.append(make('p', paragraph));
+        for (const item of section.items || []) {
+          const block = make('p');
+          if (item.title) block.append(make('strong', item.title + ': '));
+          block.append(document.createTextNode(item.text || ''));
+          article.append(block);
+        }
+        if (section.attribution) article.append(make('p', section.attribution));
+        for (const source of section.sources || []) {
+          const citation = make('p');
+          citation.append(link(source.title, source.url));
+          article.append(citation);
+        }
+        content.append(article);
+      }
+      const sourceText = lesson.readingSections?.length ? null : lesson.manuscript || lesson.hymn;
       if (sourceText) {
         const heading = make('h3', sourceText.title || 'Το κείμενο');
         const text = make('p', sourceText.text);
@@ -264,48 +311,43 @@ export class LessonInterface {
           content.append(citation);
         }
       }
-      for (const section of lesson.readingSections || []) {
-        const article = make('article');
-        article.append(make('h3', section.title));
-        if (section.note) article.append(make('p', section.note));
-        for (const paragraph of section.paragraphs || []) article.append(make('p', paragraph));
-        if (section.attribution) article.append(make('p', section.attribution));
-        for (const source of section.sources || []) {
-          const citation = make('p');
-          citation.append(link(source.title, source.url));
-          article.append(citation);
+      for (const phase of lesson.phases) {
+        content.append(make('h3', phase.title));
+        for (const station of phase.stations) {
+          const article = make('article');
+          article.append(make('h3', station.title));
+          if (lesson.manuscript || lesson.hymn) {
+            const phrase = make('p');
+            if (station.manuscriptText) strongKeyword(phrase, station.manuscriptText, station.word);
+            else strongSentence(phrase, station.before, station.word, station.after);
+            article.append(phrase);
+            for (const text of [station.meaning, station.visualQuestion, station.explanation, station.hint]) {
+              if (text) article.append(make('p', text));
+            }
+          } else if (station.question) {
+            for (const text of [station.historicalContext, station.question, station.reading,
+              station.explanation, station.hint, station.source]) {
+              if (text) article.append(make('p', text));
+            }
+            for (const reference of station.references || []) {
+              const citation = make('p');
+              citation.append(link(reference.title, reference.url));
+              article.append(citation);
+            }
+          } else {
+            const passage = (label, text) => link(label, 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(text) + '&version=SBLGNT');
+            article.append(make('p', station.reading), passage(station.source, station.passage));
+            if (station.relatedSource) article.append(' · ', passage(station.relatedSource, station.relatedPassage));
+          }
+          content.append(article);
         }
-        content.append(article);
-      }
-      for (const station of lesson.stations) {
-        const article = make('article');
-        article.append(make('h3', station.title));
-        if (lesson.manuscript || lesson.hymn) {
-          const phrase = make('p');
-          if (station.manuscriptText) strongKeyword(phrase, station.manuscriptText, station.word);
-          else strongSentence(phrase, station.before, station.word, station.after);
-          article.append(phrase);
-          for (const text of [station.meaning, station.visualQuestion, station.explanation, station.hint]) {
-            if (text) article.append(make('p', text));
-          }
-        } else if (station.question) {
-          for (const text of [station.historicalContext, station.question, station.reading,
-            station.explanation, station.hint, station.source]) {
-            if (text) article.append(make('p', text));
-          }
-          for (const reference of station.references || []) {
-            const citation = make('p');
-            citation.append(link(reference.title, reference.url));
-            article.append(citation);
-          }
-        } else {
-          const passage = (label, text) => link(label, 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(text) + '&version=SBLGNT');
-          article.append(make('p', station.reading), passage(station.source, station.passage));
-          if (station.relatedSource) article.append(' · ', passage(station.relatedSource, station.relatedPassage));
-        }
-        content.append(article);
       }
       const credits = make('p');
+      for (const source of lesson.sources || []) {
+        if (!source.url) continue;
+        if (credits.childNodes.length) credits.append(' · ');
+        credits.append(link(source.title, source.url));
+      }
       if (lesson.credits) credits.append(link(lesson.creditsLabel || 'Εικόνες και πηγές', lesson.credits));
       if (lesson.originalLesson) {
         if (credits.childNodes.length) credits.append(document.createElement('br'));
