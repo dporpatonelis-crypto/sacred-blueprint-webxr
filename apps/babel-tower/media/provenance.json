@@ -1,0 +1,8 @@
+{
+  "lessonHtml": "/Users/dimitriosporpatonelis/apps/digital-library-core/lessons/pyrgos-tis-vavel.html",
+  "lessonIllustrationSource": "/Users/dimitriosporpatonelis/apps/digital-library-core/lessons/pyrgos-tis-vavel-src/lesson-art.png",
+  "lessonIllustration": "Εικόνα 1672×941 από το αρχικό HTML. Χρησιμοποιείται ως εικόνα παζλ και ως βάση για έξι κυκλικές περικοπές στην απόδοση WebGL.",
+  "skyboxSource": "shinar-panorama.png",
+  "skyboxDimensions": "1774×887, equirectangular panorama 2:1 generated for this WebXR world.",
+  "skyboxPrompt": "media/prompts/shinar-panorama.md"
+}
