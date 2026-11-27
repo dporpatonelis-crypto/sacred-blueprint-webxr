@@ -41,8 +41,22 @@ export function stationWorld(lesson, walkable = null) {
   };
 }
 
-function illustrationTexture(source, fit) {
+function illustrationTexture(source, fit, crop = null) {
   const { image } = source;
+  if (crop) {
+    const [left, top, width, height] = crop;
+    const sx = Math.max(0, Math.min(image.width - 1, Math.round(left * image.width)));
+    const sy = Math.max(0, Math.min(image.height - 1, Math.round(top * image.height)));
+    const sw = Math.max(1, Math.min(image.width - sx, Math.round(width * image.width)));
+    const sh = Math.max(1, Math.min(image.height - sy, Math.round(height * image.height)));
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 768;
+    canvas.getContext('2d').drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = source.colorSpace;
+    texture.anisotropy = source.anisotropy;
+    return texture;
+  }
   if (!fit) {
     const texture = source.clone();
     texture.repeat.x = image.height / image.width;
@@ -86,11 +100,11 @@ function illustrationTexture(source, fit) {
   return texture;
 }
 
-function makeFrame(scene, station, index, source, fit) {
+function makeFrame(scene, station, index, source, fit, crop) {
   const group = new THREE.Group();
   group.position.set(station.position[0], imageHeight, station.position[1]);
   scene.add(group);
-  const map = illustrationTexture(source, fit);
+  const map = illustrationTexture(source, fit, crop);
   const art = new THREE.Mesh(new THREE.CircleGeometry(imageRadius, 64),
     new THREE.MeshBasicMaterial({ map, toneMapped: false }));
   const wood = new THREE.Mesh(new THREE.CylinderGeometry(.069, .11, imageHeight - .75, 12),
@@ -123,7 +137,7 @@ export function makeStations(root, camera, world, session, images, answer, finis
     const phaseFrames = new Map();
     phaseStations.forEach((station, index) => {
       const imageIndex = lesson.stations.findIndex(item => item.id === station.id);
-      const frame = makeFrame(phaseRoot, station, index, images[imageIndex], lesson.fitStationImages);
+      const frame = makeFrame(phaseRoot, station, index, images[imageIndex], lesson.fitStationImages, station.imageCrop);
       frames.set(station.id, frame);
       phaseFrames.set(station.id, frame);
     });
